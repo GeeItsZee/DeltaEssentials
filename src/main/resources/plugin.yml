@@ -1,0 +1,45 @@
+name: DeltaEssentials
+main: com.yahoo.tracebachi.DeltaEssentials.DeltaEssentialsPlugin
+version: 1.0
+author: Trace Bachi (tracebachi@yahoo.com, BigBossZee)
+depend: [DeltaRedis, Essentials, Herochat]
+commands:
+  tell:
+    description: Sends a message to another player.
+    aliases: [t]
+  r:
+    description: Sends a message to another player as a reply.
+    aliases: [reply]
+  moveto:
+    description: Sends players to different servers.
+    aliases: [mt]
+  tp:
+    description: Teleports players.
+  tphere:
+    description: Teleports other to self.
+  tpa:
+    description: Sends teleport request.
+  tpaccept:
+    description: Accepts teleport request.
+
+permissions:
+  DeltaEss.Tell:
+    description: Use /tell and /reply
+  DeltaEss.TellColor:
+    description: Lets players use color codes in their messages.
+  DeltaEss.MoveTo.Self:
+    description: Allows the player to switch servers.
+  DeltaEss.MoveTo.Other:
+    description: Allows the player to force others to switch servers.
+  DeltaEss.MoveTo.Bypass:
+      description: Allows the player to bypass blocked servers.
+  DeltaEss.Tp.Self:
+    description: Teleports self to another player.
+  DeltaEss.Tp.Other:
+    description: Teleports player to another player.
+  DeltaEss.Tp.Alert:
+    description: Sends a message to the player when another player teleports to them.
+  DeltaEss.Tpa.Send:
+    description: Sends a teleport request to another.
+  DeltaEss.Tpa.Accept:
+    description: Accepts a teleport request.

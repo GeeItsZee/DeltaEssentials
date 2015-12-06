@@ -1,0 +1,20 @@
+# DeltaEssentials Configuration File
+
+###############################################################################
+
+# Servers that players cannot access
+# Add permission 'DeltaEss.MoveTo.Bypass' to bypass
+blocked_servers: []
+
+###############################################################################
+
+# HeroChat channels to ignore when sending chat to other servers
+ignored_channels:
+  - Faction
+  - Allies
+  - Local
+
+###############################################################################
+
+# Debug Mode (for developers)
+debug_mode: False
