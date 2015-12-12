@@ -139,7 +139,7 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
 
     public boolean sendToServer(Player player, String destination, boolean callEvent)
     {
-        if(!callEvent)
+        if(callEvent)
         {
             PlayerServerSwitchEvent event = new PlayerServerSwitchEvent(player, destination);
             Bukkit.getPluginManager().callEvent(event);
