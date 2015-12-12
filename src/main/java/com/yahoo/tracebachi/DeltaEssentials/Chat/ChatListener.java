@@ -23,8 +23,8 @@ import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerTellEvent;
-import com.yahoo.tracebachi.DeltaRedis.Shared.Channels;
-import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.DeltaRedisApi;
+import com.yahoo.tracebachi.DeltaRedis.Shared.Redis.Channels;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -44,20 +44,20 @@ public class ChatListener implements Listener
     private static final Pattern pattern = Pattern.compile("/\\\\");
 
     private HashMap<String, String> replyMap;
-    private DeltaRedisApi redisApi;
+    private DeltaRedisApi deltaRedisApi;
     private DeltaChat deltaChat;
 
-    public ChatListener(HashMap<String, String> replyMap, DeltaRedisApi redisApi, DeltaChat deltaChat)
+    public ChatListener(HashMap<String, String> replyMap, DeltaRedisApi deltaRedisApi, DeltaChat deltaChat)
     {
         this.replyMap = replyMap;
-        this.redisApi = redisApi;
+        this.deltaRedisApi = deltaRedisApi;
         this.deltaChat = deltaChat;
     }
 
     public void shutdown()
     {
         replyMap = null;
-        redisApi = null;
+        deltaRedisApi = null;
         deltaChat = null;
     }
 
@@ -75,14 +75,15 @@ public class ChatListener implements Listener
         if(!deltaChat.getIgnoredHeroChatChannels().contains(channel))
         {
             String message =  event.getMsg();
-            redisApi.publish(Channels.SPIGOT, "DeltaEss:HeroChat", channel + "/\\" + message);
+            deltaRedisApi.publish(Channels.SPIGOT, DeltaChat.HERO_CHAT_CHANNEL,
+                channel + "/\\" + message);
         }
     }
 
     @EventHandler
     public void onDeltaRedisMessage(DeltaRedisMessageEvent event)
     {
-        if(event.getChannel().equals("DeltaEss:HeroChat"))
+        if(event.getChannel().equals(DeltaChat.HERO_CHAT_CHANNEL))
         {
             String[] splitMessage = pattern.split(event.getMessage(), 2);
             String channelName = splitMessage[0];
@@ -98,7 +99,7 @@ public class ChatListener implements Listener
                 deltaChat.severe("Chat channel (" + channelName + ") not found!");
             }
         }
-        else if(event.getChannel().equals("DeltaEss:Tell"))
+        else if(event.getChannel().equals(DeltaChat.TELL_CHANNEL))
         {
             onTellMessage(event);
         }
@@ -143,7 +144,7 @@ public class ChatListener implements Listener
             output.writeBoolean(true);
             String outputStr = new String(output.toByteArray(), StandardCharsets.UTF_8);
 
-            redisApi.publish(event.getSender(), "DeltaEss:Tell", outputStr);
+            deltaRedisApi.publish(event.getSender(), DeltaChat.TELL_CHANNEL, outputStr);
         }
     }
 }

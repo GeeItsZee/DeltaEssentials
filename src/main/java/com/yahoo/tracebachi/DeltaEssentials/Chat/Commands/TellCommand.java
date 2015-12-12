@@ -20,8 +20,7 @@ import com.yahoo.tracebachi.DeltaEssentials.Chat.DeltaChat;
 import com.yahoo.tracebachi.DeltaEssentials.Chat.MessageUtils;
 import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerTellEvent;
 import com.yahoo.tracebachi.DeltaEssentials.Prefixes;
-import com.yahoo.tracebachi.DeltaRedis.Shared.Cache.CachedPlayer;
-import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.DeltaRedisApi;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -85,13 +84,15 @@ public class TellCommand implements CommandExecutor
         }
         else { return true; }
 
+        // Update the reply map
+        replyMap.put(senderName, receiverName);
+
         // Check if the receiver is console
         if(receiverName.equals("console"))
         {
             Bukkit.getConsoleSender().sendMessage(formatted);
             sender.sendMessage(formatted);
 
-            replyMap.put(senderName, receiverName);
             replyMap.put(receiverName, senderName);
             return true;
         }
@@ -103,26 +104,25 @@ public class TellCommand implements CommandExecutor
             receiver.sendMessage(formatted);
             sender.sendMessage(formatted);
 
-            replyMap.put(senderName, receiverName);
             replyMap.put(receiverName, senderName);
             return true;
         }
 
-        // Check if the receiver is on another known server
-        CachedPlayer cachedPlayer = deltaRedisApi.getPlayer(receiverName);
-        if(cachedPlayer != null)
-        {
-            String dataString = MessageUtils.toByteArrayDataString(
-                senderName, receiverName, allowColors, message);
-
-            deltaRedisApi.publish(cachedPlayer.getServer(), "DeltaEss:Tell", dataString);
-            sender.sendMessage(formatted);
-
-            replyMap.put(senderName, receiverName);
-            return true;
-        }
-
-        sender.sendMessage(Prefixes.FAILURE + receiverName + " is not online.");
+        // Check other servers
+        String dataString = MessageUtils.toByteArrayDataString(
+            senderName, receiverName, allowColors, message);
+        deltaRedisApi.findPlayer(receiverName, cachedPlayer -> {
+            if(cachedPlayer != null)
+            {
+                String destination = cachedPlayer.getServer();
+                deltaRedisApi.publish(destination, DeltaChat.TELL_CHANNEL, dataString);
+                sender.sendMessage(formatted);
+            }
+            else
+            {
+                sender.sendMessage(Prefixes.FAILURE + receiverName + " is not online.");
+            }
+        });
         return true;
     }
 }

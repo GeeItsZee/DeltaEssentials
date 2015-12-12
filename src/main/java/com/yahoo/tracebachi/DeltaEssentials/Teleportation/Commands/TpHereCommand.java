@@ -19,8 +19,7 @@ package com.yahoo.tracebachi.DeltaEssentials.Teleportation.Commands;
 import com.google.common.base.Preconditions;
 import com.yahoo.tracebachi.DeltaEssentials.Prefixes;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.DeltaTeleport;
-import com.yahoo.tracebachi.DeltaRedis.Shared.Cache.CachedPlayer;
-import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.DeltaRedisApi;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -60,14 +59,7 @@ public class TpHereCommand implements CommandExecutor
         }
         else if(args.length >= 1 && sender.hasPermission("DeltaEss.Tp.Other"))
         {
-            if(!teleportHere((Player) sender, args[0]))
-            {
-                sender.sendMessage(Prefixes.FAILURE + "Player not found.");
-            }
-            else
-            {
-                sender.sendMessage(Prefixes.SUCCESS + "Teleporting player here ...");
-            }
+            teleportHere((Player) sender, args[0]);
         }
         else
         {
@@ -76,7 +68,7 @@ public class TpHereCommand implements CommandExecutor
         return true;
     }
 
-    private boolean teleportHere(Player sender, String nameToTp)
+    private void teleportHere(Player sender, String nameToTp)
     {
         Preconditions.checkNotNull(sender, "Sender cannot be null.");
         Preconditions.checkNotNull(nameToTp, "Name to TP cannot be null.");
@@ -85,20 +77,32 @@ public class TpHereCommand implements CommandExecutor
         if(playerToTp != null && playerToTp.isOnline())
         {
             deltaTeleport.teleportWithEvent(playerToTp, sender);
-            return true;
+            return;
         }
 
-        CachedPlayer cachedPlayer = deltaRedisApi.getPlayer(nameToTp);
-        if(cachedPlayer != null)
-        {
-            // Format: DestName/\DestServer
-            String message = nameToTp.toLowerCase() + "/\\" +
-                deltaRedisApi.getServerName();
+        // Check other servers
+        String senderName = sender.getName();
+        deltaRedisApi.findPlayer(nameToTp, cachedPlayer -> {
 
-            deltaRedisApi.publish(cachedPlayer.getServer(), "DeltaEss:TpHere", message);
-            deltaTeleport.addTpRequest(nameToTp, sender.getName());
-            return true;
-        }
-        else { return false; }
+            Player originalSender = Bukkit.getPlayer(senderName);
+            if(originalSender != null && originalSender.isOnline())
+            {
+                if(cachedPlayer != null)
+                {
+                    // Format: DestName/\DestServer
+                    String message = nameToTp.toLowerCase() + "/\\" +
+                        deltaRedisApi.getServerName();
+
+                    deltaRedisApi.publish(cachedPlayer.getServer(), "DeltaEss:TpHere", message);
+                    deltaTeleport.addTpRequest(nameToTp, sender.getName());
+
+                    originalSender.sendMessage(Prefixes.SUCCESS + "Teleporting player here ...");
+                }
+                else
+                {
+                    originalSender.sendMessage(Prefixes.FAILURE + "Player not found.");
+                }
+            }
+        });
     }
 }

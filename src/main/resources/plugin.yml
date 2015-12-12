@@ -1,6 +1,6 @@
 name: DeltaEssentials
 main: com.yahoo.tracebachi.DeltaEssentials.DeltaEssentialsPlugin
-version: 1.0
+version: 1.1
 author: Trace Bachi (tracebachi@yahoo.com, BigBossZee)
 depend: [DeltaRedis, Essentials, Herochat]
 commands:
@@ -17,7 +17,7 @@ commands:
     description: Teleports players.
   tphere:
     description: Teleports other to self.
-  tpa:
+  tpahere:
     description: Sends teleport request.
   tpaccept:
     description: Accepts teleport request.

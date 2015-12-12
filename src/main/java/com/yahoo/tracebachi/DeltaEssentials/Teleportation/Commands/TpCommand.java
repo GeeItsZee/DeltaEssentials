@@ -19,8 +19,7 @@ package com.yahoo.tracebachi.DeltaEssentials.Teleportation.Commands;
 import com.google.common.base.Preconditions;
 import com.yahoo.tracebachi.DeltaEssentials.Prefixes;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.DeltaTeleport;
-import com.yahoo.tracebachi.DeltaRedis.Shared.Cache.CachedPlayer;
-import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.DeltaRedisApi;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -63,14 +62,7 @@ public class TpCommand implements CommandExecutor
             }
             else
             {
-                if(!teleport((Player) sender, args[0]))
-                {
-                    sender.sendMessage(Prefixes.FAILURE + "Player not found.");
-                }
-                else
-                {
-                    sender.sendMessage(Prefixes.SUCCESS + "Teleporting to player ...");
-                }
+                teleport((Player) sender, args[0]);
             }
         }
         else if(args.length >= 2 && sender.hasPermission("DeltaEss.Tp.Other"))
@@ -84,14 +76,7 @@ public class TpCommand implements CommandExecutor
             }
             else
             {
-                if(!teleport(startPlayer, args[1]))
-                {
-                    sender.sendMessage(Prefixes.FAILURE + "Player not found.");
-                }
-                else
-                {
-                    sender.sendMessage(Prefixes.SUCCESS + "Teleporting to player ...");
-                }
+                teleport(startPlayer, args[1]);
             }
         }
         else
@@ -101,7 +86,7 @@ public class TpCommand implements CommandExecutor
         return true;
     }
 
-    private boolean teleport(Player playerToTp, String destName)
+    private void teleport(Player playerToTp, String destName)
     {
         Preconditions.checkNotNull(playerToTp, "Player to TP cannot be null.");
         Preconditions.checkNotNull(destName, "Destination cannot be null.");
@@ -110,20 +95,32 @@ public class TpCommand implements CommandExecutor
         if(destPlayer != null && destPlayer.isOnline())
         {
             deltaTeleport.teleportWithEvent(playerToTp, destPlayer);
-            return true;
+            return;
         }
 
-        CachedPlayer cachedPlayer = deltaRedisApi.getPlayer(destName);
-        if(cachedPlayer != null)
-        {
-            // Format: SenderName/\DestName
-            String message = playerToTp.getName().toLowerCase() + "/\\" +
-                destName.toLowerCase();
+        // Check other servers
+        String senderName = playerToTp.getName();
+        deltaRedisApi.findPlayer(destName, cachedPlayer -> {
 
-            deltaRedisApi.publish(cachedPlayer.getServer(), "DeltaEss:Tp", message);
-            deltaTeleport.sendToServer(playerToTp, cachedPlayer.getServer());
-            return true;
-        }
-        else { return false; }
+            Player originalSender = Bukkit.getPlayer(senderName);
+            if(originalSender != null && originalSender.isOnline())
+            {
+                if(cachedPlayer != null)
+                {
+                    // Format: SenderName/\DestName
+                    String message = playerToTp.getName().toLowerCase() + "/\\" +
+                        destName.toLowerCase();
+
+                    deltaRedisApi.publish(cachedPlayer.getServer(), "DeltaEss:Tp", message);
+                    deltaTeleport.sendToServer(playerToTp, cachedPlayer.getServer());
+
+                    originalSender.sendMessage(Prefixes.SUCCESS + "Teleporting player here ...");
+                }
+                else
+                {
+                    originalSender.sendMessage(Prefixes.FAILURE + "Player not found.");
+                }
+            }
+        });
     }
 }

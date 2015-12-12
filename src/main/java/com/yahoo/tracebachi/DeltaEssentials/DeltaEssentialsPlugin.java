@@ -21,7 +21,9 @@ import com.google.common.io.ByteStreams;
 import com.yahoo.tracebachi.DeltaEssentials.Chat.DeltaChat;
 import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerServerSwitchEvent;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.DeltaTeleport;
-import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.IDeltaRedisPlugin;
+import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.LoggablePlugin;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
@@ -38,7 +40,7 @@ import java.util.stream.Collectors;
 /**
  * Created by Trace Bachi (tracebachi@yahoo.com, BigBossZee) on 12/5/15.
  */
-public class DeltaEssentialsPlugin extends JavaPlugin implements Loggable
+public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
 {
     private boolean debugMode;
     private HashSet<String> blockedServers = new HashSet<>();
@@ -64,19 +66,14 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements Loggable
         blockedServers.addAll(blockedServerList.stream().map(String::toLowerCase).collect(Collectors.toList()));
 
         PluginManager pluginManager = getServer().getPluginManager();
-        IDeltaRedisPlugin deltaRedisPlugin = (IDeltaRedisPlugin) pluginManager.getPlugin("DeltaRedis");
+        DeltaRedisPlugin deltaRedisPlugin = (DeltaRedisPlugin) pluginManager.getPlugin("DeltaRedis");
+        DeltaRedisApi deltaRedisApi = deltaRedisPlugin.getDeltaRedisApi();
 
-        if(deltaRedisPlugin == null)
-        {
-            getLogger().severe("DeltaChat does not function without DeltaRedis. Please install DeltaRedis.");
-            return;
-        }
-
-        moveToCommand = new MoveToCommand(this, deltaRedisPlugin.getDeltaRedisApi());
+        moveToCommand = new MoveToCommand(this, deltaRedisApi);
         getCommand("moveto").setExecutor(moveToCommand);
 
-        deltaChat = new DeltaChat(this, deltaRedisPlugin.getDeltaRedisApi(), ignoredChannelList);
-        deltaTeleport = new DeltaTeleport(this, deltaRedisPlugin.getDeltaRedisApi());
+        deltaChat = new DeltaChat(this, deltaRedisApi, ignoredChannelList);
+        deltaTeleport = new DeltaTeleport(this, deltaRedisApi);
 
         Messenger messenger = getServer().getMessenger();
         messenger.registerOutgoingPluginChannel(this, "BungeeCord");

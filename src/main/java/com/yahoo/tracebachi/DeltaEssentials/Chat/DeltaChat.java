@@ -20,8 +20,8 @@ import com.yahoo.tracebachi.DeltaEssentials.Chat.Commands.ReplyCommand;
 import com.yahoo.tracebachi.DeltaEssentials.Chat.Commands.TellCommand;
 import com.yahoo.tracebachi.DeltaEssentials.DeltaEssentialsPlugin;
 import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerTellEvent;
-import com.yahoo.tracebachi.DeltaEssentials.Loggable;
-import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.DeltaRedisApi;
+import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.LoggablePlugin;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
 
 import java.util.*;
@@ -29,8 +29,11 @@ import java.util.*;
 /**
  * Created by Trace Bachi (tracebachi@yahoo.com, BigBossZee) on 12/5/15.
  */
-public class DeltaChat implements Loggable
+public class DeltaChat implements LoggablePlugin
 {
+    public static final String HERO_CHAT_CHANNEL = "DE-HeroChat";
+    public static final String TELL_CHANNEL = "DE-Tell";
+
     private DeltaEssentialsPlugin plugin;
     private HashMap<String, String> replyMap;
     private HashSet<String> ignoredChannels;

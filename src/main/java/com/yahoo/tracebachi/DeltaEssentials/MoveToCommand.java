@@ -16,8 +16,8 @@
  */
 package com.yahoo.tracebachi.DeltaEssentials;
 
-import com.yahoo.tracebachi.DeltaRedis.Shared.Channels;
-import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.DeltaRedisApi;
+import com.yahoo.tracebachi.DeltaRedis.Shared.Redis.Channels;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -54,7 +54,7 @@ public class MoveToCommand implements CommandExecutor
         Set<String> blockedServers = essentialsPlugin.getBlockedServers();
         String currentServer = deltaRedisApi.getServerName();
 
-        for(String serverName : deltaRedisApi.getServers())
+        for(String serverName : deltaRedisApi.getCachedServers())
         {
             if(!serverName.equals(Channels.BUNGEECORD))
             {

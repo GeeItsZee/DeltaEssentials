@@ -18,12 +18,12 @@ package com.yahoo.tracebachi.DeltaEssentials.Teleportation;
 
 import com.yahoo.tracebachi.DeltaEssentials.DeltaEssentialsPlugin;
 import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerTeleportEvent;
-import com.yahoo.tracebachi.DeltaEssentials.Loggable;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.Commands.TpAcceptCommand;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.Commands.TpCommand;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.Commands.TpHereCommand;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.Commands.TpaCommand;
-import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.DeltaRedisApi;
+import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.LoggablePlugin;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
@@ -35,7 +35,7 @@ import java.util.Map;
 /**
  * Created by Trace Bachi (tracebachi@yahoo.com, BigBossZee) on 12/5/15.
  */
-public class DeltaTeleport implements Loggable
+public class DeltaTeleport implements LoggablePlugin
 {
     private DeltaEssentialsPlugin plugin;
     private HashMap<String, TpRequest> requestMap;
@@ -60,7 +60,7 @@ public class DeltaTeleport implements Loggable
 
         plugin.getCommand("tp").setExecutor(tpCommand);
         plugin.getCommand("tphere").setExecutor(tpHereCommand);
-        plugin.getCommand("tpa").setExecutor(tpaCommand);
+        plugin.getCommand("tpahere").setExecutor(tpaCommand);
         plugin.getCommand("tpaccept").setExecutor(tpAcceptCommand);
 
         tpListener = new TpListener(this);
@@ -105,7 +105,7 @@ public class DeltaTeleport implements Loggable
 
         if(tpaCommand != null)
         {
-            plugin.getCommand("tpa").setExecutor(null);
+            plugin.getCommand("tpahere").setExecutor(null);
             tpaCommand.shutdown();
             tpaCommand = null;
         }
