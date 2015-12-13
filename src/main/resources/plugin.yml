@@ -1,6 +1,6 @@
 name: DeltaEssentials
 main: com.yahoo.tracebachi.DeltaEssentials.DeltaEssentialsPlugin
-version: 1.1
+version: 1.2
 author: Trace Bachi (tracebachi@yahoo.com, BigBossZee)
 depend: [DeltaRedis, Essentials, Herochat]
 commands:
@@ -23,6 +23,8 @@ commands:
     description: Accepts teleport request.
   kick:
     description: Kicks the player from the server.
+  jail:
+    description: Sends a player to the jail server and jails them.
 
 permissions:
   DeltaEss.Tell:
@@ -47,3 +49,5 @@ permissions:
     description: Accepts a teleport request.
   DeltaEss.Kick:
     description: Allows the player to kick others.
+  DeltaEss.Jail:
+    description: Allows the player to jail others.

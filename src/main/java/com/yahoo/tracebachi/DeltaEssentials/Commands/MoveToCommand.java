@@ -14,8 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with DeltaEssentials.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.yahoo.tracebachi.DeltaEssentials;
+package com.yahoo.tracebachi.DeltaEssentials.Commands;
 
+import com.yahoo.tracebachi.DeltaEssentials.CallbackUtil;
+import com.yahoo.tracebachi.DeltaEssentials.DeltaEssentialsPlugin;
+import com.yahoo.tracebachi.DeltaEssentials.Prefixes;
 import com.yahoo.tracebachi.DeltaRedis.Shared.Redis.Channels;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
@@ -32,6 +35,8 @@ import java.util.*;
  */
 public class MoveToCommand implements CommandExecutor
 {
+    public static final String MOVE_CHANNEL = "DE-Move";
+
     private DeltaEssentialsPlugin essentialsPlugin;
     private DeltaRedisApi deltaRedisApi;
 
@@ -50,33 +55,26 @@ public class MoveToCommand implements CommandExecutor
     @Override
     public boolean onCommand(CommandSender sender, Command command, String s, String[] args)
     {
-        Set<String> servers = new HashSet<>();
+        Set<String> servers = new HashSet<>(deltaRedisApi.getCachedServers());
         Set<String> blockedServers = essentialsPlugin.getBlockedServers();
         String currentServer = deltaRedisApi.getServerName();
 
-        for(String serverName : deltaRedisApi.getCachedServers())
-        {
-            if(!serverName.equals(Channels.BUNGEECORD))
-            {
-                servers.add(serverName.toLowerCase());
-            }
-        }
+        // Remove the Bungeecord server as players cannot move to it
+        servers.remove(Channels.BUNGEECORD);
 
         if(args.length == 0)
         {
             sender.sendMessage(Prefixes.INFO + "You are currently in " +
                 ChatColor.WHITE + currentServer);
-            sender.sendMessage(Prefixes.INFO + "/moveto server [player]");
+            sender.sendMessage(Prefixes.INFO + "/moveto <server>");
 
             List<String> sorted = Arrays.asList(servers.toArray(new String[servers.size()]));
             Collections.sort(sorted);
             String joined = String.join(ChatColor.GRAY + ", " + ChatColor.WHITE, sorted);
 
             sender.sendMessage(Prefixes.INFO + "Online servers: " + ChatColor.WHITE + joined);
-            return true;
         }
-
-        if(args.length == 1)
+        else if(args.length == 1)
         {
             if(!(sender instanceof Player))
             {
@@ -88,18 +86,18 @@ public class MoveToCommand implements CommandExecutor
                 sender.sendMessage(Prefixes.FAILURE +
                     "You do not have permission to use that command.");
             }
-            else if(currentServer.equalsIgnoreCase(args[0]))
+            else if(currentServer.equals(args[0]))
             {
                 sender.sendMessage(Prefixes.FAILURE +
                     "You are already connected to that server.");
             }
-            else if(blockedServers.contains(args[0].toLowerCase()) &&
+            else if(blockedServers.contains(args[0]) &&
                 !sender.hasPermission("DeltaEss.MoveTo.Bypass"))
             {
                 sender.sendMessage(Prefixes.FAILURE +
                     "That server is blocked and you do not have permission to bypass it.");
             }
-            else if(!servers.contains(args[0].toLowerCase()))
+            else if(!servers.contains(args[0]))
             {
                 sender.sendMessage(Prefixes.FAILURE +
                     "There is no server online named " + ChatColor.WHITE + args[0]);
@@ -108,7 +106,7 @@ public class MoveToCommand implements CommandExecutor
             {
                 sender.sendMessage(Prefixes.SUCCESS +
                     "Attempting to switch servers ...");
-                essentialsPlugin.sendToServer((Player) sender, args[0].toLowerCase());
+                essentialsPlugin.sendToServer((Player) sender, args[0]);
             }
         }
         else
@@ -118,40 +116,63 @@ public class MoveToCommand implements CommandExecutor
                 sender.sendMessage(Prefixes.FAILURE +
                     "You do not have permission to use that command.");
             }
-            else if(currentServer.equalsIgnoreCase(args[0]))
+            else if(currentServer.equals(args[0]))
             {
                 sender.sendMessage(Prefixes.FAILURE +
                     "You are already connected to that server.");
             }
-            else if(blockedServers.contains(args[0].toLowerCase()) &&
+            else if(blockedServers.contains(args[0]) &&
                 !sender.hasPermission("DeltaEss.MoveTo.Bypass"))
             {
                 sender.sendMessage(Prefixes.FAILURE +
                     "That server is blocked and you do not have permission to bypass it.");
             }
-            else if(!servers.contains(args[0].toLowerCase()))
+            else if(!servers.contains(args[0]))
             {
                 sender.sendMessage(Prefixes.FAILURE +
                     "There is no server online named " + ChatColor.WHITE + args[0]);
             }
             else
             {
-                Player target = Bukkit.getPlayer(args[1]);
+                String senderName = sender.getName();
+                String targetName = args[1].toLowerCase();
+                Player target = Bukkit.getPlayer(targetName);
 
-                if(target == null || !target.isOnline())
-                {
-                    sender.sendMessage(Prefixes.FAILURE +
-                        "That player is not online.");
-                }
-                else
+                if(target != null && target.isOnline())
                 {
                     sender.sendMessage(Prefixes.SUCCESS +
                         "Attempting to switch servers ...");
-                    essentialsPlugin.sendToServer(target, args[0].toLowerCase());
+                    essentialsPlugin.sendToServer(target, args[0]);
+                }
+                else
+                {
+                    deltaRedisApi.findPlayer(targetName, cachedPlayer ->
+                    {
+                        if(cachedPlayer != null)
+                        {
+                            if(!cachedPlayer.getServer().equals(args[0]))
+                            {
+                                deltaRedisApi.publish(cachedPlayer.getServer(), MOVE_CHANNEL,
+                                    senderName + "/\\" + targetName + "/\\" + args[0]);
+
+                                CallbackUtil.sendMessage(senderName,
+                                    Prefixes.SUCCESS + "Sending player to " + args[0]);
+                            }
+                            else
+                            {
+                                CallbackUtil.sendMessage(senderName,
+                                    Prefixes.FAILURE + "Player is already in that server.");
+                            }
+                        }
+                        else
+                        {
+                            CallbackUtil.sendMessage(senderName,
+                                Prefixes.FAILURE + "Player not found.");
+                        }
+                    });
                 }
             }
         }
-
         return true;
     }
 }

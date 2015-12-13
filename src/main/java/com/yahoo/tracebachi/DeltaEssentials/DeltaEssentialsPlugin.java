@@ -19,6 +19,9 @@ package com.yahoo.tracebachi.DeltaEssentials;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import com.yahoo.tracebachi.DeltaEssentials.Chat.DeltaChat;
+import com.yahoo.tracebachi.DeltaEssentials.Commands.JailCommand;
+import com.yahoo.tracebachi.DeltaEssentials.Commands.KickCommand;
+import com.yahoo.tracebachi.DeltaEssentials.Commands.MoveToCommand;
 import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerServerSwitchEvent;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.DeltaTeleport;
 import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.LoggablePlugin;
@@ -46,7 +49,8 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
     private HashSet<String> blockedServers = new HashSet<>();
     private MoveToCommand moveToCommand;
     private KickCommand kickCommand;
-    private KickListener kickListener;
+    private JailCommand jailCommand;
+    private GeneralListener generalListener;
 
     private DeltaChat deltaChat;
     private DeltaTeleport deltaTeleport;
@@ -64,6 +68,8 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
         reloadConfig();
         List<String> blockedServerList = getConfig().getStringList("blocked_servers");
         List<String> ignoredChannelList = getConfig().getStringList("ignored_channels");
+        List<String> validJails = getConfig().getStringList("valid_jails");
+        String jailServer = getConfig().getString("jail_server");
         debugMode = getConfig().getBoolean("debug_mode", false);
         blockedServers.addAll(blockedServerList.stream().map(String::toLowerCase).collect(Collectors.toList()));
 
@@ -75,24 +81,30 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
         getCommand("moveto").setExecutor(moveToCommand);
         kickCommand = new KickCommand(deltaRedisApi);
         getCommand("kick").setExecutor(kickCommand);
+        jailCommand = new JailCommand(jailServer, validJails, this, deltaRedisApi);
+        getCommand("jail").setExecutor(jailCommand);
 
         deltaChat = new DeltaChat(this, deltaRedisApi, ignoredChannelList);
         deltaTeleport = new DeltaTeleport(this, deltaRedisApi);
 
+        generalListener = new GeneralListener(deltaRedisApi.getServerName(), this);
+        getServer().getPluginManager().registerEvents(generalListener, this);
+
         Messenger messenger = getServer().getMessenger();
         messenger.registerOutgoingPluginChannel(this, "BungeeCord");
-
-        kickListener = new KickListener();
-        getServer().getPluginManager().registerEvents(kickListener, this);
     }
 
     @Override
     public void onDisable()
     {
-        kickListener = null;
-
         Messenger messenger = getServer().getMessenger();
         messenger.unregisterIncomingPluginChannel(this);
+
+        if(generalListener != null)
+        {
+            generalListener.shutdown();
+            generalListener = null;
+        }
 
         if(deltaTeleport != null)
         {
@@ -104,6 +116,13 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
         {
             deltaChat.shutdown();
             deltaChat = null;
+        }
+
+        if(jailCommand != null)
+        {
+            getCommand("jail").setExecutor(null);
+            jailCommand.shutdown();
+            jailCommand = null;
         }
 
         if(kickCommand != null)
