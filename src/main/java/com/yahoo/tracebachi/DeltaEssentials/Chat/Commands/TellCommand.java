@@ -54,75 +54,95 @@ public class TellCommand implements CommandExecutor
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String s, String[] args)
+    public boolean onCommand(CommandSender commandSender, Command command, String s, String[] args)
     {
-        if(!sender.hasPermission("DeltaEss.Tell"))
+        if(!commandSender.hasPermission("DeltaEss.Tell"))
         {
-            sender.sendMessage(Prefixes.FAILURE + "You do not have permission to do that.");
+            commandSender.sendMessage(Prefixes.FAILURE + "You do not have permission to do that.");
             return true;
         }
 
         if(args.length <= 1)
         {
-            sender.sendMessage(Prefixes.INFO + "/tell [name] [message]");
-            sender.sendMessage(Prefixes.INFO + "/reply [message]");
+            commandSender.sendMessage(Prefixes.INFO + "/tell [name] [message]");
+            commandSender.sendMessage(Prefixes.INFO + "/reply [message]");
             return true;
         }
 
-        String receiverName = args[0].toLowerCase();
+        String sender = commandSender.getName();
+        String receiver = args[0];
         String message = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-        String formatted;
-        String senderName = sender.getName().toLowerCase();
-        boolean allowColors = sender.hasPermission("DeltaEss.Tell.Color");
-        PlayerTellEvent event = deltaChat.tellWithEvent(senderName, receiverName, message);
+        boolean allowColors = commandSender.hasPermission("DeltaEss.Tell.Color");
 
-        // Call event
-        if(!event.isCancelled())
+        if(receiver.equalsIgnoreCase("console"))
         {
-            message = event.getMessage();
-            formatted = MessageUtils.format(senderName, receiverName, message, allowColors);
-        }
-        else { return true; }
+            PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message);
+            if(tellEvent.isCancelled()) { return true; }
 
-        // Update the reply map
-        replyMap.put(senderName, receiverName);
+            message = tellEvent.getMessage();
+            String formatted = MessageUtils.format(sender, receiver, message, allowColors);
 
-        // Check if the receiver is console
-        if(receiverName.equals("console"))
-        {
             Bukkit.getConsoleSender().sendMessage(formatted);
-            sender.sendMessage(formatted);
-
-            replyMap.put(receiverName, senderName);
-            return true;
+            commandSender.sendMessage(formatted);
+            replyMap.put("CONSOLE", sender);
+            replyMap.put(sender, "CONSOLE");
         }
-
-        // Check if the receiver is online
-        Player receiver = Bukkit.getPlayer(receiverName);
-        if(receiver != null && receiver.isOnline())
+        else
         {
-            receiver.sendMessage(formatted);
-            sender.sendMessage(formatted);
+            Player receiverPlayer = Bukkit.getPlayer(receiver);
 
-            replyMap.put(receiverName, senderName);
-            return true;
-        }
-
-        // Check other servers
-        String dataString = MessageUtils.toByteArrayDataString(
-            senderName, receiverName, allowColors, message);
-        deltaRedisApi.findPlayer(receiverName, cachedPlayer -> {
-            if(cachedPlayer != null)
+            if(receiverPlayer != null && receiverPlayer.isOnline())
             {
-                String destination = cachedPlayer.getServer();
-                deltaRedisApi.publish(destination, DeltaChat.TELL_CHANNEL, dataString);
-                sender.sendMessage(formatted);
+                receiver = receiverPlayer.getName();
+
+                PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message);
+                if(tellEvent.isCancelled()) { return true; }
+
+                message = tellEvent.getMessage();
+                String formatted = MessageUtils.format(sender, receiver, message, allowColors);
+
+                receiverPlayer.sendMessage(formatted);
+                commandSender.sendMessage(formatted);
+                replyMap.put(receiver, sender);
+                replyMap.put(sender, receiver);
             }
             else
             {
-                sender.sendMessage(Prefixes.FAILURE + receiverName + " is not online.");
+                PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message);
+                if(tellEvent.isCancelled()) { return true; }
+
+                message = tellEvent.getMessage();
+                String finalReceiver = receiver;
+                String formatted = MessageUtils.format(sender, receiver, message, allowColors);
+                String dataString = MessageUtils.toByteArrayDataString(
+                    sender, receiver, allowColors, message);
+
+                deltaRedisApi.findPlayer(receiver, cachedPlayer -> {
+                    if(cachedPlayer != null)
+                    {
+                        String destination = cachedPlayer.getServer();
+                        deltaRedisApi.publish(destination, DeltaChat.TELL_CHANNEL, dataString);
+
+                        replyMap.put(sender, finalReceiver);
+                        sendMessageFromCallback(sender, formatted);
+                    }
+                    else
+                    {
+                        sendMessageFromCallback(sender, Prefixes.FAILURE + finalReceiver + " is not online.");
+                    }
+                });
             }
-        });
+        }
         return true;
+    }
+
+    private void sendMessageFromCallback(String playerName, String message)
+    {
+        Player player = Bukkit.getPlayer(playerName);
+
+        if(player != null && player.isOnline())
+        {
+            player.sendMessage(message);
+        }
     }
 }

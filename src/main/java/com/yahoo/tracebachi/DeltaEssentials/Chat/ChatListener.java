@@ -20,10 +20,10 @@ import com.dthielke.herochat.Channel;
 import com.dthielke.herochat.ChatCompleteEvent;
 import com.dthielke.herochat.Herochat;
 import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerTellEvent;
 import com.yahoo.tracebachi.DeltaRedis.Shared.Redis.Channels;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.Commands.Prefixes;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent;
 import org.bukkit.Bukkit;
@@ -108,43 +108,26 @@ public class ChatListener implements Listener
     private void onTellMessage(DeltaRedisMessageEvent event)
     {
         ByteArrayDataInput in = ByteStreams.newDataInput(event.getMessage().getBytes(StandardCharsets.UTF_8));
-        String sender = in.readUTF().toLowerCase();
-        String receiver = in.readUTF().toLowerCase();
+        String sender = in.readUTF();
+        String receiver = in.readUTF();
         String message = in.readUTF();
-        String formatted;
-        PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message);
-
-        // Call event
-        if(!tellEvent.isCancelled())
-        {
-            boolean allowColors = in.readBoolean();
-            message = tellEvent.getMessage();
-            formatted = MessageUtils.format(sender, receiver, message, allowColors);
-        }
-        else { return; }
-
-        // If player is online
+        boolean allowColors = in.readBoolean();
         Player player = Bukkit.getPlayer(receiver);
+
         if(player != null && player.isOnline())
         {
-            player.sendMessage(formatted);
+            receiver = player.getName();
 
-            if(!sender.equalsIgnoreCase("console"))
-            {
-                replyMap.put(receiver, sender);
-            }
+            PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message);
+            if(tellEvent.isCancelled()) { return; }
+
+            message = tellEvent.getMessage();
+            player.sendMessage(MessageUtils.format(sender, receiver, message, allowColors));
+            replyMap.put(receiver, sender);
         }
-        else
+        else if(!sender.equalsIgnoreCase("console"))
         {
-            // Else, send a "Player not found" message
-            ByteArrayDataOutput output = ByteStreams.newDataOutput();
-            output.writeUTF("console");
-            output.writeUTF(receiver);
-            output.writeUTF("Player not found.");
-            output.writeBoolean(true);
-            String outputStr = new String(output.toByteArray(), StandardCharsets.UTF_8);
-
-            deltaRedisApi.publish(event.getSender(), DeltaChat.TELL_CHANNEL, outputStr);
+            deltaRedisApi.sendMessageToPlayer(sender, Prefixes.FAILURE + "Player not found.");
         }
     }
 }
