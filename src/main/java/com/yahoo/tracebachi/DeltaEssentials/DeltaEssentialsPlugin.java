@@ -45,6 +45,8 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
     private boolean debugMode;
     private HashSet<String> blockedServers = new HashSet<>();
     private MoveToCommand moveToCommand;
+    private KickCommand kickCommand;
+    private KickListener kickListener;
 
     private DeltaChat deltaChat;
     private DeltaTeleport deltaTeleport;
@@ -71,17 +73,24 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
 
         moveToCommand = new MoveToCommand(this, deltaRedisApi);
         getCommand("moveto").setExecutor(moveToCommand);
+        kickCommand = new KickCommand(deltaRedisApi);
+        getCommand("kick").setExecutor(kickCommand);
 
         deltaChat = new DeltaChat(this, deltaRedisApi, ignoredChannelList);
         deltaTeleport = new DeltaTeleport(this, deltaRedisApi);
 
         Messenger messenger = getServer().getMessenger();
         messenger.registerOutgoingPluginChannel(this, "BungeeCord");
+
+        kickListener = new KickListener();
+        getServer().getPluginManager().registerEvents(kickListener, this);
     }
 
     @Override
     public void onDisable()
     {
+        kickListener = null;
+
         Messenger messenger = getServer().getMessenger();
         messenger.unregisterIncomingPluginChannel(this);
 
@@ -95,6 +104,13 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
         {
             deltaChat.shutdown();
             deltaChat = null;
+        }
+
+        if(kickCommand != null)
+        {
+            getCommand("kick").setExecutor(null);
+            kickCommand.shutdown();
+            kickCommand = null;
         }
 
         if(moveToCommand != null)

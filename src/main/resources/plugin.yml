@@ -21,6 +21,8 @@ commands:
     description: Sends teleport request.
   tpaccept:
     description: Accepts teleport request.
+  kick:
+    description: Kicks the player from the server.
 
 permissions:
   DeltaEss.Tell:
@@ -43,3 +45,5 @@ permissions:
     description: Sends a teleport request to another.
   DeltaEss.Tpa.Accept:
     description: Accepts a teleport request.
+  DeltaEss.Kick:
+    description: Allows the player to kick others.

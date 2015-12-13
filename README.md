@@ -7,6 +7,7 @@ DeltaRedis for communication.
 - Controlled server switching
 - Chat (personal messages and HeroChat integration)
 - Teleportation
+- Kicks
 
 # Licence ([GPLv3](http://www.gnu.org/licenses/gpl-3.0.en.html))
 ```
