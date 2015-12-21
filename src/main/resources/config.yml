@@ -5,29 +5,41 @@
 # Names of servers that normal players cannot access. They are case-sensitive.
 # For administrators, add permission 'DeltaEss.MoveTo.Bypass' to allow them
 # to bypass the blocks.
-blocked_servers: []
+BlockedServers:
+  - StaffOnly
 
 ###############################################################################
 
 # Channels names (registered in HeroChat) that will be ignored and not sent
 # to other servers.
-ignored_channels:
-  - Faction
-  - Allies
+IgnoredChannels:
   - Local
 
 ###############################################################################
 
 # Name of the server where players should be sent when jailed.
-jail_server: world
+JailServer: world
 
 # Names of the jails that exist on the jail server.
-valid_jails:
-  - lava
-  - nether
-  - spawn
+ValidJails:
+  - Alcatraz
+  - Leavenworth
+
+###############################################################################
+
+# List of databases that plugins should be able to access.
+Databases:
+
+  # Name the DB for other plugins.
+  Main:
+    # Username and password for connecting to the database.
+    Username: mc
+    # Password for connecting to the database.
+    Password: mc
+    # This should have three parts: the main URL, the port number, and database name.
+    URL: localhost:5432/mc
 
 ###############################################################################
 
 # Debug Mode (for developers)
-debug_mode: False
+DebugMode: False

@@ -27,17 +27,17 @@ import com.yahoo.tracebachi.DeltaEssentials.Teleportation.DeltaTeleport;
 import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.LoggablePlugin;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisPlugin;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.messaging.Messenger;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -46,7 +46,10 @@ import java.util.stream.Collectors;
 public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
 {
     private boolean debugMode;
+
     private HashSet<String> blockedServers = new HashSet<>();
+    private HashMap<String, HikariDataSource> sources = new HashMap<>();
+
     private MoveToCommand moveToCommand;
     private KickCommand kickCommand;
     private JailCommand jailCommand;
@@ -66,11 +69,11 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
     public void onEnable()
     {
         reloadConfig();
-        List<String> blockedServerList = getConfig().getStringList("blocked_servers");
-        List<String> ignoredChannelList = getConfig().getStringList("ignored_channels");
-        List<String> validJails = getConfig().getStringList("valid_jails");
-        String jailServer = getConfig().getString("jail_server");
-        debugMode = getConfig().getBoolean("debug_mode", false);
+        List<String> blockedServerList = getConfig().getStringList("BlockedServers");
+        List<String> ignoredChannelList = getConfig().getStringList("IgnoredChannels");
+        List<String> validJails = getConfig().getStringList("ValidJails");
+        String jailServer = getConfig().getString("JailServer");
+        debugMode = getConfig().getBoolean("DebugMode", false);
         blockedServers.addAll(blockedServerList.stream().map(String::toLowerCase).collect(Collectors.toList()));
 
         PluginManager pluginManager = getServer().getPluginManager();
@@ -92,11 +95,15 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
 
         Messenger messenger = getServer().getMessenger();
         messenger.registerOutgoingPluginChannel(this, "BungeeCord");
+
+        createDataSources();
     }
 
     @Override
     public void onDisable()
     {
+        closeDataSources();
+
         Messenger messenger = getServer().getMessenger();
         messenger.unregisterIncomingPluginChannel(this);
 
@@ -195,5 +202,71 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
     public Set<String> getBlockedServers()
     {
         return Collections.unmodifiableSet(blockedServers);
+    }
+
+    public HikariDataSource getDataSource(String name)
+    {
+        return sources.get(name);
+    }
+
+    private void createDataSources()
+    {
+        ConfigurationSection section = getConfig().getConfigurationSection("Databases");
+        Set<String> sourceNames = section.getKeys(false);
+
+        for(String sourceName : sourceNames)
+        {
+            String username = section.getString(sourceName + ".Username");
+            String password = section.getString(sourceName + ".Password");
+            String url = section.getString(sourceName + ".URL");
+
+            try
+            {
+                getLogger().info("Creating DataSource (" + sourceName + "): ............... ");
+                HikariDataSource dataSource = createDataSource(username, password, url);
+                sources.put(sourceName, dataSource);
+            }
+            catch(Exception ex)
+            {
+                getLogger().severe("Failed to create DataSource: " + sourceName);
+                ex.printStackTrace();
+                getLogger().severe("Failed to create DataSource: " + sourceName);
+            }
+        }
+    }
+
+    private void closeDataSources()
+    {
+        for(Map.Entry<String, HikariDataSource> entry : sources.entrySet())
+        {
+            try
+            {
+                // Close the data source
+                if(entry.getValue() != null)
+                {
+                    entry.getValue().close();
+                }
+            }
+            catch(Exception ex)
+            {
+                getLogger().severe("Failed to close DataSource: " + entry.getKey());
+                ex.printStackTrace();
+                getLogger().severe("Failed to close DataSource: " + entry.getKey());
+            }
+        }
+    }
+
+    private HikariDataSource createDataSource(String username, String password, String url)
+    {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:mysql://" + url);
+        config.setUsername(username);
+        config.setPassword(password);
+        config.addDataSourceProperty("cachePrepStmts", "true");
+        config.addDataSourceProperty("prepStmtCacheSize", "250");
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+        config.addDataSourceProperty("useServerPrepStmts", "true");
+
+        return new HikariDataSource(config);
     }
 }
