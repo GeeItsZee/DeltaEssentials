@@ -57,7 +57,7 @@ public class TpCommand implements TabExecutor
 
         if(args.length != 0)
         {
-            String lastArg = args[args.length - 1];
+            String lastArg = args[args.length - 1].toLowerCase();
             for(String name : deltaRedisApi.getCachedPlayers())
             {
                 if(name.startsWith(lastArg))
