@@ -65,7 +65,14 @@ public class TpListener implements Listener
 
                 if(player != null && player.isOnline())
                 {
-                    deltaTeleport.teleportWithEvent(player, destPlayer);
+                    if(player.canSee(destPlayer))
+                    {
+                        deltaTeleport.teleportWithEvent(player, destPlayer);
+                    }
+                    else
+                    {
+                        player.sendMessage(Prefixes.FAILURE + "Player not found.");
+                    }
                 }
                 else
                 {
@@ -116,12 +123,19 @@ public class TpListener implements Listener
             Player destPlayer = Bukkit.getPlayer(request.getSender());
             if(destPlayer != null && destPlayer.isOnline())
             {
-                deltaTeleport.teleportWithEvent(player, destPlayer);
+                if(player.canSee(destPlayer))
+                {
+                    deltaTeleport.teleportWithEvent(player, destPlayer);
+                }
+                else
+                {
+                    player.sendMessage(Prefixes.FAILURE + "Player not found.");
+                }
             }
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event)
     {
         Player player = event.getPlayerToTeleport();

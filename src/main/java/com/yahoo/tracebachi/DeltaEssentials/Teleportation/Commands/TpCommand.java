@@ -94,7 +94,14 @@ public class TpCommand implements CommandExecutor
         Player destPlayer = Bukkit.getPlayer(destName);
         if(destPlayer != null && destPlayer.isOnline())
         {
-            deltaTeleport.teleportWithEvent(playerToTp, destPlayer);
+            if(playerToTp.canSee(destPlayer))
+            {
+                deltaTeleport.teleportWithEvent(playerToTp, destPlayer);
+            }
+            else
+            {
+                playerToTp.sendMessage(Prefixes.FAILURE + "Player not found.");
+            }
             return;
         }
 
