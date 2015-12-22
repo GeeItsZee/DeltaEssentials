@@ -17,9 +17,10 @@
 package com.yahoo.tracebachi.DeltaEssentials.Teleportation.Commands;
 
 import com.google.common.base.Preconditions;
-import com.yahoo.tracebachi.DeltaEssentials.Prefixes;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.DeltaTeleport;
+import com.yahoo.tracebachi.DeltaEssentials.Teleportation.TpListener;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -77,16 +78,16 @@ public class TpaCommand implements CommandExecutor
         Player destPlayer = Bukkit.getPlayer(destName);
         if(destPlayer != null && destPlayer.isOnline())
         {
-            destPlayer.sendMessage(Prefixes.INFO + ChatColor.WHITE + sender.getName() +
-                ChatColor.GRAY + " sent you a TP request. Use /tpaccept to accept.");
+            destPlayer.sendMessage(Prefixes.INFO + Prefixes.input(sender.getName()) +
+                " sent you a TP request. Use /tpaccept to accept.");
             deltaTeleport.addTpRequest(destName, sender.getName());
             return;
         }
 
         // Check other servers
         String senderName = sender.getName();
-        deltaRedisApi.findPlayer(destName, cachedPlayer -> {
-
+        deltaRedisApi.findPlayer(destName, cachedPlayer ->
+        {
             Player originalSender = Bukkit.getPlayer(senderName);
             if(originalSender != null && originalSender.isOnline())
             {
@@ -97,7 +98,7 @@ public class TpaCommand implements CommandExecutor
                         sender.getName().toLowerCase() + "/\\" +
                         deltaRedisApi.getServerName();
 
-                    deltaRedisApi.publish(cachedPlayer.getServer(), "DeltaEss:Tpa", message);
+                    deltaRedisApi.publish(cachedPlayer.getServer(), TpListener.TPA_CHANNEL, message);
                     deltaTeleport.addTpRequest(destName, sender.getName());
 
                     originalSender.sendMessage(Prefixes.SUCCESS + "Sent teleport request to player.");

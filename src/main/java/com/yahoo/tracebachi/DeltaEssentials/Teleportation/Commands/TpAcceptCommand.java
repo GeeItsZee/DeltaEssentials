@@ -16,10 +16,9 @@
  */
 package com.yahoo.tracebachi.DeltaEssentials.Teleportation.Commands;
 
-import com.google.common.base.Preconditions;
-import com.yahoo.tracebachi.DeltaEssentials.Prefixes;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.DeltaTeleport;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.TpRequest;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -48,49 +47,39 @@ public class TpAcceptCommand implements CommandExecutor
     {
         if(!(sender instanceof Player))
         {
-            sender.sendMessage(Prefixes.FAILURE + "Only players can teleport others to themselves.");
+            sender.sendMessage(Prefixes.FAILURE + "Only players can accept teleports.");
         }
         else if(sender.hasPermission("DeltaEss.Tpa.Accept"))
         {
-            if(!acceptTeleportRequest((Player) sender))
+            TpRequest request = deltaTeleport.getTpRequest(sender.getName());
+            Player player = (Player) sender;
+
+            if(request == null)
             {
-                sender.sendMessage(Prefixes.FAILURE + "There is no pending teleport " +
-                    "request or the player is offline.");
+                sender.sendMessage(Prefixes.FAILURE + "Request not found.");
+            }
+            else if(request.getServer() == null)
+            {
+                Player destPlayer = Bukkit.getPlayer(request.getSender());
+                if(destPlayer != null && destPlayer.isOnline())
+                {
+                    deltaTeleport.teleportWithEvent(player, destPlayer);
+                    sender.sendMessage(Prefixes.SUCCESS + "Teleporting ...");
+                }
+                else
+                {
+                    sender.sendMessage(Prefixes.FAILURE + "The sender is no longer online on this server.");
+                }
             }
             else
             {
                 sender.sendMessage(Prefixes.SUCCESS + "Teleporting ...");
+                deltaTeleport.sendToServer(player, request.getServer());
             }
         }
         else
         {
             sender.sendMessage(Prefixes.FAILURE + "You do not have permission to do that.");
-        }
-        return true;
-    }
-
-    private boolean acceptTeleportRequest(Player sender)
-    {
-        Preconditions.checkNotNull(sender, "Sender cannot be null.");
-
-        TpRequest request = deltaTeleport.getTpRequest(sender.getName());
-
-        if(request == null)
-        {
-            return false;
-        }
-        else if(request.getServer() == null)
-        {
-            Player destPlayer = Bukkit.getPlayer(request.getSender());
-            if(destPlayer != null && destPlayer.isOnline())
-            {
-                deltaTeleport.teleportWithEvent(sender, destPlayer);
-            }
-            else { return false; }
-        }
-        else
-        {
-            deltaTeleport.sendToServer(sender, request.getServer());
         }
         return true;
     }

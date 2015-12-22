@@ -16,11 +16,10 @@
  */
 package com.yahoo.tracebachi.DeltaEssentials.Teleportation;
 
-import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerTeleportEvent;
-import com.yahoo.tracebachi.DeltaEssentials.Prefixes;
+import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -34,6 +33,9 @@ import java.util.regex.Pattern;
  */
 public class TpListener implements Listener
 {
+    public static final String TP_CHANNEL = "DE-TP";
+    public static final String TPHERE_CHANNEL = "DE-TPHere";
+    public static final String TPA_CHANNEL = "DE-TPA";
     private static final Pattern pattern = Pattern.compile("/\\\\");
 
     private DeltaTeleport deltaTeleport;
@@ -51,18 +53,17 @@ public class TpListener implements Listener
     @EventHandler
     public void onDeltaRedisMessage(DeltaRedisMessageEvent event)
     {
-        if(event.getChannel().equals("DeltaEss:Tp"))
+        if(event.getChannel().equals(TP_CHANNEL))
         {
             // Format: SenderName/\DestName
             String[] splitMessage = pattern.split(event.getMessage(), 2);
             String senderName = splitMessage[0];
             String destName = splitMessage[1];
-            Player destPlayer = Bukkit.getPlayer(destName);
 
+            Player destPlayer = Bukkit.getPlayer(destName);
             if(destPlayer != null && destPlayer.isOnline())
             {
                 Player player = Bukkit.getPlayer(senderName);
-
                 if(player != null && player.isOnline())
                 {
                     if(player.canSee(destPlayer))
@@ -80,7 +81,7 @@ public class TpListener implements Listener
                 }
             }
         }
-        else if(event.getChannel().equals("DeltaEss:TpHere"))
+        else if(event.getChannel().equals(TPHERE_CHANNEL))
         {
             // Format: DestName/\DestServer
             String[] splitMessage = pattern.split(event.getMessage(), 2);
@@ -93,26 +94,26 @@ public class TpListener implements Listener
                 deltaTeleport.sendToServer(player, destServer);
             }
         }
-        else if(event.getChannel().equals("DeltaEss:Tpa"))
+        else if(event.getChannel().equals(TPA_CHANNEL))
         {
             // Format: DestName/\SenderName/\DestServer
             String[] splitMessage = pattern.split(event.getMessage(), 3);
             String destName = splitMessage[0];
             String senderName = splitMessage[1];
             String destServer = splitMessage[2];
-            Player destPlayer = Bukkit.getPlayer(destName);
 
+            Player destPlayer = Bukkit.getPlayer(destName);
             if(destPlayer != null && destPlayer.isOnline())
             {
-                destPlayer.sendMessage(Prefixes.INFO + ChatColor.WHITE + senderName +
-                    ChatColor.GRAY + " sent you a TP request. Use /tpaccept to accept.");
+                destPlayer.sendMessage(Prefixes.INFO + Prefixes.input(senderName) +
+                    " sent you a TP request. Use /tpaccept to accept.");
                 deltaTeleport.addTpRequest(destName,
                     new TpRequest(senderName, destServer));
             }
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event)
     {
         Player player = event.getPlayer();
@@ -136,15 +137,14 @@ public class TpListener implements Listener
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
-    public void onPlayerTeleport(PlayerTeleportEvent event)
+    public void onPlayerTeleport(PlayerTpEvent event)
     {
         Player player = event.getPlayerToTeleport();
         Player dest = event.getDestination();
 
         if(dest.hasPermission("DeltaEss.Tp.Alert"))
         {
-            dest.sendMessage(Prefixes.INFO + ChatColor.WHITE + player.getName() +
-                ChatColor.GRAY + " teleported to you.");
+            dest.sendMessage(Prefixes.INFO + Prefixes.input(player.getName()) + " teleported to you.");
         }
     }
 }

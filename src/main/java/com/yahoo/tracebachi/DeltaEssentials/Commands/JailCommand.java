@@ -19,8 +19,8 @@ package com.yahoo.tracebachi.DeltaEssentials.Commands;
 import com.earth2me.essentials.utils.DateUtil;
 import com.yahoo.tracebachi.DeltaEssentials.CallbackUtil;
 import com.yahoo.tracebachi.DeltaEssentials.DeltaEssentialsPlugin;
-import com.yahoo.tracebachi.DeltaEssentials.Prefixes;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -29,7 +29,6 @@ import org.bukkit.entity.Player;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -40,133 +39,121 @@ public class JailCommand implements CommandExecutor
     public static final String JAIL_CHANNEL = "DE-Jail";
 
     private final String jailServer;
-    private Set<String> validJails;
-    private DeltaEssentialsPlugin plugin;
+    private final Set<String> validJails;
     private DeltaRedisApi deltaRedisApi;
+    private DeltaEssentialsPlugin plugin;
 
-    public JailCommand(String jailServer, List<String> validJails, DeltaEssentialsPlugin plugin, DeltaRedisApi deltaRedisApi)
+    public JailCommand(DeltaRedisApi deltaRedisApi, DeltaEssentialsPlugin plugin)
     {
-        this.jailServer = jailServer;
-        this.validJails = new HashSet<>(validJails);
-        this.plugin = plugin;
+        this.jailServer = plugin.getConfig().getString("JailServer");
+        this.validJails = new HashSet<>(plugin.getConfig().getStringList("ValidJails"));
         this.deltaRedisApi = deltaRedisApi;
+        this.plugin = plugin;
     }
 
     public void shutdown()
     {
-        this.validJails = null;
-        this.plugin = null;
         this.deltaRedisApi = null;
+        this.plugin = null;
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String s, String[] args)
+    public boolean onCommand(CommandSender commandSender, Command command, String s, String[] args)
     {
-        if(!sender.hasPermission("DeltaEss.Jail"))
+        if(!commandSender.hasPermission("DeltaEss.Jail"))
         {
-            sender.sendMessage(Prefixes.FAILURE + "You do not have permission to use that command.");
+            commandSender.sendMessage(Prefixes.FAILURE + "You do not have permission to use that command.");
             return true;
         }
 
-        if(args.length < 1)
+        if(args.length < 2)
         {
-            sender.sendMessage(Prefixes.INFO + "/jail <player> <jailname> [datediff]");
+            commandSender.sendMessage(Prefixes.INFO + "/jail <player> <jail name> [date diff]");
             return true;
         }
 
-        String senderName = sender.getName();
+        String sender = commandSender.getName();
+        String target = args[0];
+        String jailName = args[1];
+        String dateDiff = "";
+        Player playerToJail = Bukkit.getPlayer(target);
+
+        // Check if jail name is valid
+        if(!validJails.contains(args[1]))
+        {
+            commandSender.sendMessage(Prefixes.FAILURE + "The jail " +
+                Prefixes.input(args[1]) + " does not exist.");
+            return true;
+        }
+
+        // Check if the date difference is valid (if there is a date difference)
+        if(args.length >= 3)
+        {
+            dateDiff = args[2];
+            if(!isValidDateDifference(dateDiff))
+            {
+                commandSender.sendMessage(Prefixes.FAILURE + Prefixes.input(args[2]) +
+                    " is not a valid date difference.");
+                return true;
+            }
+        }
+
+        // Check if sender is in jail server
         if(deltaRedisApi.getServerName().equals(jailServer))
         {
-            String joined = String.join(" ", Arrays.asList(args));
-            Bukkit.dispatchCommand(sender, "essentials:jail " + joined);
-
-            Player playerToJail = Bukkit.getPlayer(args[0]);
+            // If the player is not in the current server
             if(playerToJail == null)
             {
-                deltaRedisApi.findPlayer(args[0], cachedPlayer ->
+                deltaRedisApi.findPlayer(target, cachedPlayer ->
                 {
                     if(cachedPlayer != null)
                     {
                         deltaRedisApi.publish(cachedPlayer.getServer(), MoveToCommand.MOVE_CHANNEL,
-                            senderName + "/\\" + args[0] + "/\\" + jailServer);
+                            sender + "/\\" + target + "/\\" + jailServer);
                     }
                     else
                     {
-                        CallbackUtil.sendMessage(senderName, Prefixes.FAILURE + "Player not found.");
+                        CallbackUtil.sendMessage(sender, Prefixes.FAILURE + "Player not found.");
                     }
                 });
             }
 
+            // Run the command on the current server
+            String joined = String.join(" ", Arrays.asList(args));
+            Bukkit.dispatchCommand(commandSender, "essentials:jail " + joined);
             return true;
-        }
-
-        String jailName = "";
-        if(args.length >= 2)
-        {
-            if(!validJails.contains(args[1]))
-            {
-                sender.sendMessage(Prefixes.FAILURE + args[1] + " (jail) does not exist.");
-                return true;
-            }
-            else
-            {
-                jailName = args[1];
-            }
-        }
-
-        String timeDiff = "";
-        if(args.length >= 3)
-        {
-            if(!validateTimeDiff(args[2]))
-            {
-                sender.sendMessage(Prefixes.FAILURE + "That is not a valid datediff.");
-                return true;
-            }
-            else
-            {
-                timeDiff = args[2];
-            }
-        }
-
-        Player playerToJail = Bukkit.getPlayer(args[0]);
-        if(playerToJail != null && playerToJail.isOnline())
-        {
-            // Alert the jail server of the player
-            deltaRedisApi.publish(jailServer, JAIL_CHANNEL,
-                senderName + "/\\essentials:jail " +
-                args[0] + " " + jailName + " " + timeDiff);
-
-            // Since player is on the same server, send to jail server
-            plugin.sendToServer(playerToJail, jailServer);
         }
         else
         {
-            // Alert the jail server of the player
-            deltaRedisApi.publish(jailServer, JAIL_CHANNEL,
-                senderName + "/\\essentials:jail " +
-                args[0] + " " + jailName + " " + timeDiff);
-
-            // Find player and move them to the jail server
-            deltaRedisApi.findPlayer(args[0], cachedPlayer ->
+            // If the player is on the current server
+            if(playerToJail != null && playerToJail.isOnline())
             {
-                if(cachedPlayer != null)
+                plugin.sendToServer(playerToJail, jailServer);
+            }
+            else
+            {
+                deltaRedisApi.findPlayer(target, cachedPlayer ->
                 {
-                    if(!cachedPlayer.getServer().equals(jailServer))
+                    if(cachedPlayer != null)
                     {
                         deltaRedisApi.publish(cachedPlayer.getServer(), MoveToCommand.MOVE_CHANNEL,
-                            senderName + "/\\" + args[0] + "/\\" + jailServer);
+                            sender + "/\\" + target + "/\\" + jailServer);
                     }
-                }
-                else
-                {
-                    CallbackUtil.sendMessage(senderName, Prefixes.FAILURE + "Player not found.");
-                }
-            });
+                    else
+                    {
+                        CallbackUtil.sendMessage(sender, Prefixes.FAILURE + "Player not found.");
+                    }
+                });
+            }
+
+            // Alert the jail server of the player
+            deltaRedisApi.publish(jailServer, JAIL_CHANNEL, sender +
+                "/\\essentials:jail " + args[0] + " " + jailName + " " + dateDiff);
         }
         return true;
     }
 
-    private boolean validateTimeDiff(String arg)
+    private boolean isValidDateDifference(String arg)
     {
         try
         {

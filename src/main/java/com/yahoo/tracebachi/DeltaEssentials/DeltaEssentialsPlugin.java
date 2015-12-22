@@ -36,9 +36,10 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.messaging.Messenger;
 
-import java.io.File;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by Trace Bachi (tracebachi@yahoo.com, BigBossZee) on 12/5/15.
@@ -61,36 +62,30 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
     @Override
     public void onLoad()
     {
-        File file = new File(getDataFolder(), "config.yml");
-        if(!file.exists()) { saveDefaultConfig(); }
+        saveDefaultConfig();
     }
 
     @Override
     public void onEnable()
     {
         reloadConfig();
-        List<String> blockedServerList = getConfig().getStringList("BlockedServers");
-        List<String> ignoredChannelList = getConfig().getStringList("IgnoredChannels");
-        List<String> validJails = getConfig().getStringList("ValidJails");
-        String jailServer = getConfig().getString("JailServer");
         debugMode = getConfig().getBoolean("DebugMode", false);
-        blockedServers.addAll(blockedServerList.stream().map(String::toLowerCase).collect(Collectors.toList()));
 
         PluginManager pluginManager = getServer().getPluginManager();
         DeltaRedisPlugin deltaRedisPlugin = (DeltaRedisPlugin) pluginManager.getPlugin("DeltaRedis");
         DeltaRedisApi deltaRedisApi = deltaRedisPlugin.getDeltaRedisApi();
 
-        moveToCommand = new MoveToCommand(this, deltaRedisApi);
+        moveToCommand = new MoveToCommand(deltaRedisApi, this);
         getCommand("moveto").setExecutor(moveToCommand);
         kickCommand = new KickCommand(deltaRedisApi);
         getCommand("kick").setExecutor(kickCommand);
-        jailCommand = new JailCommand(jailServer, validJails, this, deltaRedisApi);
+        jailCommand = new JailCommand(deltaRedisApi, this);
         getCommand("jail").setExecutor(jailCommand);
 
-        deltaChat = new DeltaChat(this, deltaRedisApi, ignoredChannelList);
+        deltaChat = new DeltaChat(deltaRedisApi, this);
         deltaTeleport = new DeltaTeleport(this, deltaRedisApi);
 
-        generalListener = new GeneralListener(deltaRedisApi.getServerName(), this);
+        generalListener = new GeneralListener(this);
         getServer().getPluginManager().registerEvents(generalListener, this);
 
         Messenger messenger = getServer().getMessenger();
@@ -199,11 +194,6 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
         return true;
     }
 
-    public Set<String> getBlockedServers()
-    {
-        return Collections.unmodifiableSet(blockedServers);
-    }
-
     public HikariDataSource getDataSource(String name)
     {
         return sources.get(name);
@@ -222,15 +212,15 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
 
             try
             {
-                getLogger().info("Creating DataSource (" + sourceName + "): ............... ");
+                getLogger().info("Creating DataSource (" + sourceName + ") ...");
                 HikariDataSource dataSource = createDataSource(username, password, url);
                 sources.put(sourceName, dataSource);
+                getLogger().info("................... Done.");
             }
             catch(Exception ex)
             {
                 getLogger().severe("Failed to create DataSource: " + sourceName);
                 ex.printStackTrace();
-                getLogger().severe("Failed to create DataSource: " + sourceName);
             }
         }
     }
@@ -244,14 +234,15 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
                 // Close the data source
                 if(entry.getValue() != null)
                 {
+                    getLogger().info("Closing DataSource (" + entry.getKey() + ") ...");
                     entry.getValue().close();
+                    getLogger().info(".................. Done.");
                 }
             }
             catch(Exception ex)
             {
                 getLogger().severe("Failed to close DataSource: " + entry.getKey());
                 ex.printStackTrace();
-                getLogger().severe("Failed to close DataSource: " + entry.getKey());
             }
         }
     }

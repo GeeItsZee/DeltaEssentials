@@ -24,7 +24,7 @@ import org.bukkit.event.HandlerList;
 /**
  * Created by Trace Bachi (tracebachi@yahoo.com, BigBossZee) on 11/29/15.
  */
-public class PlayerTeleportEvent extends Event implements Cancellable
+public class PlayerTpEvent extends Event implements Cancellable
 {
     private static final HandlerList handlers = new HandlerList();
 
@@ -32,7 +32,7 @@ public class PlayerTeleportEvent extends Event implements Cancellable
     private final Player destination;
     private boolean cancelled;
 
-    public PlayerTeleportEvent(Player playerToTeleport, Player destination)
+    public PlayerTpEvent(Player playerToTeleport, Player destination)
     {
         this.playerToTeleport = playerToTeleport;
         this.destination = destination;

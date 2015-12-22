@@ -17,9 +17,10 @@
 package com.yahoo.tracebachi.DeltaEssentials.Teleportation.Commands;
 
 import com.google.common.base.Preconditions;
-import com.yahoo.tracebachi.DeltaEssentials.Prefixes;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.DeltaTeleport;
+import com.yahoo.tracebachi.DeltaEssentials.Teleportation.TpListener;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -51,7 +52,7 @@ public class TpHereCommand implements CommandExecutor
     {
         if(args.length == 0)
         {
-            sender.sendMessage(Prefixes.INFO + "/tphere player");
+            sender.sendMessage(Prefixes.INFO + "/tphere <player>");
         }
         else if(!(sender instanceof Player))
         {
@@ -93,7 +94,7 @@ public class TpHereCommand implements CommandExecutor
                     String message = nameToTp.toLowerCase() + "/\\" +
                         deltaRedisApi.getServerName();
 
-                    deltaRedisApi.publish(cachedPlayer.getServer(), "DeltaEss:TpHere", message);
+                    deltaRedisApi.publish(cachedPlayer.getServer(), TpListener.TPHERE_CHANNEL, message);
                     deltaTeleport.addTpRequest(nameToTp, sender.getName());
 
                     originalSender.sendMessage(Prefixes.SUCCESS + "Teleporting player here ...");

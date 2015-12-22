@@ -18,9 +18,9 @@ package com.yahoo.tracebachi.DeltaEssentials.Commands;
 
 import com.yahoo.tracebachi.DeltaEssentials.CallbackUtil;
 import com.yahoo.tracebachi.DeltaEssentials.DeltaEssentialsPlugin;
-import com.yahoo.tracebachi.DeltaEssentials.Prefixes;
 import com.yahoo.tracebachi.DeltaRedis.Shared.Redis.Channels;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -29,6 +29,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by Trace Bachi (tracebachi@yahoo.com, BigBossZee) on 12/4/15.
@@ -37,26 +38,31 @@ public class MoveToCommand implements CommandExecutor
 {
     public static final String MOVE_CHANNEL = "DE-Move";
 
-    private DeltaEssentialsPlugin essentialsPlugin;
+    private HashSet<String> blockedServers = new HashSet<>();
+    private DeltaEssentialsPlugin plugin;
     private DeltaRedisApi deltaRedisApi;
 
-    public MoveToCommand(DeltaEssentialsPlugin essentialsPlugin, DeltaRedisApi deltaRedisApi)
+    public MoveToCommand(DeltaRedisApi deltaRedisApi, DeltaEssentialsPlugin plugin)
     {
-        this.essentialsPlugin = essentialsPlugin;
         this.deltaRedisApi = deltaRedisApi;
+        this.plugin = plugin;
+
+        List<String> list = plugin.getConfig().getStringList("BlockedServers");
+        this.blockedServers.addAll(list.stream().map(String::toLowerCase).collect(Collectors.toList()));
     }
 
     public void shutdown()
     {
-        this.deltaRedisApi = null;
-        this.essentialsPlugin = null;
+        blockedServers.clear();
+        blockedServers = null;
+        deltaRedisApi = null;
+        plugin = null;
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String s, String[] args)
     {
         Set<String> servers = new HashSet<>(deltaRedisApi.getCachedServers());
-        Set<String> blockedServers = essentialsPlugin.getBlockedServers();
         String currentServer = deltaRedisApi.getServerName();
 
         // Remove the Bungeecord server as players cannot move to it
@@ -106,7 +112,7 @@ public class MoveToCommand implements CommandExecutor
             {
                 sender.sendMessage(Prefixes.SUCCESS +
                     "Attempting to switch servers ...");
-                essentialsPlugin.sendToServer((Player) sender, args[0]);
+                plugin.sendToServer((Player) sender, args[0]);
             }
         }
         else
@@ -142,7 +148,7 @@ public class MoveToCommand implements CommandExecutor
                 {
                     sender.sendMessage(Prefixes.SUCCESS +
                         "Attempting to switch servers ...");
-                    essentialsPlugin.sendToServer(target, args[0]);
+                    plugin.sendToServer(target, args[0]);
                 }
                 else
                 {

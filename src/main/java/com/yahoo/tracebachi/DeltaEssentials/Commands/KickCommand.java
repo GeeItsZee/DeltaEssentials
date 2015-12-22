@@ -17,8 +17,8 @@
 package com.yahoo.tracebachi.DeltaEssentials.Commands;
 
 import com.yahoo.tracebachi.DeltaEssentials.CallbackUtil;
-import com.yahoo.tracebachi.DeltaEssentials.Prefixes;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -56,44 +56,39 @@ public class KickCommand implements CommandExecutor
             return true;
         }
 
-        if(args.length == 0)
+        if(args.length < 1)
         {
             sender.sendMessage(Prefixes.INFO + "/kick <player>");
             return true;
         }
 
-        if(args.length >= 1)
+        String nameToKick = args[0];
+        String senderName = sender.getName();
+        String reason = getKickMessage(args);
+        Player playerToKick = Bukkit.getPlayer(nameToKick);
+
+        if(playerToKick != null && playerToKick.isOnline())
         {
-            String nameToKick = args[0];
-            String senderName = sender.getName();
-            Player playerToKick = Bukkit.getPlayer(nameToKick);
-            String reason = getKickMessage(args);
-
-            if(playerToKick != null && playerToKick.isOnline())
-            {
-                playerToKick.kickPlayer(reason + "\n\n - " + ChatColor.GOLD + senderName);
-                announceKick(senderName, playerToKick.getName(), reason);
-            }
-            else
-            {
-                deltaRedisApi.findPlayer(nameToKick, cachedPlayer ->
-                {
-                    if(cachedPlayer != null)
-                    {
-                        deltaRedisApi.publish(cachedPlayer.getServer(), KICK_CHANNEL,
-                            senderName + "/\\" + nameToKick + "/\\" + reason);
-
-                        announceKick(senderName, nameToKick, reason);
-                    }
-                    else
-                    {
-                        CallbackUtil.sendMessage(senderName,
-                            Prefixes.FAILURE + "Player not found.");
-                    }
-                });
-            }
+            playerToKick.kickPlayer(reason + "\n\n" + ChatColor.GOLD + senderName);
+            announceKick(senderName, playerToKick.getName(), reason);
         }
-
+        else
+        {
+            deltaRedisApi.findPlayer(nameToKick, cachedPlayer ->
+            {
+                if(cachedPlayer != null)
+                {
+                    deltaRedisApi.publish(cachedPlayer.getServer(), KICK_CHANNEL,
+                        senderName + "/\\" + nameToKick + "/\\" + reason);
+                    announceKick(senderName, nameToKick, reason);
+                }
+                else
+                {
+                    CallbackUtil.sendMessage(senderName,
+                        Prefixes.FAILURE + "Player not found.");
+                }
+            });
+        }
         return true;
     }
 

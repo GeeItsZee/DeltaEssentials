@@ -17,7 +17,7 @@
 package com.yahoo.tracebachi.DeltaEssentials.Teleportation;
 
 import com.yahoo.tracebachi.DeltaEssentials.DeltaEssentialsPlugin;
-import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerTeleportEvent;
+import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.Commands.TpAcceptCommand;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.Commands.TpCommand;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.Commands.TpHereCommand;
@@ -45,7 +45,6 @@ public class DeltaTeleport implements LoggablePlugin
     private TpHereCommand tpHereCommand;
     private TpaCommand tpaCommand;
     private TpAcceptCommand tpAcceptCommand;
-
     private TpListener tpListener;
 
     public DeltaTeleport(DeltaEssentialsPlugin plugin, DeltaRedisApi deltaRedisApi)
@@ -59,6 +58,7 @@ public class DeltaTeleport implements LoggablePlugin
         tpAcceptCommand = new TpAcceptCommand(this);
 
         plugin.getCommand("tp").setExecutor(tpCommand);
+        plugin.getCommand("tp").setTabCompleter(tpCommand);
         plugin.getCommand("tphere").setExecutor(tpHereCommand);
         plugin.getCommand("tpahere").setExecutor(tpaCommand);
         plugin.getCommand("tpaccept").setExecutor(tpAcceptCommand);
@@ -69,12 +69,12 @@ public class DeltaTeleport implements LoggablePlugin
         cleanupTask = plugin.getServer().getScheduler().runTaskTimer(plugin, () ->
         {
             Iterator<Map.Entry<String, TpRequest>> iterator = requestMap.entrySet().iterator();
-            long currentTime = System.currentTimeMillis();
+            long oldestTime = System.currentTimeMillis() - 60000;
 
             while(iterator.hasNext())
             {
                 TpRequest request = iterator.next().getValue();
-                if((currentTime - request.getTimeCreatedAt()) > 60000)
+                if(request.getTimeCreatedAt() < oldestTime)
                 {
                     iterator.remove();
                 }
@@ -120,6 +120,7 @@ public class DeltaTeleport implements LoggablePlugin
         if(tpCommand != null)
         {
             plugin.getCommand("tp").setExecutor(null);
+            plugin.getCommand("tp").setTabCompleter(null);
             tpCommand.shutdown();
             tpCommand = null;
         }
@@ -153,9 +154,9 @@ public class DeltaTeleport implements LoggablePlugin
         return requestMap.remove(name.toLowerCase());
     }
 
-    public PlayerTeleportEvent teleportWithEvent(Player playerToTp, Player destination)
+    public PlayerTpEvent teleportWithEvent(Player playerToTp, Player destination)
     {
-        PlayerTeleportEvent event = new PlayerTeleportEvent(playerToTp, destination);
+        PlayerTpEvent event = new PlayerTpEvent(playerToTp, destination);
         Bukkit.getPluginManager().callEvent(event);
 
         if(!event.isCancelled())
@@ -168,11 +169,6 @@ public class DeltaTeleport implements LoggablePlugin
     public boolean sendToServer(Player player, String destination)
     {
         return plugin.sendToServer(player, destination, true);
-    }
-
-    public boolean sendToServer(Player player, String destination, boolean callEvent)
-    {
-        return plugin.sendToServer(player, destination, callEvent);
     }
 
     @Override

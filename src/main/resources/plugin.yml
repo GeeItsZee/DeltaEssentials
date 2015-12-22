@@ -1,18 +1,18 @@
 name: DeltaEssentials
 main: com.yahoo.tracebachi.DeltaEssentials.DeltaEssentialsPlugin
-version: 1.2
+version: 1.3
 author: Trace Bachi (tracebachi@yahoo.com, BigBossZee)
 depend: [DeltaRedis, Essentials, Herochat]
 commands:
-  tell:
-    description: Sends a message to another player.
-    aliases: [t]
-  r:
-    description: Sends a message to another player as a reply.
-    aliases: [reply]
   moveto:
     description: Sends players to different servers.
     aliases: [mt]
+  tell:
+    description: Sends a message to another player.
+    aliases: [t]
+  reply:
+    description: Sends a message to another player as a reply.
+    aliases: [r]
   tp:
     description: Teleports players.
   tphere:
@@ -29,7 +29,7 @@ commands:
 permissions:
   DeltaEss.Tell:
     description: Use /tell and /reply
-  DeltaEss.TellColor:
+  DeltaEss.Tell.Color:
     description: Lets players use color codes in their messages.
   DeltaEss.MoveTo.Self:
     description: Allows the player to switch servers.

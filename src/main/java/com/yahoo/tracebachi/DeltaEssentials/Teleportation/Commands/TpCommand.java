@@ -17,20 +17,23 @@
 package com.yahoo.tracebachi.DeltaEssentials.Teleportation.Commands;
 
 import com.google.common.base.Preconditions;
-import com.yahoo.tracebachi.DeltaEssentials.Prefixes;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.DeltaTeleport;
+import com.yahoo.tracebachi.DeltaEssentials.Teleportation.TpListener;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Trace Bachi (tracebachi@yahoo.com, BigBossZee) on 11/29/15.
  */
-public class TpCommand implements CommandExecutor
+public class TpCommand implements TabExecutor
 {
     private DeltaTeleport deltaTeleport;
     private DeltaRedisApi deltaRedisApi;
@@ -48,11 +51,30 @@ public class TpCommand implements CommandExecutor
     }
 
     @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args)
+    {
+        List<String> result = new ArrayList<>();
+
+        if(args.length != 0)
+        {
+            String lastArg = args[args.length - 1];
+            for(String name : deltaRedisApi.getCachedPlayers())
+            {
+                if(name.startsWith(lastArg))
+                {
+                    result.add(name);
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
     public boolean onCommand(CommandSender sender, Command command, String s, String[] args)
     {
         if(args.length == 0)
         {
-            sender.sendMessage(Prefixes.INFO + "/tp player");
+            sender.sendMessage(Prefixes.INFO + "/tp <player>");
         }
         else if(args.length == 1 && sender.hasPermission("DeltaEss.Tp.Self"))
         {
@@ -71,8 +93,7 @@ public class TpCommand implements CommandExecutor
 
             if(startPlayer == null || !startPlayer.isOnline())
             {
-                sender.sendMessage(Prefixes.FAILURE + ChatColor.WHITE + args[0] +
-                    ChatColor.GRAY + " is not online.");
+                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(args[0]) + " is not online.");
             }
             else
             {
@@ -107,8 +128,8 @@ public class TpCommand implements CommandExecutor
 
         // Check other servers
         String senderName = playerToTp.getName();
-        deltaRedisApi.findPlayer(destName, cachedPlayer -> {
-
+        deltaRedisApi.findPlayer(destName, cachedPlayer ->
+        {
             Player originalSender = Bukkit.getPlayer(senderName);
             if(originalSender != null && originalSender.isOnline())
             {
@@ -118,10 +139,9 @@ public class TpCommand implements CommandExecutor
                     String message = playerToTp.getName().toLowerCase() + "/\\" +
                         destName.toLowerCase();
 
-                    deltaRedisApi.publish(cachedPlayer.getServer(), "DeltaEss:Tp", message);
+                    deltaRedisApi.publish(cachedPlayer.getServer(), TpListener.TP_CHANNEL, message);
                     deltaTeleport.sendToServer(playerToTp, cachedPlayer.getServer());
-
-                    originalSender.sendMessage(Prefixes.SUCCESS + "Teleporting player here ...");
+                    originalSender.sendMessage(Prefixes.SUCCESS + "Teleporting to player ...");
                 }
                 else
                 {

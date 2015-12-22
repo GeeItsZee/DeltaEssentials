@@ -32,17 +32,10 @@ public interface MessageUtils
         String prefix = ChatColor.translateAlternateColorCodes('&',
             "&8[&dPM&8]&7=&8[&e" + sender + " -> " + receiver + "&8]&d ");
 
-        if(allowColors)
-        {
-            return prefix + ChatColor.translateAlternateColorCodes('&', message);
-        }
-        else
-        {
-            return prefix + message;
-        }
+        return prefix + ((!allowColors) ? message : ChatColor.translateAlternateColorCodes('&', message));
     }
 
-    static String toByteArrayDataString(String sender, String receiver, boolean allowColors, String message)
+    static String toByteArrayDataString(String sender, String receiver, String message, boolean allowColors)
     {
         ByteArrayDataOutput output = ByteStreams.newDataOutput();
         output.writeUTF(sender);

@@ -24,7 +24,10 @@ import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.LoggablePlugin;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by Trace Bachi (tracebachi@yahoo.com, BigBossZee) on 12/5/15.
@@ -36,23 +39,24 @@ public class DeltaChat implements LoggablePlugin
 
     private DeltaEssentialsPlugin plugin;
     private HashMap<String, String> replyMap;
-    private HashSet<String> ignoredChannels;
+    private Set<String> ignoredChannels;
 
     private TellCommand tellCommand;
     private ReplyCommand replyCommand;
-
     private ChatListener chatListener;
 
-    public DeltaChat(DeltaEssentialsPlugin plugin, DeltaRedisApi deltaRedisApi, List<String> ignoredChannelList)
+    public DeltaChat(DeltaRedisApi deltaRedisApi, DeltaEssentialsPlugin plugin)
     {
         this.plugin = plugin;
-        this.ignoredChannels = new HashSet<>(ignoredChannelList);
         this.replyMap = new HashMap<>();
+        this.ignoredChannels = Collections.unmodifiableSet(new HashSet<>(
+            plugin.getConfig().getStringList("IgnoredChannels")));
 
         this.tellCommand = new TellCommand(replyMap, deltaRedisApi, this);
         this.replyCommand = new ReplyCommand(replyMap, deltaRedisApi, this);
 
         plugin.getCommand("tell").setExecutor(tellCommand);
+        plugin.getCommand("tell").setTabCompleter(tellCommand);
         plugin.getCommand("reply").setExecutor(replyCommand);
 
         chatListener = new ChatListener(replyMap, deltaRedisApi, this);
@@ -70,6 +74,7 @@ public class DeltaChat implements LoggablePlugin
         if(tellCommand != null)
         {
             plugin.getCommand("tell").setExecutor(null);
+            plugin.getCommand("tell").setTabCompleter(null);
             tellCommand.shutdown();
             tellCommand = null;
         }
@@ -87,13 +92,13 @@ public class DeltaChat implements LoggablePlugin
             replyMap = null;
         }
 
-        this.ignoredChannels = null;
-        this.plugin = null;
+        ignoredChannels = null;
+        plugin = null;
     }
 
     public Set<String> getIgnoredHeroChatChannels()
     {
-        return Collections.unmodifiableSet(ignoredChannels);
+        return ignoredChannels;
     }
 
     public PlayerTellEvent tellWithEvent(String sender, String receiver, String message)
@@ -103,7 +108,7 @@ public class DeltaChat implements LoggablePlugin
 
         if(!event.isCancelled())
         {
-            plugin.info("[" + sender + " -> " + receiver + "] " + message);
+            Bukkit.getLogger().info("[" + sender + " -> " + receiver + "] " + message);
         }
         return event;
     }

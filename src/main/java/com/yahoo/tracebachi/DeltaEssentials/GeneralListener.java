@@ -19,12 +19,10 @@ public class GeneralListener implements Listener
 {
     private static final Pattern pattern = Pattern.compile("/\\\\");
 
-    private String serverName;
     private DeltaEssentialsPlugin plugin;
 
-    public GeneralListener(String serverName, DeltaEssentialsPlugin plugin)
+    public GeneralListener(DeltaEssentialsPlugin plugin)
     {
-        this.serverName = serverName;
         this.plugin = plugin;
     }
 
@@ -62,7 +60,7 @@ public class GeneralListener implements Listener
             Player targetPlayer = Bukkit.getPlayer(target);
             if(targetPlayer != null && targetPlayer.isOnline())
             {
-                targetPlayer.kickPlayer(reason + "\n\n - " + ChatColor.GOLD + sender);
+                targetPlayer.kickPlayer(reason + "\n\n" + ChatColor.GOLD + sender);
                 announceKick(sender, targetPlayer.getName(), reason);
             }
         }
