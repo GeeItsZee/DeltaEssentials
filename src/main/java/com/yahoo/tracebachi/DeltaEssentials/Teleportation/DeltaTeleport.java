@@ -26,6 +26,7 @@ import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.LoggablePlugin;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
@@ -161,7 +162,7 @@ public class DeltaTeleport implements LoggablePlugin
 
         if(!event.isCancelled())
         {
-            playerToTp.teleport(destination);
+            playerToTp.teleport(destination, PlayerTeleportEvent.TeleportCause.COMMAND);
         }
         return event;
     }
