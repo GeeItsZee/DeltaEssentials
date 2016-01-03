@@ -72,10 +72,10 @@ public class ChatListener implements Listener
     {
         String channel = event.getChannel().getName();
 
-        if(!deltaChat.getIgnoredHeroChatChannels().contains(channel))
+        if(deltaChat.getSharedChatChannels().contains(channel))
         {
             String message =  event.getMsg();
-            deltaRedisApi.publish(Channels.SPIGOT, DeltaChat.HERO_CHAT_CHANNEL,
+            deltaRedisApi.publish(Channels.SPIGOT, DeltaChat.SHARED_CHAT_CHANNEL,
                 channel + "/\\" + message);
         }
     }
@@ -83,7 +83,7 @@ public class ChatListener implements Listener
     @EventHandler
     public void onDeltaRedisMessage(DeltaRedisMessageEvent event)
     {
-        if(event.getChannel().equals(DeltaChat.HERO_CHAT_CHANNEL))
+        if(event.getChannel().equals(DeltaChat.SHARED_CHAT_CHANNEL))
         {
             String[] splitMessage = pattern.split(event.getMessage(), 2);
             String channelName = splitMessage[0];

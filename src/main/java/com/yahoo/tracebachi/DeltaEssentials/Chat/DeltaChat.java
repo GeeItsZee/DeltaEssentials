@@ -34,12 +34,12 @@ import java.util.Set;
  */
 public class DeltaChat implements LoggablePlugin
 {
-    public static final String HERO_CHAT_CHANNEL = "DE-HeroChat";
+    public static final String SHARED_CHAT_CHANNEL = "DE-HeroChat";
     public static final String TELL_CHANNEL = "DE-Tell";
 
     private DeltaEssentialsPlugin plugin;
     private HashMap<String, String> replyMap;
-    private Set<String> ignoredChannels;
+    private Set<String> sharedChatChannels;
 
     private TellCommand tellCommand;
     private ReplyCommand replyCommand;
@@ -49,8 +49,8 @@ public class DeltaChat implements LoggablePlugin
     {
         this.plugin = plugin;
         this.replyMap = new HashMap<>();
-        this.ignoredChannels = Collections.unmodifiableSet(new HashSet<>(
-            plugin.getConfig().getStringList("IgnoredChannels")));
+        this.sharedChatChannels = Collections.unmodifiableSet(new HashSet<>(
+            plugin.getConfig().getStringList("SharedChatChannels")));
 
         this.tellCommand = new TellCommand(replyMap, deltaRedisApi, this);
         this.replyCommand = new ReplyCommand(replyMap, deltaRedisApi, this);
@@ -92,13 +92,13 @@ public class DeltaChat implements LoggablePlugin
             replyMap = null;
         }
 
-        ignoredChannels = null;
+        sharedChatChannels = null;
         plugin = null;
     }
 
-    public Set<String> getIgnoredHeroChatChannels()
+    public Set<String> getSharedChatChannels()
     {
-        return ignoredChannels;
+        return sharedChatChannels;
     }
 
     public PlayerTellEvent tellWithEvent(String sender, String receiver, String message)

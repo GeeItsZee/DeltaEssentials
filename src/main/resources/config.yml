@@ -10,10 +10,10 @@ BlockedServers:
 
 ###############################################################################
 
-# Channels names (registered in HeroChat) that will be ignored and not sent
-# to other servers.
-IgnoredChannels:
-  - Local
+# Channels names (registered in HeroChat) that will be shared and sent to
+# other servers.
+SharedChatChannels:
+  - Global
 
 ###############################################################################
 
