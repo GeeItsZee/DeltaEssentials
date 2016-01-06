@@ -27,6 +27,7 @@ import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -111,7 +112,6 @@ public class ChatListener implements Listener
         String sender = in.readUTF();
         String receiver = in.readUTF();
         String message = in.readUTF();
-        boolean allowColors = in.readBoolean();
         Player player = Bukkit.getPlayer(receiver);
 
         if(player != null && player.isOnline())
@@ -120,9 +120,9 @@ public class ChatListener implements Listener
 
             PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message);
             if(tellEvent.isCancelled()) { return; }
-
             message = tellEvent.getMessage();
-            player.sendMessage(MessageUtils.format(sender, receiver, message, allowColors));
+
+            player.sendMessage(MessageUtils.formatForReceiver(sender, message));
             replyMap.put(receiver, sender);
         }
         else if(!sender.equalsIgnoreCase("console"))

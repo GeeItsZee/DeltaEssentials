@@ -23,6 +23,7 @@ import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerTellEvent;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -87,11 +88,17 @@ public class ReplyCommand implements CommandExecutor
             PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message);
             if(!tellEvent.isCancelled())
             {
-                message = tellEvent.getMessage();
-                String formatted = MessageUtils.format(sender, receiver, message, canUseColors);
+                if(canUseColors)
+                {
+                    message = ChatColor.translateAlternateColorCodes('&', tellEvent.getMessage());
+                }
+                else
+                {
+                    message = tellEvent.getMessage();
+                }
 
-                Bukkit.getConsoleSender().sendMessage(formatted);
-                commandSender.sendMessage(formatted);
+                Bukkit.getConsoleSender().sendMessage(MessageUtils.formatForReceiver(sender, message));
+                commandSender.sendMessage(MessageUtils.formatForSender(receiver, message));
                 replyMap.put("CONSOLE", sender);
             }
             return true;
@@ -106,11 +113,17 @@ public class ReplyCommand implements CommandExecutor
             PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message);
             if(!tellEvent.isCancelled())
             {
-                message = tellEvent.getMessage();
-                String formatted = MessageUtils.format(sender, receiver, message, canUseColors);
+                if(canUseColors)
+                {
+                    message = ChatColor.translateAlternateColorCodes('&', tellEvent.getMessage());
+                }
+                else
+                {
+                    message = tellEvent.getMessage();
+                }
 
-                receiverPlayer.sendMessage(formatted);
-                commandSender.sendMessage(formatted);
+                receiverPlayer.sendMessage(MessageUtils.formatForReceiver(sender, message));
+                commandSender.sendMessage(MessageUtils.formatForSender(receiver, message));
                 replyMap.put(receiver, sender);
             }
             return true;
@@ -120,11 +133,18 @@ public class ReplyCommand implements CommandExecutor
         PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message);
         if(!tellEvent.isCancelled())
         {
-            message = tellEvent.getMessage();
+            if(canUseColors)
+            {
+                message = ChatColor.translateAlternateColorCodes('&', tellEvent.getMessage());
+            }
+            else
+            {
+                message = tellEvent.getMessage();
+            }
+
             String finalReceiver = receiver;
-            String formatted = MessageUtils.format(sender, receiver, message, canUseColors);
-            String dataString = MessageUtils.toByteArrayDataString(
-                sender, receiver, message, canUseColors);
+            String formatted = MessageUtils.formatForSender(receiver, message);
+            String dataString = MessageUtils.toByteArrayDataString(sender, receiver, message);
 
             deltaRedisApi.findPlayer(receiver, cachedPlayer ->
             {

@@ -18,7 +18,6 @@ package com.yahoo.tracebachi.DeltaEssentials.Chat;
 
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
-import org.bukkit.ChatColor;
 
 import java.nio.charset.StandardCharsets;
 
@@ -27,21 +26,27 @@ import java.nio.charset.StandardCharsets;
  */
 public interface MessageUtils
 {
-    static String format(String sender, String receiver, String message, boolean allowColors)
+    static String formatForLog(String sender, String receiver, String message)
     {
-        String prefix = ChatColor.translateAlternateColorCodes('&',
-            "&8[&dPM&8]&7=&8[&e" + sender + " -> " + receiver + "&8]&d ");
-
-        return prefix + ((!allowColors) ? message : ChatColor.translateAlternateColorCodes('&', message));
+        return "[" + sender + " -> " + receiver + "] " + message;
     }
 
-    static String toByteArrayDataString(String sender, String receiver, String message, boolean allowColors)
+    static String formatForSender(String receiver, String message)
+    {
+        return "\u00A78[\u00A7dPM\u00A78]\u00A77=\u00A78[\u00A7eme -> " + receiver + "\u00A78]\u00A7d " + message;
+    }
+
+    static String formatForReceiver(String sender, String message)
+    {
+        return "\u00A78[\u00A7dPM\u00A78]\u00A77=\u00A78[\u00A7e" + sender + " -> me\u00A78]\u00A7d " + message;
+    }
+
+    static String toByteArrayDataString(String sender, String receiver, String message)
     {
         ByteArrayDataOutput output = ByteStreams.newDataOutput();
         output.writeUTF(sender);
         output.writeUTF(receiver);
         output.writeUTF(message);
-        output.writeBoolean(allowColors);
         return new String(output.toByteArray(), StandardCharsets.UTF_8);
     }
 }

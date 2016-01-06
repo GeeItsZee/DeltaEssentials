@@ -108,7 +108,7 @@ public class DeltaChat implements LoggablePlugin
 
         if(!event.isCancelled())
         {
-            Bukkit.getLogger().info("[" + sender + " -> " + receiver + "] " + message);
+            Bukkit.getLogger().info(MessageUtils.formatForLog(sender, receiver, message));
         }
         return event;
     }
