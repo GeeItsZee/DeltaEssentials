@@ -59,20 +59,12 @@ public class JailCommand implements TabExecutor
     @Override
     public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args)
     {
-        List<String> result = new ArrayList<>();
-
         if(args.length != 0)
         {
-            String lastArg = args[args.length - 1].toLowerCase();
-            for(String name : deltaRedisApi.getCachedPlayers())
-            {
-                if(name.startsWith(lastArg))
-                {
-                    result.add(name);
-                }
-            }
+            String lastArg = args[args.length - 1];
+            return deltaRedisApi.matchStartOfName(lastArg);
         }
-        return result;
+        return null;
     }
 
     @Override

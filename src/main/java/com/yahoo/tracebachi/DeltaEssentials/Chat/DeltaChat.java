@@ -110,11 +110,6 @@ public class DeltaChat implements LoggablePlugin
         return event;
     }
 
-    public List<String> tabCompleteName(String partial)
-    {
-        return plugin.tabCompleteName(partial);
-    }
-
     @Override
     public void info(String message)
     {

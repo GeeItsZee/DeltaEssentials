@@ -63,7 +63,7 @@ public class TellCommand implements TabExecutor
         if(args.length != 0)
         {
             String lastArg = args[args.length - 1];
-            return deltaChat.tabCompleteName(lastArg);
+            return deltaRedisApi.matchStartOfName(lastArg);
         }
         return null;
     }
@@ -113,7 +113,7 @@ public class TellCommand implements TabExecutor
         }
 
         // Try to auto complete a partial name
-        List<String> partialMatches = deltaChat.tabCompleteName(receiver);
+        List<String> partialMatches = deltaRedisApi.matchStartOfName(receiver);
         if(!partialMatches.contains(receiver))
         {
             if(partialMatches.size() == 0)

@@ -203,21 +203,6 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
         return sources.get(name);
     }
 
-    public List<String> tabCompleteName(String partial)
-    {
-        List<String> result = new ArrayList<>();
-        partial = partial.toLowerCase();
-
-        for(String name : deltaRedisApi.getCachedPlayers())
-        {
-            if(name.startsWith(partial))
-            {
-                result.add(name);
-            }
-        }
-        return result;
-    }
-
     private void createDataSources()
     {
         ConfigurationSection section = getConfig().getConfigurationSection("Databases");

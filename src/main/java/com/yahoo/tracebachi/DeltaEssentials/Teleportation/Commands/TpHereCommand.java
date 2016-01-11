@@ -54,7 +54,7 @@ public class TpHereCommand implements TabExecutor
         if(args.length != 0)
         {
             String lastArg = args[args.length - 1];
-            return deltaTeleport.tabCompleteName(lastArg);
+            return deltaRedisApi.matchStartOfName(lastArg);
         }
         return null;
     }

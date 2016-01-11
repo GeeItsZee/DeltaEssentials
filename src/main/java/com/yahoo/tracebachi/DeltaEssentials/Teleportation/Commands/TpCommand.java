@@ -56,7 +56,7 @@ public class TpCommand implements TabExecutor
         if(args.length != 0)
         {
             String lastArg = args[args.length - 1];
-            return deltaTeleport.tabCompleteName(lastArg);
+            return deltaRedisApi.matchStartOfName(lastArg);
         }
         return null;
     }
@@ -105,7 +105,7 @@ public class TpCommand implements TabExecutor
         Preconditions.checkNotNull(destName, "Destination cannot be null.");
 
         // Try to auto complete a partial name
-        List<String> partialMatches = deltaTeleport.tabCompleteName(destName);
+        List<String> partialMatches = deltaRedisApi.matchStartOfName(destName);
         if(!partialMatches.contains(destName))
         {
             if(partialMatches.size() == 0)

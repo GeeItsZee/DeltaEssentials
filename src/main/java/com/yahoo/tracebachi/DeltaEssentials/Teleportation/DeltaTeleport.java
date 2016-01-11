@@ -177,11 +177,6 @@ public class DeltaTeleport implements LoggablePlugin
         return plugin.sendToServer(player, destination, true);
     }
 
-    public List<String> tabCompleteName(String partial)
-    {
-        return plugin.tabCompleteName(partial);
-    }
-
     @Override
     public void info(String message)
     {
