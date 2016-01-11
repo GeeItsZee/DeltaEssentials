@@ -22,15 +22,16 @@ import com.yahoo.tracebachi.DeltaEssentials.Teleportation.TpListener;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
+import org.bukkit.command.*;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Trace Bachi (tracebachi@yahoo.com, BigBossZee) on 11/29/15.
  */
-public class TpHereCommand implements CommandExecutor
+public class TpHereCommand implements TabExecutor
 {
     private DeltaTeleport deltaTeleport;
     private DeltaRedisApi deltaRedisApi;
@@ -45,6 +46,17 @@ public class TpHereCommand implements CommandExecutor
     {
         this.deltaRedisApi = null;
         this.deltaTeleport = null;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args)
+    {
+        if(args.length != 0)
+        {
+            String lastArg = args[args.length - 1];
+            return deltaTeleport.tabCompleteName(lastArg);
+        }
+        return null;
     }
 
     @Override

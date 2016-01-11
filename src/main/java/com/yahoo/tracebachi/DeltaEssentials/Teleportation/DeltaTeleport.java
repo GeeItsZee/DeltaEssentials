@@ -31,6 +31,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -61,7 +62,9 @@ public class DeltaTeleport implements LoggablePlugin
         plugin.getCommand("tp").setExecutor(tpCommand);
         plugin.getCommand("tp").setTabCompleter(tpCommand);
         plugin.getCommand("tphere").setExecutor(tpHereCommand);
+        plugin.getCommand("tphere").setTabCompleter(tpHereCommand);
         plugin.getCommand("tpahere").setExecutor(tpaCommand);
+        plugin.getCommand("tpahere").setTabCompleter(tpaCommand);
         plugin.getCommand("tpaccept").setExecutor(tpAcceptCommand);
 
         tpListener = new TpListener(this);
@@ -107,6 +110,7 @@ public class DeltaTeleport implements LoggablePlugin
         if(tpaCommand != null)
         {
             plugin.getCommand("tpahere").setExecutor(null);
+            plugin.getCommand("tpahere").setTabCompleter(null);
             tpaCommand.shutdown();
             tpaCommand = null;
         }
@@ -114,6 +118,7 @@ public class DeltaTeleport implements LoggablePlugin
         if(tpHereCommand != null)
         {
             plugin.getCommand("tphere").setExecutor(null);
+            plugin.getCommand("tphere").setTabCompleter(null);
             tpHereCommand.shutdown();
             tpHereCommand = null;
         }
@@ -170,6 +175,11 @@ public class DeltaTeleport implements LoggablePlugin
     public boolean sendToServer(Player player, String destination)
     {
         return plugin.sendToServer(player, destination, true);
+    }
+
+    public List<String> tabCompleteName(String partial)
+    {
+        return plugin.tabCompleteName(partial);
     }
 
     @Override

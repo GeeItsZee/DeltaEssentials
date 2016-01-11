@@ -60,26 +60,18 @@ public class TellCommand implements TabExecutor
     @Override
     public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args)
     {
-        List<String> result = new ArrayList<>();
-
         if(args.length != 0)
         {
-            String lastArg = args[args.length - 1].toLowerCase();
-            for(String name : deltaRedisApi.getCachedPlayers())
-            {
-                if(name.startsWith(lastArg))
-                {
-                    result.add(name);
-                }
-            }
+            String lastArg = args[args.length - 1];
+            return deltaChat.tabCompleteName(lastArg);
         }
-        return result;
+        return null;
     }
 
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] args)
     {
-        if(!commandSender.hasPermission("DeltaEss.Tell"))
+        if(!commandSender.hasPermission("DeltaEss.Tell.Use"))
         {
             commandSender.sendMessage(Prefixes.FAILURE + "You do not have permission to do that.");
             return true;
@@ -118,6 +110,29 @@ public class TellCommand implements TabExecutor
                 replyMap.put(sender, "CONSOLE");
             }
             return true;
+        }
+
+        // Try to auto complete a partial name
+        List<String> partialMatches = deltaChat.tabCompleteName(receiver);
+        if(!partialMatches.contains(receiver))
+        {
+            if(partialMatches.size() == 0)
+            {
+                commandSender.sendMessage(Prefixes.FAILURE +
+                    Prefixes.input(receiver) + "is not online.");
+                return true;
+            }
+            else if(partialMatches.size() == 1)
+            {
+                receiver = partialMatches.get(0);
+            }
+            else
+            {
+                commandSender.sendMessage(Prefixes.FAILURE +
+                    "There are too many players that match " +
+                    Prefixes.input(receiver));
+                return true;
+            }
         }
 
         // Check if the receiver is a player on the same server

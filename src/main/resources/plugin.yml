@@ -9,25 +9,31 @@ commands:
     aliases: [mt]
   tell:
     description: Sends a message to another player.
-    aliases: [t]
+    aliases: [t, tell, pm, m]
   reply:
     description: Sends a message to another player as a reply.
     aliases: [r]
   tp:
     description: Teleports players.
+    aliases: [detp]
   tphere:
     description: Teleports other to self.
+    aliases: [detphere]
   tpahere:
     description: Sends teleport request.
+    aliases: [detpahere]
   tpaccept:
     description: Accepts teleport request.
+    aliases: [detpaccept]
   kick:
     description: Kicks the player from the server.
+    aliases: [dekick]
   jail:
     description: Sends a player to the jail server and jails them.
+    aliases: [dejail]
 
 permissions:
-  DeltaEss.Tell:
+  DeltaEss.Tell.Use:
     description: Use /tell and /reply
   DeltaEss.Tell.Color:
     description: Lets players use color codes in their messages.

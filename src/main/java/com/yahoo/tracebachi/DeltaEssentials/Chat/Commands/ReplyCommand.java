@@ -58,7 +58,7 @@ public class ReplyCommand implements CommandExecutor
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] args)
     {
-        if(!commandSender.hasPermission("DeltaEss.Tell"))
+        if(!commandSender.hasPermission("DeltaEss.Tell.Use"))
         {
             commandSender.sendMessage(Prefixes.FAILURE + "You do not have permission to do that.");
             return true;

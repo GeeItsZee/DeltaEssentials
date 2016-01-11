@@ -24,10 +24,7 @@ import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.LoggablePlugin;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by Trace Bachi (tracebachi@yahoo.com, BigBossZee) on 12/5/15.
@@ -111,6 +108,11 @@ public class DeltaChat implements LoggablePlugin
             Bukkit.getLogger().info(MessageUtils.formatForLog(sender, receiver, message));
         }
         return event;
+    }
+
+    public List<String> tabCompleteName(String partial)
+    {
+        return plugin.tabCompleteName(partial);
     }
 
     @Override

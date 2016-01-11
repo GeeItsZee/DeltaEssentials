@@ -25,16 +25,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by Trace Bachi (tracebachi@yahoo.com, BigBossZee) on 12/4/15.
  */
-public class JailCommand implements CommandExecutor
+public class JailCommand implements TabExecutor
 {
     public static final String JAIL_CHANNEL = "DE-Jail";
 
@@ -55,6 +54,25 @@ public class JailCommand implements CommandExecutor
     {
         this.deltaRedisApi = null;
         this.plugin = null;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args)
+    {
+        List<String> result = new ArrayList<>();
+
+        if(args.length != 0)
+        {
+            String lastArg = args[args.length - 1].toLowerCase();
+            for(String name : deltaRedisApi.getCachedPlayers())
+            {
+                if(name.startsWith(lastArg))
+                {
+                    result.add(name);
+                }
+            }
+        }
+        return result;
     }
 
     @Override

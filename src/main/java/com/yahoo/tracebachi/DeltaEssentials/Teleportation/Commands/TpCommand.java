@@ -53,20 +53,12 @@ public class TpCommand implements TabExecutor
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args)
     {
-        List<String> result = new ArrayList<>();
-
         if(args.length != 0)
         {
-            String lastArg = args[args.length - 1].toLowerCase();
-            for(String name : deltaRedisApi.getCachedPlayers())
-            {
-                if(name.startsWith(lastArg))
-                {
-                    result.add(name);
-                }
-            }
+            String lastArg = args[args.length - 1];
+            return deltaTeleport.tabCompleteName(lastArg);
         }
-        return result;
+        return null;
     }
 
     @Override
@@ -112,6 +104,29 @@ public class TpCommand implements TabExecutor
         Preconditions.checkNotNull(playerToTp, "Player to TP cannot be null.");
         Preconditions.checkNotNull(destName, "Destination cannot be null.");
 
+        // Try to auto complete a partial name
+        List<String> partialMatches = deltaTeleport.tabCompleteName(destName);
+        if(!partialMatches.contains(destName))
+        {
+            if(partialMatches.size() == 0)
+            {
+                playerToTp.sendMessage(Prefixes.FAILURE +
+                    Prefixes.input(destName) + "is not online.");
+                return;
+            }
+            else if(partialMatches.size() == 1)
+            {
+                destName = partialMatches.get(0);
+            }
+            else
+            {
+                playerToTp.sendMessage(Prefixes.FAILURE +
+                    "There are too many players that match " +
+                    Prefixes.input(destName));
+                return;
+            }
+        }
+
         Player destPlayer = Bukkit.getPlayer(destName);
         if(destPlayer != null && destPlayer.isOnline())
         {
@@ -126,8 +141,10 @@ public class TpCommand implements TabExecutor
             return;
         }
 
-        // Check other servers
         String senderName = playerToTp.getName();
+        String finalDestName = destName;
+
+        // Check other servers
         deltaRedisApi.findPlayer(destName, cachedPlayer ->
         {
             Player originalSender = Bukkit.getPlayer(senderName);
@@ -137,7 +154,7 @@ public class TpCommand implements TabExecutor
                 {
                     // Format: SenderName/\DestName
                     String message = playerToTp.getName().toLowerCase() + "/\\" +
-                        destName.toLowerCase();
+                        finalDestName.toLowerCase();
 
                     deltaRedisApi.publish(cachedPlayer.getServer(), TpListener.TP_CHANNEL, message);
                     deltaTeleport.sendToServer(playerToTp, cachedPlayer.getServer());

@@ -36,10 +36,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.messaging.Messenger;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by Trace Bachi (tracebachi@yahoo.com, BigBossZee) on 12/5/15.
@@ -58,6 +55,7 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
 
     private DeltaChat deltaChat;
     private DeltaTeleport deltaTeleport;
+    private DeltaRedisApi deltaRedisApi;
 
     @Override
     public void onLoad()
@@ -73,14 +71,17 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
 
         PluginManager pluginManager = getServer().getPluginManager();
         DeltaRedisPlugin deltaRedisPlugin = (DeltaRedisPlugin) pluginManager.getPlugin("DeltaRedis");
-        DeltaRedisApi deltaRedisApi = deltaRedisPlugin.getDeltaRedisApi();
+        deltaRedisApi = deltaRedisPlugin.getDeltaRedisApi();
 
         moveToCommand = new MoveToCommand(deltaRedisApi, this);
         getCommand("moveto").setExecutor(moveToCommand);
+        getCommand("moveto").setTabCompleter(moveToCommand);
         kickCommand = new KickCommand(deltaRedisApi);
         getCommand("kick").setExecutor(kickCommand);
+        getCommand("kick").setTabCompleter(kickCommand);
         jailCommand = new JailCommand(deltaRedisApi, this);
         getCommand("jail").setExecutor(jailCommand);
+        getCommand("jail").setTabCompleter(jailCommand);
 
         deltaChat = new DeltaChat(deltaRedisApi, this);
         deltaTeleport = new DeltaTeleport(this, deltaRedisApi);
@@ -123,6 +124,7 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
         if(jailCommand != null)
         {
             getCommand("jail").setExecutor(null);
+            getCommand("jail").setTabCompleter(null);
             jailCommand.shutdown();
             jailCommand = null;
         }
@@ -130,6 +132,7 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
         if(kickCommand != null)
         {
             getCommand("kick").setExecutor(null);
+            getCommand("kick").setTabCompleter(null);
             kickCommand.shutdown();
             kickCommand = null;
         }
@@ -137,6 +140,7 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
         if(moveToCommand != null)
         {
             getCommand("moveto").setExecutor(null);
+            getCommand("moveto").setTabCompleter(null);
             moveToCommand.shutdown();
             moveToCommand = null;
         }
@@ -197,6 +201,21 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
     public HikariDataSource getDataSource(String name)
     {
         return sources.get(name);
+    }
+
+    public List<String> tabCompleteName(String partial)
+    {
+        List<String> result = new ArrayList<>();
+        partial = partial.toLowerCase();
+
+        for(String name : deltaRedisApi.getCachedPlayers())
+        {
+            if(name.startsWith(partial))
+            {
+                result.add(name);
+            }
+        }
+        return result;
     }
 
     private void createDataSources()

@@ -24,14 +24,17 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by Trace Bachi (tracebachi@yahoo.com, BigBossZee) on 12/4/15.
  */
-public class KickCommand implements CommandExecutor
+public class KickCommand implements TabExecutor
 {
     public static final String KICK_CHANNEL = "DE-Kick";
 
@@ -45,6 +48,25 @@ public class KickCommand implements CommandExecutor
     public void shutdown()
     {
         this.deltaRedisApi = null;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args)
+    {
+        List<String> result = new ArrayList<>();
+
+        if(args.length != 0)
+        {
+            String lastArg = args[args.length - 1].toLowerCase();
+            for(String name : deltaRedisApi.getCachedPlayers())
+            {
+                if(name.startsWith(lastArg))
+                {
+                    result.add(name);
+                }
+            }
+        }
+        return result;
     }
 
     @Override

@@ -26,6 +26,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -34,7 +35,7 @@ import java.util.stream.Collectors;
 /**
  * Created by Trace Bachi (tracebachi@yahoo.com, BigBossZee) on 12/4/15.
  */
-public class MoveToCommand implements CommandExecutor
+public class MoveToCommand implements TabExecutor
 {
     public static final String MOVE_CHANNEL = "DE-Move";
 
@@ -57,6 +58,26 @@ public class MoveToCommand implements CommandExecutor
         blockedServers = null;
         deltaRedisApi = null;
         plugin = null;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args)
+    {
+        List<String> result = new ArrayList<>();
+
+        if(args.length != 0)
+        {
+            String lastArg = args[args.length - 1].toLowerCase();
+
+            for(String name : deltaRedisApi.getCachedServers())
+            {
+                if(!name.equals(Channels.BUNGEECORD) && name.startsWith(lastArg))
+                {
+                    result.add(name);
+                }
+            }
+        }
+        return result;
     }
 
     @Override
