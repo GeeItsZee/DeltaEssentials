@@ -23,12 +23,10 @@ import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -95,6 +93,7 @@ public class TpaCommand implements TabExecutor
             destPlayer.sendMessage(Prefixes.INFO + Prefixes.input(sender.getName()) +
                 " sent you a TP request. Use /tpaccept to accept.");
             deltaTeleport.addTpRequest(destName, sender.getName());
+            destPlayer.sendMessage(Prefixes.SUCCESS + "Sent teleport request to player.");
             return;
         }
 

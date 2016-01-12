@@ -65,6 +65,8 @@ public class TpAcceptCommand implements CommandExecutor
                 {
                     deltaTeleport.teleportWithEvent(player, destPlayer);
                     sender.sendMessage(Prefixes.SUCCESS + "Teleporting ...");
+                    destPlayer.sendMessage(Prefixes.SUCCESS +
+                        Prefixes.input(sender.getName()) + " accepted your request.");
                 }
                 else
                 {

@@ -22,6 +22,7 @@ import com.yahoo.tracebachi.DeltaEssentials.Chat.DeltaChat;
 import com.yahoo.tracebachi.DeltaEssentials.Commands.JailCommand;
 import com.yahoo.tracebachi.DeltaEssentials.Commands.KickCommand;
 import com.yahoo.tracebachi.DeltaEssentials.Commands.MoveToCommand;
+import com.yahoo.tracebachi.DeltaEssentials.Commands.StopJoinCommand;
 import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerServerSwitchEvent;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.DeltaTeleport;
 import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.LoggablePlugin;
@@ -36,7 +37,10 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.messaging.Messenger;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by Trace Bachi (tracebachi@yahoo.com, BigBossZee) on 12/5/15.
@@ -44,6 +48,7 @@ import java.util.*;
 public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
 {
     private boolean debugMode;
+    private boolean stopJoin;
 
     private HashSet<String> blockedServers = new HashSet<>();
     private HashMap<String, HikariDataSource> sources = new HashMap<>();
@@ -51,6 +56,7 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
     private MoveToCommand moveToCommand;
     private KickCommand kickCommand;
     private JailCommand jailCommand;
+    private StopJoinCommand stopJoinCommand;
     private GeneralListener generalListener;
 
     private DeltaChat deltaChat;
@@ -82,6 +88,8 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
         jailCommand = new JailCommand(deltaRedisApi, this);
         getCommand("jail").setExecutor(jailCommand);
         getCommand("jail").setTabCompleter(jailCommand);
+        stopJoinCommand = new StopJoinCommand(this);
+        getCommand("stopjoin").setExecutor(stopJoinCommand);
 
         deltaChat = new DeltaChat(deltaRedisApi, this);
         deltaTeleport = new DeltaTeleport(this, deltaRedisApi);
@@ -201,6 +209,16 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
     public HikariDataSource getDataSource(String name)
     {
         return sources.get(name);
+    }
+
+    public void setStopJoin(boolean value)
+    {
+        stopJoin = value;
+    }
+
+    public boolean isStopJoinEnabled()
+    {
+        return stopJoin;
     }
 
     private void createDataSources()

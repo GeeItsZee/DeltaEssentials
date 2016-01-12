@@ -27,7 +27,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -106,7 +105,7 @@ public class TpCommand implements TabExecutor
 
         // Try to auto complete a partial name
         List<String> partialMatches = deltaRedisApi.matchStartOfName(destName);
-        if(!partialMatches.contains(destName))
+        if(!partialMatches.contains(destName.toLowerCase()))
         {
             if(partialMatches.size() == 0)
             {

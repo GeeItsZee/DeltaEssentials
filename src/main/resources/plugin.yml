@@ -9,7 +9,7 @@ commands:
     aliases: [mt]
   tell:
     description: Sends a message to another player.
-    aliases: [t, tell, pm, m]
+    aliases: [t, tell, pm, m, msg]
   reply:
     description: Sends a message to another player as a reply.
     aliases: [r]
@@ -31,6 +31,9 @@ commands:
   jail:
     description: Sends a player to the jail server and jails them.
     aliases: [dejail]
+  stopjoin:
+    description: Blocks all players from joining the server when enabled. Useful for shutdowns to prevent players from rejoining.
+    aliases: [destopjoin]
 
 permissions:
   DeltaEss.Tell.Use:
@@ -57,3 +60,5 @@ permissions:
     description: Allows the player to kick others.
   DeltaEss.Jail:
     description: Allows the player to jail others.
+  DeltaEss.StopJoin:
+    description: Allows the player to use the stopjoin command.

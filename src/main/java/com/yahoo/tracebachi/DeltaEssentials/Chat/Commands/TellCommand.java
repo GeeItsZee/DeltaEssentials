@@ -29,7 +29,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -88,6 +87,7 @@ public class TellCommand implements TabExecutor
         String receiver = args[0];
         String message = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
         boolean canUseColors = commandSender.hasPermission("DeltaEss.Tell.Color");
+        boolean ignoreVanish = commandSender.hasPermission("DeltaEss.Tell.IgnoreVanish");
 
         // Check if the receiver is CONSOLE
         if(receiver.equalsIgnoreCase("console"))
@@ -114,7 +114,7 @@ public class TellCommand implements TabExecutor
 
         // Try to auto complete a partial name
         List<String> partialMatches = deltaRedisApi.matchStartOfName(receiver);
-        if(!partialMatches.contains(receiver))
+        if(!partialMatches.contains(receiver.toLowerCase()))
         {
             if(partialMatches.size() == 0)
             {

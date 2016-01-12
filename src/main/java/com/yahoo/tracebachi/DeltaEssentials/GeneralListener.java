@@ -4,11 +4,14 @@ import com.yahoo.tracebachi.DeltaEssentials.Commands.JailCommand;
 import com.yahoo.tracebachi.DeltaEssentials.Commands.KickCommand;
 import com.yahoo.tracebachi.DeltaEssentials.Commands.MoveToCommand;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerLoginEvent;
 
 import java.util.regex.Pattern;
 
@@ -31,7 +34,17 @@ public class GeneralListener implements Listener
         this.plugin = null;
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    public void onPlayerLoginEvent(PlayerLoginEvent event)
+    {
+        if(plugin.isStopJoinEnabled())
+        {
+            event.setResult(PlayerLoginEvent.Result.KICK_OTHER);
+            event.setKickMessage(Prefixes.FAILURE + "This server is currently not allowing players to join.");
+        }
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = false)
     public void onRedisMessageEvent(DeltaRedisMessageEvent event)
     {
         String channel = event.getChannel();
@@ -60,7 +73,7 @@ public class GeneralListener implements Listener
             Player targetPlayer = Bukkit.getPlayer(target);
             if(targetPlayer != null && targetPlayer.isOnline())
             {
-                targetPlayer.kickPlayer(reason + "\n\n" + ChatColor.GOLD + sender);
+                targetPlayer.kickPlayer(reason + "\n\n by " + ChatColor.GOLD + sender);
                 announceKick(sender, targetPlayer.getName(), reason);
             }
         }
