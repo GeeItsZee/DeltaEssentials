@@ -16,13 +16,14 @@
  */
 package com.yahoo.tracebachi.DeltaEssentials;
 
+import com.earth2me.essentials.Essentials;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import com.yahoo.tracebachi.DeltaEssentials.Chat.DeltaChat;
 import com.yahoo.tracebachi.DeltaEssentials.Commands.JailCommand;
+import com.yahoo.tracebachi.DeltaEssentials.Commands.JoinStopCommand;
 import com.yahoo.tracebachi.DeltaEssentials.Commands.KickCommand;
 import com.yahoo.tracebachi.DeltaEssentials.Commands.MoveToCommand;
-import com.yahoo.tracebachi.DeltaEssentials.Commands.StopJoinCommand;
 import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerServerSwitchEvent;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.DeltaTeleport;
 import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.LoggablePlugin;
@@ -56,7 +57,7 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
     private MoveToCommand moveToCommand;
     private KickCommand kickCommand;
     private JailCommand jailCommand;
-    private StopJoinCommand stopJoinCommand;
+    private JoinStopCommand joinStopCommand;
     private GeneralListener generalListener;
 
     private DeltaChat deltaChat;
@@ -77,6 +78,7 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
 
         PluginManager pluginManager = getServer().getPluginManager();
         DeltaRedisPlugin deltaRedisPlugin = (DeltaRedisPlugin) pluginManager.getPlugin("DeltaRedis");
+        Essentials essentials = (Essentials) pluginManager.getPlugin("Essentials");
         deltaRedisApi = deltaRedisPlugin.getDeltaRedisApi();
 
         moveToCommand = new MoveToCommand(deltaRedisApi, this);
@@ -88,10 +90,10 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
         jailCommand = new JailCommand(deltaRedisApi, this);
         getCommand("jail").setExecutor(jailCommand);
         getCommand("jail").setTabCompleter(jailCommand);
-        stopJoinCommand = new StopJoinCommand(this);
-        getCommand("stopjoin").setExecutor(stopJoinCommand);
+        joinStopCommand = new JoinStopCommand(this);
+        getCommand("joinstop").setExecutor(joinStopCommand);
 
-        deltaChat = new DeltaChat(deltaRedisApi, this);
+        deltaChat = new DeltaChat(essentials, deltaRedisApi, this);
         deltaTeleport = new DeltaTeleport(this, deltaRedisApi);
 
         generalListener = new GeneralListener(this);
@@ -211,12 +213,12 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
         return sources.get(name);
     }
 
-    public void setStopJoin(boolean value)
+    public void setJoinStop(boolean value)
     {
         stopJoin = value;
     }
 
-    public boolean isStopJoinEnabled()
+    public boolean isJoinStopEnabled()
     {
         return stopJoin;
     }

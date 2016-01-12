@@ -30,10 +30,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 
 /**
@@ -41,15 +43,20 @@ import java.util.regex.Pattern;
  */
 public class ChatListener implements Listener
 {
+    public static final String SHARED_CHAT_CHANNEL = "DE-HeroChat";
+    public static final String TELL_CHANNEL = "DE-Tell";
     private static final Pattern pattern = Pattern.compile("/\\\\");
 
     private HashMap<String, String> replyMap;
+    private HashSet<String> socialSpyListeners;
     private DeltaRedisApi deltaRedisApi;
     private DeltaChat deltaChat;
 
-    public ChatListener(HashMap<String, String> replyMap, DeltaRedisApi deltaRedisApi, DeltaChat deltaChat)
+    public ChatListener(HashMap<String, String> replyMap, HashSet<String> socialSpyListeners,
+        DeltaRedisApi deltaRedisApi, DeltaChat deltaChat)
     {
         this.replyMap = replyMap;
+        this.socialSpyListeners = socialSpyListeners;
         this.deltaRedisApi = deltaRedisApi;
         this.deltaChat = deltaChat;
     }
@@ -62,9 +69,21 @@ public class ChatListener implements Listener
     }
 
     @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event)
+    {
+        Player player = event.getPlayer();
+        if(player.hasPermission("DeltaEss.SocialSpy"))
+        {
+            socialSpyListeners.add(player.getName().toLowerCase());
+        }
+    }
+
+    @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event)
     {
-        replyMap.remove(event.getPlayer().getName().toLowerCase());
+        String playerName = event.getPlayer().getName().toLowerCase();
+        replyMap.remove(playerName);
+        socialSpyListeners.remove(playerName);
     }
 
     @EventHandler
@@ -75,7 +94,7 @@ public class ChatListener implements Listener
         if(deltaChat.getSharedChatChannels().contains(channel))
         {
             String message =  event.getMsg();
-            deltaRedisApi.publish(Channels.SPIGOT, DeltaChat.SHARED_CHAT_CHANNEL,
+            deltaRedisApi.publish(Channels.SPIGOT, SHARED_CHAT_CHANNEL,
                 channel + "/\\" + message);
         }
     }
@@ -83,7 +102,7 @@ public class ChatListener implements Listener
     @EventHandler
     public void onDeltaRedisMessage(DeltaRedisMessageEvent event)
     {
-        if(event.getChannel().equals(DeltaChat.SHARED_CHAT_CHANNEL))
+        if(event.getChannel().equals(SHARED_CHAT_CHANNEL))
         {
             String[] splitMessage = pattern.split(event.getMessage(), 2);
             String channelName = splitMessage[0];
@@ -99,7 +118,7 @@ public class ChatListener implements Listener
                 deltaChat.severe("Chat channel (" + channelName + ") not found!");
             }
         }
-        else if(event.getChannel().equals(DeltaChat.TELL_CHANNEL))
+        else if(event.getChannel().equals(TELL_CHANNEL))
         {
             onTellMessage(event);
         }
@@ -117,12 +136,20 @@ public class ChatListener implements Listener
         {
             receiver = player.getName();
 
-            PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message);
-            if(tellEvent.isCancelled()) { return; }
-            message = tellEvent.getMessage();
+            PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message, false);
+            if(!tellEvent.isCancelled())
+            {
+                // In case the message was modified, update it
+                message = tellEvent.getMessage();
 
-            player.sendMessage(MessageUtils.formatForReceiver(sender, message));
-            replyMap.put(receiver, sender);
+                // Send message
+                player.sendMessage(MessageUtils.formatForReceiver(sender, message));
+                replyMap.put(receiver, sender);
+            }
+            else if(tellEvent.getCancelReason() != null)
+            {
+                deltaRedisApi.sendMessageToPlayer(sender, tellEvent.getCancelReason());
+            }
         }
         else if(!sender.equalsIgnoreCase("console"))
         {

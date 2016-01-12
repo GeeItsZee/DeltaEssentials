@@ -34,13 +34,13 @@ import java.util.List;
  */
 public class TpHereCommand implements TabExecutor
 {
-    private DeltaTeleport deltaTeleport;
     private DeltaRedisApi deltaRedisApi;
+    private DeltaTeleport deltaTeleport;
 
-    public TpHereCommand(DeltaTeleport deltaTeleport, DeltaRedisApi deltaRedisApi)
+    public TpHereCommand(DeltaRedisApi deltaRedisApi, DeltaTeleport deltaTeleport)
     {
-        this.deltaTeleport = deltaTeleport;
         this.deltaRedisApi = deltaRedisApi;
+        this.deltaTeleport = deltaTeleport;
     }
 
     public void shutdown()
@@ -96,15 +96,16 @@ public class TpHereCommand implements TabExecutor
 
         // Check other servers
         String senderName = sender.getName();
-        deltaRedisApi.findPlayer(nameToTp, cachedPlayer -> {
-
+        deltaRedisApi.findPlayer(nameToTp, cachedPlayer ->
+        {
             Player originalSender = Bukkit.getPlayer(senderName);
             if(originalSender != null && originalSender.isOnline())
             {
                 if(cachedPlayer != null)
                 {
-                    // Format: DestName/\DestServer
+                    // Format: NameToTp/\TpHereSender/\DestServer
                     String message = nameToTp.toLowerCase() + "/\\" +
+                        sender.getName().toLowerCase() + "/\\" +
                         deltaRedisApi.getServerName();
 
                     deltaRedisApi.publish(cachedPlayer.getServer(), TpListener.TPHERE_CHANNEL, message);

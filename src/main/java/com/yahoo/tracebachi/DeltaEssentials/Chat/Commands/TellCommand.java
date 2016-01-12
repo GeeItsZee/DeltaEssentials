@@ -17,13 +17,13 @@
 package com.yahoo.tracebachi.DeltaEssentials.Chat.Commands;
 
 import com.yahoo.tracebachi.DeltaEssentials.CallbackUtil;
+import com.yahoo.tracebachi.DeltaEssentials.Chat.ChatListener;
 import com.yahoo.tracebachi.DeltaEssentials.Chat.DeltaChat;
 import com.yahoo.tracebachi.DeltaEssentials.Chat.MessageUtils;
 import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerTellEvent;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -87,27 +87,25 @@ public class TellCommand implements TabExecutor
         String receiver = args[0];
         String message = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
         boolean canUseColors = commandSender.hasPermission("DeltaEss.Tell.Color");
-        boolean ignoreVanish = commandSender.hasPermission("DeltaEss.Tell.IgnoreVanish");
 
         // Check if the receiver is CONSOLE
         if(receiver.equalsIgnoreCase("console"))
         {
-            PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message);
+            PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message, canUseColors);
             if(!tellEvent.isCancelled())
             {
-                if(canUseColors)
-                {
-                    message = ChatColor.translateAlternateColorCodes('&', tellEvent.getMessage());
-                }
-                else
-                {
-                    message = tellEvent.getMessage();
-                }
+                // In case the message was modified, update it
+                message = tellEvent.getMessage();
 
+                // Send messages
                 Bukkit.getConsoleSender().sendMessage(MessageUtils.formatForReceiver(sender, message));
                 commandSender.sendMessage(MessageUtils.formatForSender(receiver, message));
                 replyMap.put("CONSOLE", sender);
                 replyMap.put(sender, "CONSOLE");
+            }
+            else if(tellEvent.getCancelReason() != null)
+            {
+                commandSender.sendMessage(tellEvent.getCancelReason());
             }
             return true;
         }
@@ -119,19 +117,19 @@ public class TellCommand implements TabExecutor
             if(partialMatches.size() == 0)
             {
                 commandSender.sendMessage(Prefixes.FAILURE +
-                    Prefixes.input(receiver) + "is not online.");
+                    Prefixes.input(receiver) + " is not online.");
                 return true;
             }
-            else if(partialMatches.size() == 1)
-            {
-                receiver = partialMatches.get(0);
-            }
-            else
+            else if(partialMatches.size() > 1)
             {
                 commandSender.sendMessage(Prefixes.FAILURE +
                     "There are too many players that match " +
                     Prefixes.input(receiver));
                 return true;
+            }
+            else
+            {
+                receiver = partialMatches.get(0);
             }
         }
 
@@ -141,38 +139,31 @@ public class TellCommand implements TabExecutor
         {
             receiver = receiverPlayer.getName();
 
-            PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message);
+            PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message, canUseColors);
             if(!tellEvent.isCancelled())
             {
-                if(canUseColors)
-                {
-                    message = ChatColor.translateAlternateColorCodes('&', tellEvent.getMessage());
-                }
-                else
-                {
-                    message = tellEvent.getMessage();
-                }
+                // In case the message was modified, update it
+                message = tellEvent.getMessage();
 
+                // Send messages
                 receiverPlayer.sendMessage(MessageUtils.formatForReceiver(sender, message));
                 commandSender.sendMessage(MessageUtils.formatForSender(receiver, message));
                 replyMap.put(receiver, sender);
                 replyMap.put(sender, receiver);
             }
+            else if(tellEvent.getCancelReason() != null)
+            {
+                commandSender.sendMessage(tellEvent.getCancelReason());
+            }
             return true;
         }
 
         // Check if the receiver might be on another server
-        PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message);
+        PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message, canUseColors);
         if(!tellEvent.isCancelled())
         {
-            if(canUseColors)
-            {
-                message = ChatColor.translateAlternateColorCodes('&', tellEvent.getMessage());
-            }
-            else
-            {
-                message = tellEvent.getMessage();
-            }
+            // In case the message was modified, update it
+            message = tellEvent.getMessage();
 
             String finalReceiver = receiver;
             String formatted = MessageUtils.formatForSender(receiver, message);
@@ -183,17 +174,21 @@ public class TellCommand implements TabExecutor
                 if(cachedPlayer != null)
                 {
                     String destination = cachedPlayer.getServer();
-                    deltaRedisApi.publish(destination, DeltaChat.TELL_CHANNEL, dataString);
+                    deltaRedisApi.publish(destination, ChatListener.TELL_CHANNEL, dataString);
 
                     replyMap.put(sender, finalReceiver);
                     CallbackUtil.sendMessage(sender, formatted);
                 }
                 else
                 {
-                    CallbackUtil.sendMessage(sender,  Prefixes.FAILURE +
+                    CallbackUtil.sendMessage(sender, Prefixes.FAILURE +
                         Prefixes.input(finalReceiver) + " is not online.");
                 }
             });
+        }
+        else if(tellEvent.getCancelReason() != null)
+        {
+            commandSender.sendMessage(tellEvent.getCancelReason());
         }
         return true;
     }

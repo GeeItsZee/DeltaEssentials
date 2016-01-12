@@ -21,29 +21,26 @@ import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerLoginEvent;
 
 /**
  * Created by Trace Bachi (tracebachi@yahoo.com, BigBossZee) on 12/4/15.
  */
-public class StopJoinCommand implements CommandExecutor, Listener
+public class JoinStopCommand implements CommandExecutor, Listener
 {
     private DeltaEssentialsPlugin plugin;
 
-    public StopJoinCommand(DeltaEssentialsPlugin plugin)
+    public JoinStopCommand(DeltaEssentialsPlugin plugin)
     {
         this.plugin = plugin;
     }
 
     @Override
-    public boolean onCommand(CommandSender commandSender, Command command, String s, String[] args)
+    public boolean onCommand(CommandSender sender, Command command, String s, String[] args)
     {
-        if(!commandSender.hasPermission("DeltaEss.StopJoin"))
+        if(!sender.hasPermission("DeltaEss.JoinStop"))
         {
-            commandSender.sendMessage(Prefixes.FAILURE + "You do not have permission to use that command.");
+            sender.sendMessage(Prefixes.FAILURE + "You do not have permission to use that command.");
             return true;
         }
 
@@ -52,28 +49,28 @@ public class StopJoinCommand implements CommandExecutor, Listener
             switch(args[0].toLowerCase())
             {
                 case "on":
-                    plugin.setStopJoin(true);
+                    plugin.setJoinStop(true);
                     break;
                 case "off":
-                    plugin.setStopJoin(false);
+                    plugin.setJoinStop(false);
                     break;
                 default:
-                    plugin.setStopJoin(!plugin.isStopJoinEnabled());
+                    plugin.setJoinStop(!plugin.isJoinStopEnabled());
                     break;
             }
         }
         else
         {
-            plugin.setStopJoin(!plugin.isStopJoinEnabled());
+            plugin.setJoinStop(!plugin.isJoinStopEnabled());
         }
 
-        if(plugin.isStopJoinEnabled())
+        if(plugin.isJoinStopEnabled())
         {
-            commandSender.sendMessage(Prefixes.SUCCESS + "StopJoin " + Prefixes.input("enabled"));
+            sender.sendMessage(Prefixes.SUCCESS + "JoinStop " + Prefixes.input("enabled"));
         }
         else
         {
-            commandSender.sendMessage(Prefixes.SUCCESS + "StopJoin " + Prefixes.input("disabled"));
+            sender.sendMessage(Prefixes.SUCCESS + "JoinStop " + Prefixes.input("disabled"));
         }
 
         return true;

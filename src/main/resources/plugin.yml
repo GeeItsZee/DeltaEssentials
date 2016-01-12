@@ -25,15 +25,18 @@ commands:
   tpaccept:
     description: Accepts teleport request.
     aliases: [detpaccept]
+  tptoggle:
+    description: Controls if players can teleport to the player.
+    aliases: [detptoggle]
   kick:
     description: Kicks the player from the server.
     aliases: [dekick]
   jail:
     description: Sends a player to the jail server and jails them.
     aliases: [dejail]
-  stopjoin:
+  joinstop:
     description: Blocks all players from joining the server when enabled. Useful for shutdowns to prevent players from rejoining.
-    aliases: [destopjoin]
+    aliases: [js]
 
 permissions:
   DeltaEss.Tell.Use:
@@ -56,9 +59,15 @@ permissions:
     description: Sends a teleport request to another.
   DeltaEss.Tpa.Accept:
     description: Accepts a teleport request.
+  DeltaEss.TpToggle.Use:
+    description: Accepts a teleport request.
+  DeltaEss.TpToggle.Bypass:
+    description: Accepts a teleport request.
   DeltaEss.Kick:
     description: Allows the player to kick others.
   DeltaEss.Jail:
     description: Allows the player to jail others.
-  DeltaEss.StopJoin:
+  DeltaEss.SocialSpy:
+    description: Allows the player to listen to messages on the server.
+  DeltaEss.JoinStop:
     description: Allows the player to use the stopjoin command.

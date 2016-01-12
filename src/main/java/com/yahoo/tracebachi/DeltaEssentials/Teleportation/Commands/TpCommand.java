@@ -37,10 +37,10 @@ public class TpCommand implements TabExecutor
     private DeltaTeleport deltaTeleport;
     private DeltaRedisApi deltaRedisApi;
 
-    public TpCommand(DeltaTeleport deltaTeleport, DeltaRedisApi deltaRedisApi)
+    public TpCommand(DeltaRedisApi deltaRedisApi, DeltaTeleport deltaTeleport)
     {
-        this.deltaTeleport = deltaTeleport;
         this.deltaRedisApi = deltaRedisApi;
+        this.deltaTeleport = deltaTeleport;
     }
 
     public void shutdown()
@@ -113,37 +113,49 @@ public class TpCommand implements TabExecutor
                     Prefixes.input(destName) + "is not online.");
                 return;
             }
-            else if(partialMatches.size() == 1)
-            {
-                destName = partialMatches.get(0);
-            }
-            else
+            else if(partialMatches.size() > 1)
             {
                 playerToTp.sendMessage(Prefixes.FAILURE +
                     "There are too many players that match " +
                     Prefixes.input(destName));
                 return;
             }
+            else
+            {
+                destName = partialMatches.get(0);
+            }
         }
 
-        Player destPlayer = Bukkit.getPlayer(destName);
-        if(destPlayer != null && destPlayer.isOnline())
+        Player destination = Bukkit.getPlayer(destName);
+        String senderName = playerToTp.getName();
+
+        if(destination != null && destination.isOnline())
         {
-            if(playerToTp.canSee(destPlayer))
+            if(playerToTp.canSee(destination))
             {
-                deltaTeleport.teleportWithEvent(playerToTp, destPlayer);
+                boolean bypassTpDeny = playerToTp.hasPermission("DeltaEss.TpToggle.Bypass");
+
+                if(deltaTeleport.isDenyingTp(destName) && !bypassTpDeny)
+                {
+                    playerToTp.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
+                        " is not allowing players to teleport to them.");
+                    destination.sendMessage(Prefixes.INFO + Prefixes.input(senderName) +
+                        " tried to teleport to you, but you are denying teleports.");
+                }
+                else
+                {
+                    deltaTeleport.teleportWithEvent(playerToTp, destination);
+                }
             }
             else
             {
-                playerToTp.sendMessage(Prefixes.FAILURE + "Player not found.");
+                playerToTp.sendMessage(Prefixes.FAILURE + "Player is not online.");
             }
             return;
         }
 
-        String senderName = playerToTp.getName();
-        String finalDestName = destName;
-
         // Check other servers
+        String finalDestName = destName;
         deltaRedisApi.findPlayer(destName, cachedPlayer ->
         {
             Player originalSender = Bukkit.getPlayer(senderName);
@@ -151,13 +163,13 @@ public class TpCommand implements TabExecutor
             {
                 if(cachedPlayer != null)
                 {
-                    // Format: SenderName/\DestName
+                    // Format: TpSender/\DestName
                     String message = playerToTp.getName().toLowerCase() + "/\\" +
                         finalDestName.toLowerCase();
 
                     deltaRedisApi.publish(cachedPlayer.getServer(), TpListener.TP_CHANNEL, message);
                     deltaTeleport.sendToServer(playerToTp, cachedPlayer.getServer());
-                    originalSender.sendMessage(Prefixes.SUCCESS + "Teleporting to player ...");
+                    originalSender.sendMessage(Prefixes.SUCCESS + "Teleporting ...");
                 }
                 else
                 {

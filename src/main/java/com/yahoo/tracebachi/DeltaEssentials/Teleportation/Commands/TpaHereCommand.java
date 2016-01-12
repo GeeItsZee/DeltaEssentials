@@ -32,15 +32,15 @@ import java.util.List;
 /**
  * Created by Trace Bachi (tracebachi@yahoo.com, BigBossZee) on 11/29/15.
  */
-public class TpaCommand implements TabExecutor
+public class TpaHereCommand implements TabExecutor
 {
-    private DeltaTeleport deltaTeleport;
     private DeltaRedisApi deltaRedisApi;
+    private DeltaTeleport deltaTeleport;
 
-    public TpaCommand(DeltaTeleport deltaTeleport, DeltaRedisApi deltaRedisApi)
+    public TpaHereCommand(DeltaRedisApi deltaRedisApi, DeltaTeleport deltaTeleport)
     {
-        this.deltaTeleport = deltaTeleport;
         this.deltaRedisApi = deltaRedisApi;
+        this.deltaTeleport = deltaTeleport;
     }
 
     public void shutdown()
@@ -82,37 +82,37 @@ public class TpaCommand implements TabExecutor
         return true;
     }
 
-    private void sendTeleportRequest(String destName, Player sender)
+    private void sendTeleportRequest(String tpaReceiver, Player sender)
     {
         Preconditions.checkNotNull(sender, "Sender cannot be null.");
-        Preconditions.checkNotNull(destName, "Start player cannot be null.");
+        Preconditions.checkNotNull(tpaReceiver, "Tpa receiver cannot be null.");
 
-        Player destPlayer = Bukkit.getPlayer(destName);
+        Player destPlayer = Bukkit.getPlayer(tpaReceiver);
         if(destPlayer != null && destPlayer.isOnline())
         {
             destPlayer.sendMessage(Prefixes.INFO + Prefixes.input(sender.getName()) +
-                " sent you a TP request. Use /tpaccept to accept.");
-            deltaTeleport.addTpRequest(destName, sender.getName());
+                " sent you a TP request. Use /tpaccept to accept within 30 seconds.");
+            deltaTeleport.addTpRequest(tpaReceiver, sender.getName());
             destPlayer.sendMessage(Prefixes.SUCCESS + "Sent teleport request to player.");
             return;
         }
 
         // Check other servers
         String senderName = sender.getName();
-        deltaRedisApi.findPlayer(destName, cachedPlayer ->
+        deltaRedisApi.findPlayer(tpaReceiver, cachedPlayer ->
         {
             Player originalSender = Bukkit.getPlayer(senderName);
             if(originalSender != null && originalSender.isOnline())
             {
                 if(cachedPlayer != null)
                 {
-                    // Format: DestName/\SenderName/\DestServer
-                    String message = destName.toLowerCase() + "/\\" +
+                    // Format: TpaReceiver/\TpaSender/\DestServer
+                    String message = tpaReceiver.toLowerCase() + "/\\" +
                         sender.getName().toLowerCase() + "/\\" +
                         deltaRedisApi.getServerName();
 
-                    deltaRedisApi.publish(cachedPlayer.getServer(), TpListener.TPA_CHANNEL, message);
-                    deltaTeleport.addTpRequest(destName, sender.getName());
+                    deltaRedisApi.publish(cachedPlayer.getServer(), TpListener.TPAHERE_CHANNEL, message);
+                    deltaTeleport.addTpRequest(tpaReceiver, sender.getName());
 
                     originalSender.sendMessage(Prefixes.SUCCESS + "Sent teleport request to player.");
                 }

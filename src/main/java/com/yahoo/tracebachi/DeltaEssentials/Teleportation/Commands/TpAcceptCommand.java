@@ -18,6 +18,7 @@ package com.yahoo.tracebachi.DeltaEssentials.Teleportation.Commands;
 
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.DeltaTeleport;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.TpRequest;
+import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -30,15 +31,18 @@ import org.bukkit.entity.Player;
  */
 public class TpAcceptCommand implements CommandExecutor
 {
+    private DeltaRedisApi deltaRedisApi;
     private DeltaTeleport deltaTeleport;
 
-    public TpAcceptCommand(DeltaTeleport deltaTeleport)
+    public TpAcceptCommand(DeltaRedisApi deltaRedisApi, DeltaTeleport deltaTeleport)
     {
+        this.deltaRedisApi = deltaRedisApi;
         this.deltaTeleport = deltaTeleport;
     }
 
     public void shutdown()
     {
+        this.deltaRedisApi = null;
         this.deltaTeleport = null;
     }
 
@@ -64,7 +68,7 @@ public class TpAcceptCommand implements CommandExecutor
                 if(destPlayer != null && destPlayer.isOnline())
                 {
                     deltaTeleport.teleportWithEvent(player, destPlayer);
-                    sender.sendMessage(Prefixes.SUCCESS + "Teleporting ...");
+
                     destPlayer.sendMessage(Prefixes.SUCCESS +
                         Prefixes.input(sender.getName()) + " accepted your request.");
                 }
@@ -75,8 +79,9 @@ public class TpAcceptCommand implements CommandExecutor
             }
             else
             {
-                sender.sendMessage(Prefixes.SUCCESS + "Teleporting ...");
                 deltaTeleport.sendToServer(player, request.getServer());
+                deltaRedisApi.sendMessageToPlayer(request.getSender(), Prefixes.SUCCESS +
+                    Prefixes.input(sender.getName()) + " accepted your request.");
             }
         }
         else

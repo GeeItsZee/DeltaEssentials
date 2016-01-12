@@ -34,13 +34,13 @@ public class GeneralListener implements Listener
         this.plugin = null;
     }
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    @EventHandler
     public void onPlayerLoginEvent(PlayerLoginEvent event)
     {
-        if(plugin.isStopJoinEnabled())
+        if(plugin.isJoinStopEnabled())
         {
-            event.setResult(PlayerLoginEvent.Result.KICK_OTHER);
-            event.setKickMessage(Prefixes.FAILURE + "This server is currently not allowing players to join.");
+            event.disallow(PlayerLoginEvent.Result.KICK_OTHER, "\n" + Prefixes.FAILURE + "" +
+                "This server is currently not allowing any players to join.");
         }
     }
 

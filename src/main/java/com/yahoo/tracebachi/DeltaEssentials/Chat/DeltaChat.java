@@ -16,6 +16,7 @@
  */
 package com.yahoo.tracebachi.DeltaEssentials.Chat;
 
+import com.earth2me.essentials.Essentials;
 import com.yahoo.tracebachi.DeltaEssentials.Chat.Commands.ReplyCommand;
 import com.yahoo.tracebachi.DeltaEssentials.Chat.Commands.TellCommand;
 import com.yahoo.tracebachi.DeltaEssentials.DeltaEssentialsPlugin;
@@ -23,6 +24,8 @@ import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerTellEvent;
 import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.LoggablePlugin;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,21 +37,24 @@ import java.util.Set;
  */
 public class DeltaChat implements LoggablePlugin
 {
-    public static final String SHARED_CHAT_CHANNEL = "DE-HeroChat";
-    public static final String TELL_CHANNEL = "DE-Tell";
-
+    private Essentials essPlugin;
     private DeltaEssentialsPlugin plugin;
+
     private HashMap<String, String> replyMap;
+    private HashSet<String> socialSpyListeners;
     private Set<String> sharedChatChannels;
 
     private TellCommand tellCommand;
     private ReplyCommand replyCommand;
     private ChatListener chatListener;
 
-    public DeltaChat(DeltaRedisApi deltaRedisApi, DeltaEssentialsPlugin plugin)
+    public DeltaChat(Essentials essPlugin, DeltaRedisApi deltaRedisApi, DeltaEssentialsPlugin plugin)
     {
+        this.essPlugin = essPlugin;
         this.plugin = plugin;
+
         this.replyMap = new HashMap<>();
+        this.socialSpyListeners = new HashSet<>();
         this.sharedChatChannels = Collections.unmodifiableSet(new HashSet<>(
             plugin.getConfig().getStringList("SharedChatChannels")));
 
@@ -59,7 +65,7 @@ public class DeltaChat implements LoggablePlugin
         plugin.getCommand("tell").setTabCompleter(tellCommand);
         plugin.getCommand("reply").setExecutor(replyCommand);
 
-        chatListener = new ChatListener(replyMap, deltaRedisApi, this);
+        chatListener = new ChatListener(replyMap, socialSpyListeners, deltaRedisApi, this);
         plugin.getServer().getPluginManager().registerEvents(chatListener, plugin);
     }
 
@@ -86,6 +92,12 @@ public class DeltaChat implements LoggablePlugin
             replyCommand = null;
         }
 
+        if(socialSpyListeners != null)
+        {
+            socialSpyListeners.clear();
+            socialSpyListeners = null;
+        }
+
         if(replyMap != null)
         {
             replyMap.clear();
@@ -101,14 +113,32 @@ public class DeltaChat implements LoggablePlugin
         return sharedChatChannels;
     }
 
-    public PlayerTellEvent tellWithEvent(String sender, String receiver, String message)
+    public PlayerTellEvent tellWithEvent(String sender, String receiver, String message, boolean canUseColors)
     {
+        if(canUseColors)
+        {
+            message = ChatColor.translateAlternateColorCodes('&', message);
+        }
+
         PlayerTellEvent event = new PlayerTellEvent(sender, receiver, message);
         Bukkit.getPluginManager().callEvent(event);
 
         if(!event.isCancelled())
         {
-            Bukkit.getLogger().info(MessageUtils.formatForLog(sender, receiver, message));
+            String logFormat = MessageUtils.formatForLog(sender, receiver, message);
+            Bukkit.getLogger().info(logFormat);
+
+            for(String spyListener : socialSpyListeners)
+            {
+                Player player = Bukkit.getPlayer(spyListener);
+                if(player != null && player.isOnline())
+                {
+                    if(essPlugin.getUser(player).isSocialSpyEnabled())
+                    {
+                        player.sendMessage("[Spy]" + logFormat);
+                    }
+                }
+            }
         }
         return event;
     }

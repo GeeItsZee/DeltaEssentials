@@ -30,6 +30,7 @@ public class PlayerTellEvent extends Event implements Cancellable
     private final String sender;
     private final String receiver;
     private String message;
+    private String cancelReason;
     private boolean cancelled;
 
     public PlayerTellEvent(String sender, String receiver, String message)
@@ -54,9 +55,19 @@ public class PlayerTellEvent extends Event implements Cancellable
         return message;
     }
 
+    public String getCancelReason()
+    {
+        return cancelReason;
+    }
+
     public void setMessage(String message)
     {
         this.message = message;
+    }
+
+    public void setCancelReason(String cancelReason)
+    {
+        this.cancelReason = cancelReason;
     }
 
     public HandlerList getHandlers()

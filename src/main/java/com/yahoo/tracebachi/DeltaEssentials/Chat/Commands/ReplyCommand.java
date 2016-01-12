@@ -17,13 +17,13 @@
 package com.yahoo.tracebachi.DeltaEssentials.Chat.Commands;
 
 import com.yahoo.tracebachi.DeltaEssentials.CallbackUtil;
+import com.yahoo.tracebachi.DeltaEssentials.Chat.ChatListener;
 import com.yahoo.tracebachi.DeltaEssentials.Chat.DeltaChat;
 import com.yahoo.tracebachi.DeltaEssentials.Chat.MessageUtils;
 import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerTellEvent;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -85,21 +85,20 @@ public class ReplyCommand implements CommandExecutor
         // Check if the receiver is CONSOLE
         if(receiver.equalsIgnoreCase("console"))
         {
-            PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message);
+            PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message, canUseColors);
             if(!tellEvent.isCancelled())
             {
-                if(canUseColors)
-                {
-                    message = ChatColor.translateAlternateColorCodes('&', tellEvent.getMessage());
-                }
-                else
-                {
-                    message = tellEvent.getMessage();
-                }
+                // In case the message was modified, update it
+                message = tellEvent.getMessage();
 
+                // Send messages
                 Bukkit.getConsoleSender().sendMessage(MessageUtils.formatForReceiver(sender, message));
                 commandSender.sendMessage(MessageUtils.formatForSender(receiver, message));
                 replyMap.put("CONSOLE", sender);
+            }
+            else if(tellEvent.getCancelReason() != null)
+            {
+                commandSender.sendMessage(tellEvent.getCancelReason());
             }
             return true;
         }
@@ -110,37 +109,30 @@ public class ReplyCommand implements CommandExecutor
         {
             receiver = receiverPlayer.getName();
 
-            PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message);
+            PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message, canUseColors);
             if(!tellEvent.isCancelled())
             {
-                if(canUseColors)
-                {
-                    message = ChatColor.translateAlternateColorCodes('&', tellEvent.getMessage());
-                }
-                else
-                {
-                    message = tellEvent.getMessage();
-                }
+                // In case the message was modified, update it
+                message = tellEvent.getMessage();
 
+                // Send messages
                 receiverPlayer.sendMessage(MessageUtils.formatForReceiver(sender, message));
                 commandSender.sendMessage(MessageUtils.formatForSender(receiver, message));
                 replyMap.put(receiver, sender);
+            }
+            else if(tellEvent.getCancelReason() != null)
+            {
+                commandSender.sendMessage(tellEvent.getCancelReason());
             }
             return true;
         }
 
         // Check if the receiver might be on another server
-        PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message);
+        PlayerTellEvent tellEvent = deltaChat.tellWithEvent(sender, receiver, message, canUseColors);
         if(!tellEvent.isCancelled())
         {
-            if(canUseColors)
-            {
-                message = ChatColor.translateAlternateColorCodes('&', tellEvent.getMessage());
-            }
-            else
-            {
-                message = tellEvent.getMessage();
-            }
+            // In case the message was modified, update it
+            message = tellEvent.getMessage();
 
             String finalReceiver = receiver;
             String formatted = MessageUtils.formatForSender(receiver, message);
@@ -151,7 +143,7 @@ public class ReplyCommand implements CommandExecutor
                 if(cachedPlayer != null)
                 {
                     String destination = cachedPlayer.getServer();
-                    deltaRedisApi.publish(destination, DeltaChat.TELL_CHANNEL, dataString);
+                    deltaRedisApi.publish(destination, ChatListener.TELL_CHANNEL, dataString);
 
                     replyMap.put(sender, finalReceiver);
                     CallbackUtil.sendMessage(sender, formatted);
@@ -162,6 +154,10 @@ public class ReplyCommand implements CommandExecutor
                         Prefixes.input(finalReceiver) + " is not online.");
                 }
             });
+        }
+        else if(tellEvent.getCancelReason() != null)
+        {
+            commandSender.sendMessage(tellEvent.getCancelReason());
         }
         return true;
     }
