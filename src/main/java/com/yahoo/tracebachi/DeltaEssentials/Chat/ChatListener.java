@@ -48,15 +48,12 @@ public class ChatListener implements Listener
     private static final Pattern pattern = Pattern.compile("/\\\\");
 
     private HashMap<String, String> replyMap;
-    private HashSet<String> socialSpyListeners;
     private DeltaRedisApi deltaRedisApi;
     private DeltaChat deltaChat;
 
-    public ChatListener(HashMap<String, String> replyMap, HashSet<String> socialSpyListeners,
-        DeltaRedisApi deltaRedisApi, DeltaChat deltaChat)
+    public ChatListener(HashMap<String, String> replyMap, DeltaRedisApi deltaRedisApi, DeltaChat deltaChat)
     {
         this.replyMap = replyMap;
-        this.socialSpyListeners = socialSpyListeners;
         this.deltaRedisApi = deltaRedisApi;
         this.deltaChat = deltaChat;
     }
@@ -69,21 +66,11 @@ public class ChatListener implements Listener
     }
 
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event)
-    {
-        Player player = event.getPlayer();
-        if(player.hasPermission("DeltaEss.SocialSpy"))
-        {
-            socialSpyListeners.add(player.getName().toLowerCase());
-        }
-    }
-
-    @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event)
     {
         String playerName = event.getPlayer().getName().toLowerCase();
         replyMap.remove(playerName);
-        socialSpyListeners.remove(playerName);
+        deltaChat.removeSocialSpy(playerName);
     }
 
     @EventHandler

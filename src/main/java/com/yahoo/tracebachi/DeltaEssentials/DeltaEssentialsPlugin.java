@@ -78,7 +78,6 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
 
         PluginManager pluginManager = getServer().getPluginManager();
         DeltaRedisPlugin deltaRedisPlugin = (DeltaRedisPlugin) pluginManager.getPlugin("DeltaRedis");
-        Essentials essentials = (Essentials) pluginManager.getPlugin("Essentials");
         deltaRedisApi = deltaRedisPlugin.getDeltaRedisApi();
 
         moveToCommand = new MoveToCommand(deltaRedisApi, this);
@@ -93,7 +92,7 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
         joinStopCommand = new JoinStopCommand(this);
         getCommand("joinstop").setExecutor(joinStopCommand);
 
-        deltaChat = new DeltaChat(essentials, deltaRedisApi, this);
+        deltaChat = new DeltaChat(deltaRedisApi, this);
         deltaTeleport = new DeltaTeleport(this, deltaRedisApi);
 
         generalListener = new GeneralListener(this);

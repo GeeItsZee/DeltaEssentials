@@ -33,12 +33,14 @@ public interface MessageUtils
 
     static String formatForSender(String receiver, String message)
     {
-        return "\u00A78[\u00A7dPM\u00A78]\u00A77=\u00A78[\u00A7eme -> " + receiver + "\u00A78]\u00A7d " + message;
+        return "\u00A78[\u00A7dPM\u00A78]\u00A77=\u00A78[\u00A7eme -> " +
+            receiver + "\u00A78]\u00A7d " + message;
     }
 
     static String formatForReceiver(String sender, String message)
     {
-        return "\u00A78[\u00A7dPM\u00A78]\u00A77=\u00A78[\u00A7e" + sender + " -> me\u00A78]\u00A7d " + message;
+        return "\u00A78[\u00A7dPM\u00A78]\u00A77=\u00A78[\u00A7e" +
+            sender + " -> me\u00A78]\u00A7d " + message;
     }
 
     static String toByteArrayDataString(String sender, String receiver, String message)

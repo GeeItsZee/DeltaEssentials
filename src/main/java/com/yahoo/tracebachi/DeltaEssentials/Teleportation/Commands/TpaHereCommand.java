@@ -93,7 +93,7 @@ public class TpaHereCommand implements TabExecutor
             destPlayer.sendMessage(Prefixes.INFO + Prefixes.input(sender.getName()) +
                 " sent you a TP request. Use /tpaccept to accept within 30 seconds.");
             deltaTeleport.addTpRequest(tpaReceiver, sender.getName());
-            destPlayer.sendMessage(Prefixes.SUCCESS + "Sent teleport request to player.");
+            sender.sendMessage(Prefixes.SUCCESS + "Sent teleport request to player.");
             return;
         }
 
