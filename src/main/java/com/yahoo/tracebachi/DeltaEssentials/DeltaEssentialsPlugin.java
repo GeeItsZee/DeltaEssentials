@@ -19,10 +19,7 @@ package com.yahoo.tracebachi.DeltaEssentials;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import com.yahoo.tracebachi.DeltaEssentials.Chat.DeltaChat;
-import com.yahoo.tracebachi.DeltaEssentials.Commands.JailCommand;
-import com.yahoo.tracebachi.DeltaEssentials.Commands.JoinStopCommand;
-import com.yahoo.tracebachi.DeltaEssentials.Commands.KickCommand;
-import com.yahoo.tracebachi.DeltaEssentials.Commands.MoveToCommand;
+import com.yahoo.tracebachi.DeltaEssentials.Commands.*;
 import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerServerSwitchEvent;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.DeltaTeleport;
 import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.LoggablePlugin;
@@ -57,6 +54,7 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
     private KickCommand kickCommand;
     private JailCommand jailCommand;
     private JoinStopCommand joinStopCommand;
+    private DisposalCommand disposalCommand;
     private GeneralListener generalListener;
 
     private DeltaChat deltaChat;
@@ -89,6 +87,8 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
         getCommand("jail").setTabCompleter(jailCommand);
         joinStopCommand = new JoinStopCommand(this);
         getCommand("joinstop").setExecutor(joinStopCommand);
+        disposalCommand = new DisposalCommand(this);
+        getCommand("disposal").setExecutor(disposalCommand);
 
         deltaChat = new DeltaChat(deltaRedisApi, this);
         deltaTeleport = new DeltaTeleport(this, deltaRedisApi);
@@ -126,6 +126,13 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
         {
             deltaChat.shutdown();
             deltaChat = null;
+        }
+
+        if(disposalCommand != null)
+        {
+            getCommand("disposal").setExecutor(null);
+            disposalCommand.shutdown();
+            disposalCommand = null;
         }
 
         if(joinStopCommand != null)

@@ -40,6 +40,9 @@ commands:
   joinstop:
     description: Blocks all players from joining the server when enabled. Useful for shutdowns to prevent players from rejoining.
     aliases: [js]
+  disposal:
+    description: Opens an inventory where players can get rid of items permanently.
+    aliases: [trash]
 
 permissions:
   DeltaEss.Tell.Use:
@@ -75,4 +78,6 @@ permissions:
   DeltaEss.SocialSpy:
     description: Allows the player to listen to messages on the server.
   DeltaEss.JoinStop:
+    description: Allows the player to use the stopjoin command.
+  DeltaEss.Disposal:
     description: Allows the player to use the stopjoin command.
