@@ -150,6 +150,7 @@ public class DeltaChat implements LoggablePlugin
         {
             // Log to the console
             String logFormat = MessageUtils.formatForLog(sender, receiver, message);
+            String spyFormat = MessageUtils.formatForSpy(sender, receiver, message);
             Bukkit.getLogger().info(logFormat);
 
             // Send a copy of the message to the social spies
@@ -158,7 +159,7 @@ public class DeltaChat implements LoggablePlugin
                 Player player = Bukkit.getPlayer(spyListener);
                 if(player != null && player.isOnline())
                 {
-                    player.sendMessage("[Spy]" + logFormat);
+                    player.sendMessage(spyFormat);
                 }
             }
         }

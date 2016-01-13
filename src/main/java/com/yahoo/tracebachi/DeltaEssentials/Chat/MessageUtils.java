@@ -31,6 +31,13 @@ public interface MessageUtils
         return "[" + sender + " -> " + receiver + "] " + message;
     }
 
+    static String formatForSpy(String sender, String receiver, String message)
+    {
+        return "\u00A78[\u00A77Spy\u00A78]\u00A77=\u00A78[" +
+            "\u00A77" + sender + " \u00A78-> " +
+            "\u00A77" + receiver + "\u00A78] \u00A77" + message;
+    }
+
     static String formatForSender(String receiver, String message)
     {
         return "\u00A78[\u00A7dPM\u00A78]\u00A77=\u00A78[\u00A7eme -> " +

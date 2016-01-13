@@ -16,6 +16,7 @@
  */
 package com.yahoo.tracebachi.DeltaEssentials.Teleportation;
 
+import com.earth2me.essentials.utils.LocationUtil;
 import com.yahoo.tracebachi.DeltaEssentials.DeltaEssentialsPlugin;
 import com.yahoo.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.Commands.*;
@@ -23,6 +24,7 @@ import com.yahoo.tracebachi.DeltaRedis.Shared.Interfaces.LoggablePlugin;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.scheduler.BukkitTask;
@@ -191,8 +193,23 @@ public class DeltaTeleport implements LoggablePlugin
 
         if(!event.isCancelled())
         {
-            playerToTp.sendMessage(Prefixes.SUCCESS + "Teleporting ...");
-            playerToTp.teleport(destination, PlayerTeleportEvent.TeleportCause.COMMAND);
+            try
+            {
+                Location destLoc = destination.getLocation();
+                if(!playerToTp.getAllowFlight() || !playerToTp.isFlying())
+                {
+                    destLoc = LocationUtil.getSafeDestination(destLoc);
+                }
+
+                playerToTp.sendMessage(Prefixes.SUCCESS + "Teleporting ...");
+                playerToTp.teleport(destLoc, PlayerTeleportEvent.TeleportCause.COMMAND);
+            }
+            catch(Exception ex)
+            {
+                playerToTp.sendMessage(Prefixes.FAILURE + Prefixes.input(destination.getName()) +
+                    " is in an unsafe teleport location.");
+                event.setCancelled(true);
+            }
         }
         return event;
     }
