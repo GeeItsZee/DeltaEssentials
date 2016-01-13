@@ -35,6 +35,11 @@ public class JoinStopCommand implements CommandExecutor, Listener
         this.plugin = plugin;
     }
 
+    public void shutdown()
+    {
+        this.plugin = null;
+    }
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String s, String[] args)
     {

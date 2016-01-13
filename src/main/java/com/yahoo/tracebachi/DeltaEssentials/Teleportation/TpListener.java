@@ -82,22 +82,39 @@ public class TpListener implements Listener
     public void onPlayerJoin(PlayerJoinEvent event)
     {
         Player player = event.getPlayer();
-        TpRequest request = deltaTeleport.removeTpRequest(player.getName());
+        String playerName = player.getName();
+        TpRequest request = deltaTeleport.removeTpRequest(playerName);
 
-        if(request != null)
+        // Ignore if there is no request
+        if(request == null) { return; }
+
+        String destName = request.getSender();
+        Player destination = Bukkit.getPlayer(destName);
+        if(destination == null || !destination.isOnline())
         {
-            Player destPlayer = Bukkit.getPlayer(request.getSender());
-            if(destPlayer != null && destPlayer.isOnline())
-            {
-                if(player.canSee(destPlayer))
-                {
-                    deltaTeleport.teleportWithEvent(player, destPlayer);
-                }
-                else
-                {
-                    player.sendMessage(Prefixes.FAILURE + "Player not found.");
-                }
-            }
+            player.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
+                " is not online.");
+            return;
+        }
+
+        if(!player.canSee(destination) && !player.hasPermission("DeltaEss.Tp.IgnoreVanish"))
+        {
+            player.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
+                " is not online.");
+            return;
+        }
+
+        boolean denyingTp = deltaTeleport.isDenyingTp(destName);
+        if(denyingTp && !player.hasPermission("DeltaEss.TpToggle.Bypass"))
+        {
+            player.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
+                " is not allowing players to teleport to them.");
+            destination.sendMessage(Prefixes.INFO + Prefixes.input(playerName) +
+                " tried to teleport to you, but you are denying teleports.");
+        }
+        else
+        {
+            deltaTeleport.teleportWithEvent(player, destination);
         }
     }
 
@@ -112,45 +129,51 @@ public class TpListener implements Listener
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTpEvent event)
     {
-        Player player = event.getPlayerToTeleport();
+        String playerName = event.getPlayerToTeleport().getName();
         Player dest = event.getDestination();
 
         if(dest.hasPermission("DeltaEss.Tp.Alert"))
         {
-            dest.sendMessage(Prefixes.INFO + Prefixes.input(player.getName()) + " teleported to you.");
+            dest.sendMessage(Prefixes.INFO + Prefixes.input(playerName) +
+                " teleported to you.");
         }
     }
 
     private void handleTpChannel(String tpSender, String destName)
     {
-        Player playerToTp = Bukkit.getPlayer(tpSender);
-        if(playerToTp != null && playerToTp.isOnline())
+        Player player = Bukkit.getPlayer(tpSender);
+        if(player == null || !player.isOnline())
         {
-            Player destination = Bukkit.getPlayer(destName);
-            if(destination != null && destination.isOnline() && playerToTp.canSee(destination))
-            {
-                boolean bypassTpDeny = playerToTp.hasPermission("DeltaEss.TpToggle.Bypass");
+            deltaTeleport.addTpRequest(tpSender, destName);
+            return;
+        }
 
-                if(deltaTeleport.isDenyingTp(destName) && !bypassTpDeny)
-                {
-                    playerToTp.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
-                        " is not allowing players to teleport to them.");
-                    destination.sendMessage(Prefixes.INFO + Prefixes.input(tpSender) +
-                        " tried to teleport to you, but you are denying teleports.");
-                }
-                else
-                {
-                    deltaTeleport.teleportWithEvent(playerToTp, destination);
-                }
-            }
-            else
-            {
-                playerToTp.sendMessage(Prefixes.FAILURE + "Player is not online.");
-            }
+        Player destination = Bukkit.getPlayer(destName);
+        if(destination == null || !destination.isOnline())
+        {
+            player.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
+                " is not online.");
+            return;
+        }
+
+        if(!player.canSee(destination) && !player.hasPermission("DeltaEss.Tp.IgnoreVanish"))
+        {
+            player.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
+                " is not online.");
+            return;
+        }
+
+        boolean denyingTp = deltaTeleport.isDenyingTp(destName);
+        if(denyingTp && !player.hasPermission("DeltaEss.TpToggle.Bypass"))
+        {
+            player.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
+                " is not allowing players to teleport to them.");
+            destination.sendMessage(Prefixes.INFO + Prefixes.input(tpSender) +
+                " tried to teleport to you, but you are denying teleports.");
         }
         else
         {
-            deltaTeleport.addTpRequest(tpSender, destName);
+            deltaTeleport.teleportWithEvent(player, destination);
         }
     }
 
@@ -174,7 +197,7 @@ public class TpListener implements Listener
         if(targetPlayer != null && targetPlayer.isOnline())
         {
             targetPlayer.sendMessage(Prefixes.INFO + Prefixes.input(tpaSender) +
-                " sent you a TP request. Use /tpaccept to accept within 30 seconds.");
+                " wants you to TP to them. Use /tpaccept to accept within 30 seconds.");
             deltaTeleport.addTpRequest(tpaReceiver,
                 new TpRequest(tpaSender, destServer));
         }

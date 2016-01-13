@@ -16,7 +16,6 @@
  */
 package com.yahoo.tracebachi.DeltaEssentials.Teleportation.Commands;
 
-import com.google.common.base.Preconditions;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.DeltaTeleport;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.TpListener;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
@@ -69,26 +68,25 @@ public class TpCommand implements TabExecutor
         }
         else if(args.length == 1 && sender.hasPermission("DeltaEss.Tp.Self"))
         {
-            if(!(sender instanceof Player))
+            if(sender instanceof Player)
             {
-                sender.sendMessage(Prefixes.FAILURE + "Only players can teleport to others.");
+                teleport((Player) sender, args[0]);
             }
             else
             {
-                teleport((Player) sender, args[0]);
+                sender.sendMessage(Prefixes.FAILURE + "Only players can teleport to others.");
             }
         }
         else if(args.length >= 2 && sender.hasPermission("DeltaEss.Tp.Other"))
         {
             Player startPlayer = Bukkit.getPlayer(args[0]);
-
-            if(startPlayer == null || !startPlayer.isOnline())
+            if(startPlayer != null && startPlayer.isOnline())
             {
-                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(args[0]) + " is not online.");
+                teleport(startPlayer, args[1]);
             }
             else
             {
-                teleport(startPlayer, args[1]);
+                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(args[0]) + " is not online.");
             }
         }
         else
@@ -100,62 +98,79 @@ public class TpCommand implements TabExecutor
 
     private void teleport(Player playerToTp, String destName)
     {
-        Preconditions.checkNotNull(playerToTp, "Player to TP cannot be null.");
-        Preconditions.checkNotNull(destName, "Destination cannot be null.");
-
         // Try to auto complete a partial name
-        List<String> partialMatches = deltaRedisApi.matchStartOfName(destName);
-        if(!partialMatches.contains(destName.toLowerCase()))
+        destName = attemptAutoComplete(playerToTp, destName);
+        if(destName == null) { return; }
+
+        // Check if the destination is online on the same server
+        Player destination = Bukkit.getPlayer(destName);
+        if(destination != null && destination.isOnline())
+        {
+            handleSameServerTeleport(playerToTp, destination);
+        }
+        else
+        {
+            handleDiffServerTeleport(playerToTp, destName);
+        }
+    }
+
+    private String attemptAutoComplete(CommandSender sender, String partial)
+    {
+        List<String> partialMatches = deltaRedisApi.matchStartOfName(partial);
+        if(!partialMatches.contains(partial.toLowerCase()))
         {
             if(partialMatches.size() == 0)
             {
-                playerToTp.sendMessage(Prefixes.FAILURE +
-                    Prefixes.input(destName) + "is not online.");
-                return;
+                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(partial) +
+                    " is not online.");
+                return null;
             }
             else if(partialMatches.size() > 1)
             {
-                playerToTp.sendMessage(Prefixes.FAILURE +
-                    "There are too many players that match " +
-                    Prefixes.input(destName));
-                return;
+                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(partial) +
+                    " matches too many players.");
+                return null;
             }
             else
             {
-                destName = partialMatches.get(0);
+                return partialMatches.get(0);
             }
         }
+        return partial;
+    }
 
-        Player destination = Bukkit.getPlayer(destName);
+    private void handleSameServerTeleport(Player playerToTp, Player destination)
+    {
+        String senderName = playerToTp.getName();
+        String destName = destination.getName();
+
+        if(playerToTp.canSee(destination) || playerToTp.hasPermission("DeltaEss.Tp.IgnoreVanish"))
+        {
+            if(deltaTeleport.isDenyingTp(destName) &&
+                !playerToTp.hasPermission("DeltaEss.TpToggle.Bypass"))
+            {
+                playerToTp.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
+                    " is not allowing players to teleport to them.");
+                destination.sendMessage(Prefixes.INFO + Prefixes.input(senderName) +
+                    " tried to teleport to you, but you are denying teleports.");
+            }
+            else
+            {
+                deltaTeleport.teleportWithEvent(playerToTp, destination);
+            }
+        }
+        else
+        {
+            playerToTp.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
+                " is not online.");
+        }
+    }
+
+    private void handleDiffServerTeleport(Player playerToTp, String destName)
+    {
         String senderName = playerToTp.getName();
 
-        if(destination != null && destination.isOnline())
-        {
-            if(playerToTp.canSee(destination))
-            {
-                boolean bypassTpDeny = playerToTp.hasPermission("DeltaEss.TpToggle.Bypass");
-
-                if(deltaTeleport.isDenyingTp(destName) && !bypassTpDeny)
-                {
-                    playerToTp.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
-                        " is not allowing players to teleport to them.");
-                    destination.sendMessage(Prefixes.INFO + Prefixes.input(senderName) +
-                        " tried to teleport to you, but you are denying teleports.");
-                }
-                else
-                {
-                    deltaTeleport.teleportWithEvent(playerToTp, destination);
-                }
-            }
-            else
-            {
-                playerToTp.sendMessage(Prefixes.FAILURE + "Player is not online.");
-            }
-            return;
-        }
-
         // Check other servers
-        String finalDestName = destName;
         deltaRedisApi.findPlayer(destName, cachedPlayer ->
         {
             Player originalSender = Bukkit.getPlayer(senderName);
@@ -164,16 +179,18 @@ public class TpCommand implements TabExecutor
                 if(cachedPlayer != null)
                 {
                     // Format: TpSender/\DestName
-                    String message = playerToTp.getName().toLowerCase() + "/\\" +
-                        finalDestName.toLowerCase();
+                    String message = senderName.toLowerCase() + "/\\" +
+                        destName.toLowerCase();
 
                     deltaRedisApi.publish(cachedPlayer.getServer(), TpListener.TP_CHANNEL, message);
-                    deltaTeleport.sendToServer(playerToTp, cachedPlayer.getServer());
+
                     originalSender.sendMessage(Prefixes.SUCCESS + "Teleporting ...");
+                    deltaTeleport.sendToServer(playerToTp, cachedPlayer.getServer());
                 }
                 else
                 {
-                    originalSender.sendMessage(Prefixes.FAILURE + "Player not found.");
+                    originalSender.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
+                        " is not online.");
                 }
             }
         });

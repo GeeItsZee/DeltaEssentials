@@ -13,6 +13,9 @@ commands:
   reply:
     description: Sends a message to another player as a reply.
     aliases: [r]
+  socialspy:
+    description: Shows a copy of all private messages on the server when enabled.
+    aliases: [spy]
   tp:
     description: Teleports players.
     aliases: [detp]
@@ -55,6 +58,8 @@ permissions:
     description: Teleports player to another player.
   DeltaEss.Tp.Alert:
     description: Sends a message to the player when another player teleports to them.
+  DeltaEss.Tp.IgnoreVanish:
+    description: Allows the player to teleport to another even if the other player is vanished.
   DeltaEss.Tpa.Send:
     description: Sends a teleport request to another.
   DeltaEss.Tpa.Accept:

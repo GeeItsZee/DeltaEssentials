@@ -16,7 +16,6 @@
  */
 package com.yahoo.tracebachi.DeltaEssentials.Teleportation.Commands;
 
-import com.google.common.base.Preconditions;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.DeltaTeleport;
 import com.yahoo.tracebachi.DeltaEssentials.Teleportation.TpListener;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
@@ -73,7 +72,21 @@ public class TpaHereCommand implements TabExecutor
         }
         else if(args.length >= 1 && sender.hasPermission("DeltaEss.Tpa.Send"))
         {
-            sendTeleportRequest(args[0], (Player) sender);
+            String tpaReceiver = args[0];
+            String tpaSender = sender.getName();
+            Player destPlayer = Bukkit.getPlayer(tpaReceiver);
+
+            if(destPlayer != null && destPlayer.isOnline())
+            {
+                destPlayer.sendMessage(Prefixes.INFO + Prefixes.input(tpaSender) +
+                    " wants you to TP to them. Use /tpaccept to accept within 30 seconds.");
+                deltaTeleport.addTpRequest(tpaReceiver, tpaSender);
+                sender.sendMessage(Prefixes.SUCCESS + "Sent teleport request to player.");
+            }
+            else
+            {
+                handleDiffServerRequest(tpaReceiver, tpaSender);
+            }
         }
         else
         {
@@ -82,43 +95,29 @@ public class TpaHereCommand implements TabExecutor
         return true;
     }
 
-    private void sendTeleportRequest(String tpaReceiver, Player sender)
+    private void handleDiffServerRequest(String tpaReceiver, String tpaSender)
     {
-        Preconditions.checkNotNull(sender, "Sender cannot be null.");
-        Preconditions.checkNotNull(tpaReceiver, "Tpa receiver cannot be null.");
-
-        Player destPlayer = Bukkit.getPlayer(tpaReceiver);
-        if(destPlayer != null && destPlayer.isOnline())
-        {
-            destPlayer.sendMessage(Prefixes.INFO + Prefixes.input(sender.getName()) +
-                " sent you a TP request. Use /tpaccept to accept within 30 seconds.");
-            deltaTeleport.addTpRequest(tpaReceiver, sender.getName());
-            sender.sendMessage(Prefixes.SUCCESS + "Sent teleport request to player.");
-            return;
-        }
-
-        // Check other servers
-        String senderName = sender.getName();
         deltaRedisApi.findPlayer(tpaReceiver, cachedPlayer ->
         {
-            Player originalSender = Bukkit.getPlayer(senderName);
-            if(originalSender != null && originalSender.isOnline())
+            Player sender = Bukkit.getPlayer(tpaSender);
+            if(sender != null && sender.isOnline())
             {
                 if(cachedPlayer != null)
                 {
                     // Format: TpaReceiver/\TpaSender/\DestServer
                     String message = tpaReceiver.toLowerCase() + "/\\" +
-                        sender.getName().toLowerCase() + "/\\" +
+                        tpaSender.toLowerCase() + "/\\" +
                         deltaRedisApi.getServerName();
 
                     deltaRedisApi.publish(cachedPlayer.getServer(), TpListener.TPAHERE_CHANNEL, message);
-                    deltaTeleport.addTpRequest(tpaReceiver, sender.getName());
+                    deltaTeleport.addTpRequest(tpaReceiver, tpaSender);
 
-                    originalSender.sendMessage(Prefixes.SUCCESS + "Sent teleport request to player.");
+                    sender.sendMessage(Prefixes.SUCCESS + "Sent teleport request.");
                 }
                 else
                 {
-                    originalSender.sendMessage(Prefixes.FAILURE + "Player not found.");
+                    sender.sendMessage(Prefixes.FAILURE + Prefixes.input(tpaReceiver) +
+                        " is not online.");
                 }
             }
         });

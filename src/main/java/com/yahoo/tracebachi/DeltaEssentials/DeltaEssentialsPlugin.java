@@ -16,7 +16,6 @@
  */
 package com.yahoo.tracebachi.DeltaEssentials;
 
-import com.earth2me.essentials.Essentials;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import com.yahoo.tracebachi.DeltaEssentials.Chat.DeltaChat;
@@ -62,7 +61,6 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
 
     private DeltaChat deltaChat;
     private DeltaTeleport deltaTeleport;
-    private DeltaRedisApi deltaRedisApi;
 
     @Override
     public void onLoad()
@@ -78,7 +76,7 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
 
         PluginManager pluginManager = getServer().getPluginManager();
         DeltaRedisPlugin deltaRedisPlugin = (DeltaRedisPlugin) pluginManager.getPlugin("DeltaRedis");
-        deltaRedisApi = deltaRedisPlugin.getDeltaRedisApi();
+        DeltaRedisApi deltaRedisApi = deltaRedisPlugin.getDeltaRedisApi();
 
         moveToCommand = new MoveToCommand(deltaRedisApi, this);
         getCommand("moveto").setExecutor(moveToCommand);
@@ -128,6 +126,13 @@ public class DeltaEssentialsPlugin extends JavaPlugin implements LoggablePlugin
         {
             deltaChat.shutdown();
             deltaChat = null;
+        }
+
+        if(joinStopCommand != null)
+        {
+            getCommand("joinstop").setExecutor(null);
+            joinStopCommand.shutdown();
+            joinStopCommand = null;
         }
 
         if(jailCommand != null)
