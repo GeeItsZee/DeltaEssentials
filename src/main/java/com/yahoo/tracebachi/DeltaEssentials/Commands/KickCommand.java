@@ -17,6 +17,7 @@
 package com.yahoo.tracebachi.DeltaEssentials.Commands;
 
 import com.yahoo.tracebachi.DeltaEssentials.CallbackUtil;
+import com.yahoo.tracebachi.DeltaRedis.Shared.Redis.Channels;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.yahoo.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
@@ -90,7 +91,7 @@ public class KickCommand implements TabExecutor
             {
                 if(cachedPlayer != null)
                 {
-                    deltaRedisApi.publish(cachedPlayer.getServer(), KICK_CHANNEL,
+                    deltaRedisApi.publish(Channels.SPIGOT, KICK_CHANNEL,
                         senderName + "/\\" + nameToKick + "/\\" + reason);
                     announceKick(senderName, nameToKick, reason);
                 }

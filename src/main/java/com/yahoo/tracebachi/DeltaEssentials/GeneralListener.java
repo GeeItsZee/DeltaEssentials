@@ -74,8 +74,9 @@ public class GeneralListener implements Listener
             if(targetPlayer != null && targetPlayer.isOnline())
             {
                 targetPlayer.kickPlayer(reason + "\n\n by " + ChatColor.GOLD + sender);
-                announceKick(sender, targetPlayer.getName(), reason);
             }
+
+            announceKick(sender, target, reason);
         }
         else if(channel.equals(JailCommand.JAIL_CHANNEL))
         {
