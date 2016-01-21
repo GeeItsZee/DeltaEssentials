@@ -1,7 +1,7 @@
 name: DeltaEssentials
-main: com.yahoo.tracebachi.DeltaEssentials.DeltaEssentialsPlugin
-version: 1.3
-author: Trace Bachi (tracebachi@yahoo.com, BigBossZee)
+main: com.gmail.tracebachi.DeltaEssentials.DeltaEssentials
+version: 2.0
+author: Trace Bachi (tracebachi@gmail.com, BigBossZee)
 depend: [DeltaRedis, Essentials, Herochat]
 commands:
   moveto:
@@ -28,56 +28,56 @@ commands:
   tpaccept:
     description: Accepts teleport request.
     aliases: [detpaccept]
-  tptoggle:
+  tpdeny:
     description: Controls if players can teleport to the player.
-    aliases: [detptoggle]
+    aliases: [detpdeny]
   kick:
     description: Kicks the player from the server.
     aliases: [dekick]
   jail:
     description: Sends a player to the jail server and jails them.
     aliases: [dejail]
-  joinstop:
-    description: Blocks all players from joining the server when enabled. Useful for shutdowns to prevent players from rejoining.
-    aliases: [js]
+  lockdown:
+    description: Stops all players from joining the server when enabled.
+    aliases: [ld]
   disposal:
     description: Opens an inventory where players can get rid of items permanently.
     aliases: [trash]
 
 permissions:
   DeltaEss.Tell.Use:
-    description: Use /tell and /reply
+    description: Permission for /tell and /reply
   DeltaEss.Tell.Color:
-    description: Lets players use color codes in their messages.
+    description: Permission for using color in chat
   DeltaEss.MoveTo.Self:
-    description: Allows the player to switch servers.
+    description: Permission for /moveto <server>
   DeltaEss.MoveTo.Other:
-    description: Allows the player to force others to switch servers.
-  DeltaEss.MoveTo.Bypass:
-      description: Allows the player to bypass blocked servers.
+    description: Permission for /moveto <server> <name>
   DeltaEss.Tp.Self:
-    description: Teleports self to another player.
+    description: Permission for /tp
   DeltaEss.Tp.Other:
-    description: Teleports player to another player.
-  DeltaEss.Tp.Alert:
-    description: Sends a message to the player when another player teleports to them.
-  DeltaEss.Tp.IgnoreVanish:
-    description: Allows the player to teleport to another even if the other player is vanished.
+    description: Permission for /tphere and /tp <a> <b>
   DeltaEss.Tpa.Send:
-    description: Sends a teleport request to another.
+    description: Permission for /tpahere
   DeltaEss.Tpa.Accept:
-    description: Accepts a teleport request.
-  DeltaEss.TpToggle.Use:
-    description: Accepts a teleport request.
-  DeltaEss.TpToggle.Bypass:
-    description: Accepts a teleport request.
+    description: Permission for /tpaccept
+  DeltaEss.TpDeny:
+    description: Permission for /tpdeny
   DeltaEss.Kick:
-    description: Allows the player to kick others.
+    description: Permission for /kick
   DeltaEss.Jail:
-    description: Allows the player to jail others.
+    description: Permission for /jail
   DeltaEss.SocialSpy:
-    description: Allows the player to listen to messages on the server.
-  DeltaEss.JoinStop:
-    description: Allows the player to use the stopjoin command.
+    description: Permission for /socialspy
+  DeltaEss.Lockdown:
+    description: Permission for /lockdown
   DeltaEss.Disposal:
-    description: Allows the player to use the stopjoin command.
+    description: Permission for /disposal
+  DeltaEss.BlockedServerBypass:
+    description: Ignores if a server is blocked.
+  DeltaEss.SilentTp:
+    description: Does not inform the player when you teleport to them.
+  DeltaEss.TpVanishBypass:
+    description: Ignores if a player is vanished.
+  DeltaEss.TpDenyBypass:
+    description: Ignores if a player is denying teleports.
