@@ -81,3 +81,7 @@ permissions:
     description: Ignores if a player is vanished.
   DeltaEss.TpDenyBypass:
     description: Ignores if a player is denying teleports.
+  DeltaEss.ForcedGameModeBypass:
+    description: Ignores if a game mode is being forced.
+  DeltaEss.SingleInventory:
+    description: Inventory is shared between gamemodes.

@@ -158,7 +158,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
      * GameModeChange Event
      *************************************************************************/
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerGameModeChange(PlayerGameModeChangeEvent event)
     {
         Player player = event.getPlayer();
