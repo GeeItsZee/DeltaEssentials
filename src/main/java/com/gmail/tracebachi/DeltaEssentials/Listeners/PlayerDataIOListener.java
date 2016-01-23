@@ -105,7 +105,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
             if(!plugin.getPlayerMap().containsKey(name))
             {
                 Player player = Bukkit.getPlayer(name);
-                if(player != null && player.isOnline() )
+                if(player != null && player.isOnline())
                 {
                     loadPlayerData(name);
                 }
@@ -148,10 +148,11 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
             if(plugin.getPlayerMap().containsKey(name))
             {
                 savePlayerData(player, null);
-                plugin.getInventoryLockListener().remove(name);
-                plugin.getPlayerMap().remove(name);
             }
         }
+
+        plugin.getInventoryLockListener().remove(name);
+        plugin.getPlayerMap().remove(name);
     }
 
     /**************************************************************************
