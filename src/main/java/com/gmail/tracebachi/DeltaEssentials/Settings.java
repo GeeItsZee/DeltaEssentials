@@ -19,6 +19,7 @@ public class Settings
 
     private boolean isOnLockdown;
     private boolean isDefaultGameModeForced;
+    private boolean loadAndSavePotionEffects;
     private String playerDataFolderPath;
     private String lockdownMessage;
     private String kickMessageFormat;
@@ -33,6 +34,7 @@ public class Settings
     {
         this.isOnLockdown = plugin.getConfig().getBoolean("StartWithLockdown");
         this.isDefaultGameModeForced = plugin.getConfig().getBoolean("ForceDefaultGameMode");
+        this.loadAndSavePotionEffects = plugin.getConfig().getBoolean("LoadAndSavePotionEffects");
         this.playerDataFolderPath = plugin.getConfig().getString("PlayerDataFolder");
         this.lockdownMessage = plugin.getConfig().getString("LockdownMessage");
         this.kickMessageFormat = plugin.getConfig().getString("KickMessageFormat");
@@ -89,6 +91,11 @@ public class Settings
     public String getLockdownMessage()
     {
         return lockdownMessage;
+    }
+
+    public boolean canLoadAndSavePotionEffects()
+    {
+        return loadAndSavePotionEffects;
     }
 
     public String getKickMessage(String kicker, String reason)

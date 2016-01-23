@@ -10,6 +10,7 @@ import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssentialsPlayer;
 import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerEntry;
 import com.gmail.tracebachi.DeltaEssentials.Storage.SavedInventory;
 import com.gmail.tracebachi.DeltaEssentials.Utils.xAuthUtil;
+import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashMap;
 import com.gmail.tracebachi.DeltaRedis.Spigot.Prefixes;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteArrayDataOutput;
@@ -34,9 +35,12 @@ import org.bukkit.potion.PotionEffect;
  */
 public class PlayerDataIOListener extends DeltaEssentialsListener
 {
+    private CaseInsensitiveHashMap<Long> lastSwitchTimeMap;
+
     public PlayerDataIOListener(DeltaEssentials plugin)
     {
         super(plugin);
+        lastSwitchTimeMap = new CaseInsensitiveHashMap<>();
     }
 
     public void shutdown()
@@ -54,6 +58,10 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
                     player.getName());
             }
         }
+
+        lastSwitchTimeMap.clear();
+        lastSwitchTimeMap = null;
+        super.shutdown();
     }
 
     /**************************************************************************
@@ -133,12 +141,16 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
     {
         Player player = event.getPlayer();
         String name = player.getName();
+        Long lastSwitchTime = lastSwitchTimeMap.remove(name);
 
-        if(plugin.getPlayerMap().containsKey(name))
+        if(lastSwitchTime == null || (System.currentTimeMillis() - lastSwitchTime) > 2000)
         {
-            savePlayerData(player, null);
-            plugin.getInventoryLockListener().remove(name);
-            plugin.getPlayerMap().remove(name);
+            if(plugin.getPlayerMap().containsKey(name))
+            {
+                savePlayerData(player, null);
+                plugin.getInventoryLockListener().remove(name);
+                plugin.getPlayerMap().remove(name);
+            }
         }
     }
 
@@ -285,6 +297,8 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
                 output.writeUTF("Connect");
                 output.writeUTF(destServer);
                 player.sendPluginMessage(plugin, "BungeeCord", output.toByteArray());
+
+                lastSwitchTimeMap.put(name, System.currentTimeMillis());
             }
             else
             {
@@ -339,6 +353,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         PlayerPreSaveEvent preSaveEvent = new PlayerPreSaveEvent(player);
         Bukkit.getPluginManager().callEvent(preSaveEvent);
 
+        Settings settings = plugin.getSettings();
         PlayerEntry entry = new PlayerEntry(player.getName());
         SavedInventory inventory = new SavedInventory(player);
 
@@ -346,13 +361,17 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         entry.setFoodLevel(player.getFoodLevel());
         entry.setXpLevel(player.getLevel());
         entry.setXpProgress(player.getExp());
-        entry.setPotionEffects(player.getActivePotionEffects());
         entry.setEnderChest(player.getEnderChest().getContents());
         entry.setGameMode(player.getGameMode());
         entry.setSocialSpyEnabled(dePlayer.isSocialSpyEnabled());
         entry.setTeleportDenyEnabled(dePlayer.isTeleportDenyEnabled());
         entry.setLastReplyTarget(dePlayer.getLastReplyTarget());
         entry.setMetaData(preSaveEvent.getMetaData());
+
+        if(settings.canLoadAndSavePotionEffects())
+        {
+            entry.setPotionEffects(player.getActivePotionEffects());
+        }
 
         if(player.hasPermission("DeltaEss.SingleInventory"))
         {
@@ -396,14 +415,17 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         player.setExp((float) entry.getXpProgress());
         player.getEnderChest().setContents(entry.getEnderChest());
 
-        for(PotionEffect effect : player.getActivePotionEffects())
+        if(settings.canLoadAndSavePotionEffects())
         {
-            player.removePotionEffect(effect.getType());
-        }
+            for(PotionEffect effect : player.getActivePotionEffects())
+            {
+                player.removePotionEffect(effect.getType());
+            }
 
-        for(PotionEffect effect : entry.getPotionEffects())
-        {
-            player.addPotionEffect(effect);
+            for(PotionEffect effect : entry.getPotionEffects())
+            {
+                player.addPotionEffect(effect);
+            }
         }
 
         if(player.hasPermission("DeltaEss.SingleInventory"))
@@ -449,63 +471,4 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         PlayerLoadedEvent loadedEvent = new PlayerLoadedEvent(player, entry.getMetaData());
         Bukkit.getPluginManager().callEvent(loadedEvent);
     }
-
-
-//    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = false)
-//    public void onRedisMessageEvent(DeltaRedisMessageEvent event)
-//    {
-//        String channel = event.getChannel();
-//
-//        if(channel.equals(CommandMoveTo.MOVE_CHANNEL))
-//        {
-//            String[] splitMessage = pattern.split(event.getMessage(), 3);
-//            String sender = splitMessage[0];
-//            String nameToMove = splitMessage[1];
-//            String destination = splitMessage[2];
-//
-//            Player playerToMove = Bukkit.getPlayer(nameToMove);
-//            if(playerToMove != null && playerToMove.isOnline())
-//            {
-//                plugin.sendToServer(playerToMove, destination);
-//                plugin.info(sender + " moved " + nameToMove + " to " + destination);
-//            }
-//        }
-//        else if(channel.equals(CommandKick.KICK_CHANNEL))
-//        {
-//            String[] splitMessage = pattern.split(event.getMessage(), 3);
-//            String sender = splitMessage[0];
-//            String target = splitMessage[1];
-//            String reason = splitMessage[2];
-//
-//            Player targetPlayer = Bukkit.getPlayer(target);
-//            if(targetPlayer != null && targetPlayer.isOnline())
-//            {
-//                targetPlayer.kickPlayer(reason + "\n\n by " + ChatColor.GOLD + sender);
-//            }
-//
-//            announceKick(sender, target, reason);
-//        }
-//        else if(channel.equals(CommandJail.JAIL_CHANNEL))
-//        {
-//            String[] splitMessage = pattern.split(event.getMessage(), 2);
-//            String sender = splitMessage[0];
-//            String command = splitMessage[1];
-//
-//            plugin.info(sender + " ran /" + command);
-//            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
-//        }
-//    }
-//
-//    private void announceKick(String kicker, String playerKicked, String reason)
-//    {
-//        String announcement =
-//            ChatColor.GOLD + kicker + ChatColor.WHITE + " kicked " +
-//            ChatColor.GOLD + playerKicked + ChatColor.WHITE + " for " +
-//            ChatColor.GOLD + reason;
-//
-//        for(Player onlinePlayer : Bukkit.getOnlinePlayers())
-//        {
-//            onlinePlayer.sendMessage(announcement);
-//        }
-//    }
 }

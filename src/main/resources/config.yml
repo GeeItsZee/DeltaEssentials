@@ -19,6 +19,9 @@ DefaultGameMode: SURVIVAL
 # Should the game mode be forced for players on login
 ForceDefaultGameMode: False
 
+# Should potion effects be loaded from and saved to player data
+LoadAndSavePotionEffects: True
+
 # Game modes that players cannot access without the proper bypass permissions
 DisabledGameModes:
   - ADVENTURE
