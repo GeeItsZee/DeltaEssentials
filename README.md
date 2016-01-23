@@ -12,7 +12,7 @@ DeltaRedis for communication.
 # Licence ([GPLv3](http://www.gnu.org/licenses/gpl-3.0.en.html))
 ```
 DeltaEssentials - Basic server functionality for Bukkit/Spigot servers using BungeeCord.
-Copyright (C) 2015  Trace Bachi (tracebachi@yahoo.com)
+Copyright (C) 2015  Trace Bachi (tracebachi@gmail.com)
 
 DeltaEssentials is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

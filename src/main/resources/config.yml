@@ -2,18 +2,47 @@
 
 ###############################################################################
 
-# Names of servers that normal players cannot access. They are case-sensitive.
-# For administrators, add permission 'DeltaEss.MoveTo.Bypass' to allow them
-# to bypass the blocks.
-BlockedServers:
-  - StaffOnly
+# Should lockdown be enabled on start
+StartWithLockdown: False
+
+# Message to deny player connections with
+LockdownMessage: 'Server is locked down'
 
 ###############################################################################
 
-# Channels names (registered in HeroChat) that will be shared and sent to
-# other servers.
+# File path to the player data folder
+PlayerDataFolder: 'plugins/DeltaEssentials/PlayerData/'
+
+# Default game mode for players who do not have player data
+DefaultGameMode: SURVIVAL
+
+# Should the game mode be forced for players on login
+ForceDefaultGameMode: False
+
+# Should potion effects be loaded from and saved to player data
+LoadAndSavePotionEffects: True
+
+# Game modes that players cannot access without the proper bypass permissions
+DisabledGameModes:
+  - ADVENTURE
+  - SPECTATOR
+
+###############################################################################
+
+# Names of servers that players cannot access without the bypass permission
+BlockedServers:
+  - SuperSecretServer
+
+###############################################################################
+
+# Channels names (registered in HeroChat) that will be shared with other servers
 SharedChatChannels:
   - Global
+
+###############################################################################
+
+# Format of the message displayed to the player when kicked
+KickMessageFormat: 'Kicked by {SENDER} for {REASON}'
 
 ###############################################################################
 
@@ -27,19 +56,5 @@ ValidJails:
 
 ###############################################################################
 
-# List of databases that plugins should be able to access.
-Databases:
-
-  # Name the DB for other plugins.
-  Main:
-    # Username and password for connecting to the database.
-    Username: mc
-    # Password for connecting to the database.
-    Password: mc
-    # This should have three parts: the main URL, the port number, and database name.
-    URL: localhost:5432/mc
-
-###############################################################################
-
 # Debug Mode (for developers)
-DebugMode: False
+DebugMode: True
