@@ -24,18 +24,15 @@ import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTellEvent;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssentialsPlayer;
-import com.gmail.tracebachi.DeltaEssentials.Utils.MessageUtils;
-import com.gmail.tracebachi.DeltaRedis.Shared.Redis.Servers;
+import com.gmail.tracebachi.DeltaRedis.Shared.Servers;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent;
-import com.gmail.tracebachi.DeltaRedis.Spigot.Prefixes;
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteStreams;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 
-import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
@@ -66,8 +63,9 @@ public class ChatListener extends DeltaEssentialsListener
         if(settings.isChatChannelShared(channel))
         {
             String message =  event.getMsg();
-            deltaRedisApi.publish(Servers.SPIGOT, DeltaEssentialsChannels.SHARED_CHAT,
-                channel + "/\\" + message);
+            deltaRedisApi.publish(Servers.SPIGOT,
+                DeltaEssentialsChannels.SHARED_CHAT,
+                channel, message);
         }
     }
 
@@ -96,43 +94,80 @@ public class ChatListener extends DeltaEssentialsListener
         }
     }
 
-    private void onTellMessage(DeltaRedisMessageEvent event)
+    public boolean sendMessageFromPlayer(String senderName, CommandSender sender,
+        String receiverName, CommandSender receiver, String message)
     {
-        byte[] bytes = event.getMessage().getBytes(StandardCharsets.UTF_16);
-        ByteArrayDataInput in = ByteStreams.newDataInput(bytes);
-        String sender = in.readUTF();
-        String receiver = in.readUTF();
-        String message = in.readUTF();
-        Player player = Bukkit.getPlayer(receiver);
+        Settings settings = plugin.getSettings();
+        PlayerTellEvent event = new PlayerTellEvent(senderName, sender,
+            receiverName, receiver, message);
 
-        if(player != null && player.isOnline())
+        Bukkit.getPluginManager().callEvent(event);
+
+        if(!event.isCancelled())
         {
-            PlayerTellEvent tellEvent = plugin.sendMessageFromPlayer(sender, receiver, message);
+            String logFormat = settings.format("TellLog", senderName, receiverName, message);
+            Bukkit.getLogger().info(logFormat);
 
-            if(!tellEvent.isCancelled())
+            String spyFormat = settings.format("TellSpy", senderName, receiverName, message);
+            sendToAllSocialSpies(spyFormat);
+
+            if(sender != null)
             {
-                // In case the message was modified, update it
-                message = tellEvent.getMessage();
+                String senderFormat = settings.format("TellSender", receiverName, message);
+                sender.sendMessage(senderFormat);
 
-                // Send message
-                player.sendMessage(MessageUtils.formatForReceiver(sender, message));
+                DeltaEssentialsPlayer dePlayer = plugin.getPlayerMap().get(senderName);
+                dePlayer.setLastReplyTarget(receiverName);
+            }
 
-                // Update last reply target
-                DeltaEssentialsPlayer dePlayer = plugin.getPlayerMap().get(receiver);
-                if(dePlayer != null)
+            if(receiver != null)
+            {
+                String receiverFormat = settings.format("TellReceiver", senderName, message);
+                receiver.sendMessage(receiverFormat);
+
+                DeltaEssentialsPlayer dePlayer = plugin.getPlayerMap().get(receiverName);
+                dePlayer.setLastReplyTarget(senderName);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private void sendToAllSocialSpies(String spyFormat)
+    {
+        for(Map.Entry<String, DeltaEssentialsPlayer> entry : plugin.getPlayerMap().entrySet())
+        {
+            if(entry.getValue().isSocialSpyEnabled())
+            {
+                Player player = Bukkit.getPlayer(entry.getKey());
+
+                if(player != null)
                 {
-                    dePlayer.setLastReplyTarget(sender);
+                    player.sendMessage(spyFormat);
                 }
             }
-            else if(tellEvent.getCancelReason() != null)
-            {
-                deltaRedisApi.sendMessageToPlayer(sender, tellEvent.getCancelReason());
-            }
+        }
+    }
+
+    private void onTellMessage(DeltaRedisMessageEvent event)
+    {
+        Settings settings = plugin.getSettings();
+        String[] split = DELTA_PATTERN.split(event.getMessage(), 3);
+        String sender = split[0];
+        String receiver = split[1];
+        String message = split[2];
+        Player player = Bukkit.getPlayer(receiver);
+
+        if(player != null)
+        {
+            sendMessageFromPlayer(sender, null, receiver, player, message);
         }
         else if(!sender.equalsIgnoreCase("console"))
         {
-            deltaRedisApi.sendMessageToPlayer(sender,
-                Prefixes.FAILURE + "Player not found.");
+            String playerNotOnline = settings.format("PlayerNotOnline", receiver);
+            deltaRedisApi.sendMessageToPlayer(sender, playerNotOnline);
         }
     }
 }

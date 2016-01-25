@@ -17,7 +17,7 @@
 package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
-import com.gmail.tracebachi.DeltaRedis.Spigot.Prefixes;
+import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 

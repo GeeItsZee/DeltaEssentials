@@ -18,7 +18,7 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssentialsPlayer;
-import com.gmail.tracebachi.DeltaRedis.Spigot.Prefixes;
+import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -61,7 +61,8 @@ public class CommandSocialSpy extends DeltaEssentialsCommand
 
         if(dePlayer == null)
         {
-            sender.sendMessage(Prefixes.FAILURE + "Your data has not been loaded!");
+            String playerDataNotLoaded = plugin.getSettings().format("PlayerDataNotLoaded");
+            sender.sendMessage(playerDataNotLoaded);
             return;
         }
 

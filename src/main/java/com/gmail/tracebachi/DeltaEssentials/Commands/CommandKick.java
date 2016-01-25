@@ -20,9 +20,9 @@ import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Utils.CallbackUtil;
-import com.gmail.tracebachi.DeltaRedis.Shared.Redis.Servers;
+import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
+import com.gmail.tracebachi.DeltaRedis.Shared.Servers;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
-import com.gmail.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -74,11 +74,11 @@ public class CommandKick extends DeltaEssentialsCommand
         String reason = getKickReason(args);
         Player playerToKick = Bukkit.getPlayer(nameToKick);
 
-        if(playerToKick != null && playerToKick.isOnline())
+        if(playerToKick != null)
         {
-            String kickMessage = settings.getKickMessage(senderName, reason);
-            playerToKick.kickPlayer(kickMessage);
-            announceKick(senderName, nameToKick, reason);
+            String onKickPlayer = settings.format("OnKickPlayer", senderName, reason);
+            playerToKick.kickPlayer(onKickPlayer);
+            announceKick(settings, nameToKick, senderName, reason);
         }
         else
         {
@@ -88,13 +88,16 @@ public class CommandKick extends DeltaEssentialsCommand
                 {
                     deltaRedisApi.publish(Servers.SPIGOT,
                         DeltaEssentialsChannels.KICK,
-                        senderName + "/\\" + nameToKick + "/\\" + reason);
-                    announceKick(senderName, nameToKick, reason);
+                        senderName, nameToKick, reason);
+
+                    announceKick(settings, nameToKick, senderName, reason);
                 }
                 else
                 {
-                    CallbackUtil.sendMessage(senderName,
-                        Prefixes.FAILURE + "Player not found.");
+                    String playerNotOnline = settings.format(
+                        "PlayerNotOnline", nameToKick);
+
+                    CallbackUtil.sendMessage(senderName, playerNotOnline);
                 }
             });
         }
@@ -113,16 +116,13 @@ public class CommandKick extends DeltaEssentialsCommand
         }
     }
 
-    private void announceKick(String kicker, String playerKicked, String reason)
+    private void announceKick(Settings settings, String nameToKick, String senderName, String reason)
     {
-        String announcement =
-            ChatColor.GOLD + kicker + ChatColor.WHITE + " kicked " +
-            ChatColor.GOLD + playerKicked + ChatColor.WHITE + " for " +
-            ChatColor.GOLD + reason;
+        String onKickAnnounce = settings.format("OnKickAnnounce", senderName, nameToKick, reason);
 
         for(Player onlinePlayer : Bukkit.getOnlinePlayers())
         {
-            onlinePlayer.sendMessage(announcement);
+            onlinePlayer.sendMessage(onKickAnnounce);
         }
     }
 }

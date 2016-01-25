@@ -18,8 +18,9 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
+import com.gmail.tracebachi.DeltaEssentials.Settings;
+import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
-import com.gmail.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -63,6 +64,7 @@ public class CommandTp extends DeltaEssentialsCommand
             return;
         }
 
+        Settings settings = plugin.getSettings();
         String destName = args[0];
 
         if(args.length == 1 && sender.hasPermission("DeltaEss.Tp"))
@@ -86,12 +88,14 @@ public class CommandTp extends DeltaEssentialsCommand
             }
             else
             {
-                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) + " is not online.");
+                String playerNotOnline = settings.format("PlayerNotOnline", destName);
+                sender.sendMessage(playerNotOnline);
             }
         }
         else
         {
-            sender.sendMessage(Prefixes.FAILURE + "You do not have permission to do that.");
+            String noPermission = settings.format("NoPermission", "DeltaEss.Tp or DeltaEss.TpOther");
+            sender.sendMessage(noPermission);
         }
     }
 
@@ -114,6 +118,8 @@ public class CommandTp extends DeltaEssentialsCommand
 
     private void handleDiffServerTeleport(String senderName, String destName)
     {
+        Settings settings = plugin.getSettings();
+
         deltaRedisApi.findPlayer(destName, cachedPlayer ->
         {
             Player toTp = Bukkit.getPlayer(senderName);
@@ -123,22 +129,24 @@ public class CommandTp extends DeltaEssentialsCommand
             {
                 // Format: TpSender/\CurrentServer
                 String destServer = cachedPlayer.getServer();
-                String message = senderName + "/\\" + destName;
 
-                deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TP, message);
+                deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TP,
+                    senderName, destName);
                 plugin.sendToServer(toTp, destServer);
             }
             else
             {
-                toTp.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
-                    " is not online.");
+                String playerNotOnline = settings.format("PlayerNotOnline", destName);
+                toTp.sendMessage(playerNotOnline);
             }
         });
     }
 
     private String attemptAutoComplete(CommandSender sender, String partial)
     {
+        Settings settings = plugin.getSettings();
         List<String> partialMatches = deltaRedisApi.matchStartOfPlayerName(partial);
+
         if(!partialMatches.contains(partial.toLowerCase()))
         {
             if(partialMatches.size() == 1)
@@ -147,8 +155,10 @@ public class CommandTp extends DeltaEssentialsCommand
             }
             else if(partialMatches.size() > 1)
             {
-                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(partial) +
-                    " matches too many players.");
+                String tooManyAutoCompleteMatches = settings.format(
+                    "TooManyAutoCompleteMatches", partial);
+
+                sender.sendMessage(tooManyAutoCompleteMatches);
                 return null;
             }
         }

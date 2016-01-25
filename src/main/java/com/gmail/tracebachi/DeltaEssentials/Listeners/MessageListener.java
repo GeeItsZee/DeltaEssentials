@@ -1,10 +1,26 @@
+/*
+ * This file is part of DeltaEssentials.
+ *
+ * DeltaEssentials is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * DeltaEssentials is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with DeltaEssentials.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.gmail.tracebachi.DeltaEssentials.Listeners;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
+import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -45,15 +61,21 @@ public class MessageListener extends DeltaEssentialsListener
             String target = split[1];
             String reason = split[2];
 
-            String kickMessage = plugin.getSettings().getKickMessage(sender, reason);
+            Settings settings = plugin.getSettings();
             Player toKick = Bukkit.getPlayer(target);
 
             if(toKick != null && toKick.isOnline())
             {
-                toKick.kickPlayer(kickMessage);
+                String onKickPlayer = settings.format("OnKickPlayer", sender, reason);
+                toKick.kickPlayer(onKickPlayer);
             }
 
-            announceKick(sender, target, reason);
+            String onKickAnnounce = settings.format("OnKickAnnounce", sender, target, reason);
+
+            for(Player onlinePlayer : Bukkit.getOnlinePlayers())
+            {
+                onlinePlayer.sendMessage(onKickAnnounce);
+            }
         }
         else if(channel.equals(DeltaEssentialsChannels.JAIL))
         {
@@ -63,19 +85,6 @@ public class MessageListener extends DeltaEssentialsListener
 
             plugin.info(sender + " ran /essentials:jail " + command);
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "essentials:jail " + command);
-        }
-    }
-
-    private void announceKick(String kicker, String playerKicked, String reason)
-    {
-        String announcement =
-            ChatColor.GOLD + kicker + ChatColor.WHITE + " kicked " +
-                ChatColor.GOLD + playerKicked + ChatColor.WHITE + " for " +
-                ChatColor.GOLD + reason;
-
-        for(Player onlinePlayer : Bukkit.getOnlinePlayers())
-        {
-            onlinePlayer.sendMessage(announcement);
         }
     }
 }

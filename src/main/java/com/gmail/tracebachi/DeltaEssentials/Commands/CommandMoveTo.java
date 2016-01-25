@@ -20,8 +20,8 @@ import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Utils.CallbackUtil;
+import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
-import com.gmail.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -88,28 +88,30 @@ public class CommandMoveTo extends DeltaEssentialsCommand
             }
             else if(!sender.hasPermission("DeltaEss.MoveTo.Self"))
             {
-                sender.sendMessage(Prefixes.FAILURE +
-                    "You do not have permission to use that command.");
+                String noPermission = settings.format("NoPermission", "DeltaEss.MoveTo.Self");
+                sender.sendMessage(noPermission);
             }
             else if(currentServer.equalsIgnoreCase(destServer))
             {
-                sender.sendMessage(Prefixes.FAILURE +
-                    "You are already connected to that server.");
+                String onMoveToSameServer = settings.format("OnMoveToSameServer", currentServer);
+                sender.sendMessage(onMoveToSameServer);
             }
             else if(!isOnline(servers, destServer))
             {
-                sender.sendMessage(Prefixes.FAILURE +
-                    "There is no server online named " + Prefixes.input(destServer));
+                String onMoveToOfflineServer = settings.format("OnMoveToOfflineServer", destServer);
+                sender.sendMessage(onMoveToOfflineServer);
             }
             else if(settings.isServerBlocked(destServer) &&
                 !sender.hasPermission("DeltaEss.BlockedServerBypass"))
             {
-                sender.sendMessage(Prefixes.FAILURE +
-                    "That server is blocked and you do not have permission to bypass it.");
+                String onMoveToBlockedServer = settings.format("OnMoveToBlockedServer", destServer);
+                sender.sendMessage(onMoveToBlockedServer);
             }
             else
             {
-                sender.sendMessage(Prefixes.SUCCESS + "Attempting to switch servers ...");
+                String onMoveSuccess = settings.format("OnMoveSuccess", destServer);
+                sender.sendMessage(onMoveSuccess);
+
                 plugin.getPlayerDataIOListener().savePlayerData((Player) sender, destServer);
             }
         }
@@ -117,24 +119,19 @@ public class CommandMoveTo extends DeltaEssentialsCommand
         {
             if(!sender.hasPermission("DeltaEss.MoveTo.Other"))
             {
-                sender.sendMessage(Prefixes.FAILURE +
-                    "You do not have permission to use that command.");
-            }
-            else if(currentServer.equalsIgnoreCase(destServer))
-            {
-                sender.sendMessage(Prefixes.FAILURE +
-                    "You are already connected to that server.");
+                String noPermission = settings.format("NoPermission", "DeltaEss.MoveTo.Self");
+                sender.sendMessage(noPermission);
             }
             else if(!isOnline(servers, destServer))
             {
-                sender.sendMessage(Prefixes.FAILURE +
-                    "There is no server online named " + Prefixes.input(destServer));
+                String onMoveToOfflineServer = settings.format("OnMoveToOfflineServer", destServer);
+                sender.sendMessage(onMoveToOfflineServer);
             }
             else if(settings.isServerBlocked(destServer) &&
                 !sender.hasPermission("DeltaEss.BlockedServerBypass"))
             {
-                sender.sendMessage(Prefixes.FAILURE +
-                    "That server is blocked and you do not have permission to bypass it.");
+                String onMoveToBlockedServer = settings.format("OnMoveToBlockedServer", destServer);
+                sender.sendMessage(onMoveToBlockedServer);
             }
             else
             {
@@ -144,41 +141,51 @@ public class CommandMoveTo extends DeltaEssentialsCommand
 
                 if(target != null && target.isOnline())
                 {
-                    sender.sendMessage(Prefixes.SUCCESS + "Attempting to switch servers ...");
+                    String onMoveSuccess = settings.format("OnMoveSuccess", destServer);
+                    String onMoveOtherSuccess = settings.format(
+                        "OnMoveOtherSuccess", targetName, destServer);
+
+                    target.sendMessage(onMoveSuccess);
+                    sender.sendMessage(onMoveOtherSuccess);
+
                     plugin.getPlayerDataIOListener().savePlayerData(target, destServer);
                 }
                 else
                 {
-                    handlePlayerInDiffServer(senderName, destServer, targetName);
+                    handlePlayerInDiffServer(settings,senderName, destServer, targetName);
                 }
             }
         }
     }
 
-    private void handlePlayerInDiffServer(String senderName, String destServer, String targetName)
+    private void handlePlayerInDiffServer(Settings settings, String senderName, String destServer, String targetName)
     {
         deltaRedisApi.findPlayer(targetName, cachedPlayer ->
         {
             if(cachedPlayer == null)
             {
-                CallbackUtil.sendMessage(senderName,
-                    Prefixes.FAILURE + "Player not found.");
+                String playerNotOnline = settings.format("PlayerNotOnline", targetName);
+                CallbackUtil.sendMessage(senderName, playerNotOnline);
                 return;
             }
 
             if(!cachedPlayer.getServer().equalsIgnoreCase(destServer))
             {
-                CallbackUtil.sendMessage(senderName,
-                    Prefixes.FAILURE + "Player is already in that server.");
+                String onMoveOtherToSameServer = settings.format(
+                    "OnMoveOtherToSameServer", targetName, destServer);
+
+                CallbackUtil.sendMessage(senderName, onMoveOtherToSameServer);
                 return;
             }
 
             deltaRedisApi.publish(cachedPlayer.getServer(),
                 DeltaEssentialsChannels.MOVE,
-                senderName + "/\\" + targetName + "/\\" + destServer);
+                senderName, targetName, destServer);
 
-            CallbackUtil.sendMessage(senderName,
-                Prefixes.SUCCESS + "Sending player to " + destServer);
+            String onMoveOtherSuccess = settings.format(
+                "OnMoveOtherSuccess", targetName, destServer);
+
+            CallbackUtil.sendMessage(senderName, onMoveOtherSuccess);
         });
     }
 

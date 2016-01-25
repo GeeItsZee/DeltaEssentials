@@ -1,8 +1,24 @@
+/*
+ * This file is part of DeltaEssentials.
+ *
+ * DeltaEssentials is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * DeltaEssentials is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with DeltaEssentials.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
+import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
-import com.gmail.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -78,7 +94,10 @@ public abstract class DeltaEssentialsCommand implements TabExecutor, Shutdownabl
     {
         if(permission != null && !sender.hasPermission(permission))
         {
-            sender.sendMessage(Prefixes.FAILURE + "You do not have permission to use this command.");
+            Settings settings = plugin.getSettings();
+            String noPermission = settings.format("NoPermission", permission);
+
+            sender.sendMessage(noPermission);
         }
         else
         {

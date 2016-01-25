@@ -20,12 +20,12 @@ import com.earth2me.essentials.utils.LocationUtil;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
+import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssentialsPlayer;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
 import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashMap;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent;
-import com.gmail.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -53,21 +53,8 @@ public class TeleportListener extends DeltaEssentialsListener
         super(plugin);
         this.requestMap = new CaseInsensitiveHashMap<>();
         this.deltaRedisApi = deltaRedisApi;
-        this.requestCleanupTask = Bukkit.getScheduler().runTaskTimer(plugin, () ->
-        {
-            long oldestTime = System.currentTimeMillis() - 60000;
-            Iterator<Map.Entry<String, TeleportRequest>> iterator =
-                requestMap.entrySet().iterator();
-
-            while(iterator.hasNext())
-            {
-                TeleportRequest request = iterator.next().getValue();
-                if(request.getTimeCreatedAt() < oldestTime)
-                {
-                    iterator.remove();
-                }
-            }
-        }, 600, 600);
+        this.requestCleanupTask = Bukkit.getScheduler()
+            .runTaskTimer(plugin, this::cleanRequestMap, 100, 100);
     }
 
     @Override
@@ -122,6 +109,7 @@ public class TeleportListener extends DeltaEssentialsListener
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event)
     {
+        Settings settings = plugin.getSettings();
         Player toTp = event.getPlayer();
         String playerName = toTp.getName();
 
@@ -131,10 +119,10 @@ public class TeleportListener extends DeltaEssentialsListener
         String destName = request.getSender();
         Player destination = Bukkit.getPlayer(destName);
 
-        if(destination == null || !destination.isOnline())
+        if(destination == null)
         {
-            toTp.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
-                " is not online.");
+            String playerNotOnline = settings.format("PlayerNotOnline", destName);
+            toTp.sendMessage(playerNotOnline);
         }
         else
         {
@@ -144,6 +132,7 @@ public class TeleportListener extends DeltaEssentialsListener
 
     public void teleport(Player toTp, Player destination)
     {
+        Settings settings = plugin.getSettings();
         String senderName = toTp.getName();
         String destName = destination.getName();
         Location location = destination.getLocation();
@@ -151,23 +140,25 @@ public class TeleportListener extends DeltaEssentialsListener
 
         if(!toTp.canSee(destination) && !toTp.hasPermission("DeltaEss.TpVanishBypass"))
         {
-            toTp.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
-                " is not online.");
+            String playerNotOnline = settings.format("PlayerNotOnline", destName);
+            toTp.sendMessage(playerNotOnline);
             return;
         }
 
         if(dePlayer != null && dePlayer.isTeleportDenyEnabled() &&
             !toTp.hasPermission("DeltaEss.TpDenyBypass"))
         {
-            toTp.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
-                " is not allowing players to teleport to them.");
-            destination.sendMessage(Prefixes.INFO + Prefixes.input(senderName) +
-                " tried to teleport to you, but you are denying teleports.");
+            String onDeniedTpSender = settings.format("OnDeniedTpSender", destName);
+            String onDeniedTpReceiver = settings.format("OnDeniedTpReceiver", senderName);
+
+            toTp.sendMessage(onDeniedTpSender);
+            destination.sendMessage(onDeniedTpReceiver);
             return;
         }
 
         PlayerTpEvent event = new PlayerTpEvent(toTp, destination);
         Bukkit.getPluginManager().callEvent(event);
+
         if(event.isCancelled()) { return; }
 
         try
@@ -177,28 +168,31 @@ public class TeleportListener extends DeltaEssentialsListener
                 location = LocationUtil.getSafeDestination(location);
             }
 
-            toTp.sendMessage(Prefixes.SUCCESS + "Teleporting ...");
+            String onTpAttempt = settings.format("OnTpAttempt", destName);
+
+            toTp.sendMessage(onTpAttempt);
             toTp.teleport(location, PlayerTeleportEvent.TeleportCause.COMMAND);
 
             if(!toTp.hasPermission("DeltaEss.SilentTp"))
             {
-                destination.sendMessage(Prefixes.INFO + Prefixes.input(senderName) +
-                    " teleported to you.");
+                String onTpAlert = settings.format("OnTpAlert", destName);
+                destination.sendMessage(onTpAlert);
             }
         }
         catch(Exception ex)
         {
-            toTp.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
-                " is in an unsafe teleport location.");
+            String onUnsafeTpLocation = settings.format("OnUnsafeTpLocation", destName);
+            toTp.sendMessage(onUnsafeTpLocation);
         }
     }
 
     private void handleTpChannel(String tpSender, String destName)
     {
+        Settings settings = plugin.getSettings();
         TeleportRequest request = new TeleportRequest(destName, deltaRedisApi.getServerName());
         Player toTp = Bukkit.getPlayer(tpSender);
 
-        if(toTp == null || !toTp.isOnline())
+        if(toTp == null)
         {
             requestMap.put(tpSender, request);
             return;
@@ -206,10 +200,10 @@ public class TeleportListener extends DeltaEssentialsListener
 
         Player destination = Bukkit.getPlayer(destName);
 
-        if(destination == null || !destination.isOnline())
+        if(destination == null)
         {
-            toTp.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
-                " is not online.");
+            String playerNotOnline = settings.format("PlayerNotOnline", destName);
+            toTp.sendMessage(playerNotOnline);
         }
         else
         {
@@ -219,33 +213,53 @@ public class TeleportListener extends DeltaEssentialsListener
 
     private void handleTpHereChannel(String nameToTp, String tpHereSender, String destServer)
     {
+        Settings settings = plugin.getSettings();
         Player player = Bukkit.getPlayer(nameToTp);
-        if(player != null && player.isOnline())
+
+        if(player != null)
         {
             plugin.sendToServer(player, destServer);
         }
         else
         {
-            deltaRedisApi.sendMessageToPlayer(tpHereSender, Prefixes.FAILURE +
-                Prefixes.input(nameToTp) + " is not online.");
+            String playerNotOnline = settings.format("PlayerNotOnline", nameToTp);
+            deltaRedisApi.sendMessageToPlayer(tpHereSender, playerNotOnline);
         }
     }
 
     private void handleTpaHereChannel(String receiver, String sender, String destServer)
     {
+        Settings settings = plugin.getSettings();
         TeleportRequest request = new TeleportRequest(sender, destServer);
         Player receiverPlayer = Bukkit.getPlayer(receiver);
 
-        if(receiverPlayer != null && receiverPlayer.isOnline())
+        if(receiverPlayer != null)
         {
-            receiverPlayer.sendMessage(Prefixes.INFO + Prefixes.input(sender) +
-                " wants you to TP to them. Use /tpaccept to accept within 30 seconds.");
+            String onTpaReceived = settings.format("OnTpaReceived", sender);
+            receiverPlayer.sendMessage(onTpaReceived);
+
             requestMap.put(receiver, request);
         }
         else
         {
-            deltaRedisApi.sendMessageToPlayer(sender, Prefixes.FAILURE +
-                Prefixes.input(receiver) + " is not online.");
+            String playerNotOnline = settings.format("PlayerNotOnline", receiver);
+            deltaRedisApi.sendMessageToPlayer(sender, playerNotOnline);
+        }
+    }
+
+    private void cleanRequestMap()
+    {
+        long oldestTime = System.currentTimeMillis() - 60000;
+        Iterator<Map.Entry<String, TeleportRequest>> iterator =
+            requestMap.entrySet().iterator();
+
+        while(iterator.hasNext())
+        {
+            TeleportRequest request = iterator.next().getValue();
+            if(request.getTimeCreatedAt() < oldestTime)
+            {
+                iterator.remove();
+            }
         }
     }
 }

@@ -19,8 +19,8 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
+import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
-import com.gmail.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -101,7 +101,6 @@ public class CommandTpHere extends DeltaEssentialsCommand
 
                 deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TP_HERE, message);
                 plugin.getTeleportListener().getRequestMap().put(nameToTp, request);
-                sender.sendMessage(Prefixes.SUCCESS + "Teleporting here ...");
             }
             else
             {

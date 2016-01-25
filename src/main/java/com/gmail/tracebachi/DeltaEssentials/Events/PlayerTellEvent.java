@@ -16,6 +16,7 @@
  */
 package com.gmail.tracebachi.DeltaEssentials.Events;
 
+import org.bukkit.command.CommandSender;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -27,25 +28,39 @@ public class PlayerTellEvent extends Event implements Cancellable
 {
     private static final HandlerList handlers = new HandlerList();
 
-    private final String sender;
-    private final String receiver;
-    private String message;
-    private String cancelReason;
+    private final String senderName;
+    private final CommandSender sender;
+    private final String receiverName;
+    private final CommandSender receiver;
+    private final String message;
     private boolean cancelled;
 
-    public PlayerTellEvent(String sender, String receiver, String message)
+    public PlayerTellEvent(String senderName, CommandSender sender,
+        String receiverName, CommandSender receiver, String message)
     {
+        this.senderName = senderName;
         this.sender = sender;
+        this.receiverName = receiverName;
         this.receiver = receiver;
         this.message = message;
     }
 
-    public String getSender()
+    public String getSenderName()
+    {
+        return senderName;
+    }
+
+    public CommandSender getSender()
     {
         return sender;
     }
 
-    public String getReceiver()
+    public String getReceiverName()
+    {
+        return receiverName;
+    }
+
+    public CommandSender getReceiver()
     {
         return receiver;
     }
@@ -53,21 +68,6 @@ public class PlayerTellEvent extends Event implements Cancellable
     public String getMessage()
     {
         return message;
-    }
-
-    public String getCancelReason()
-    {
-        return cancelReason;
-    }
-
-    public void setMessage(String message)
-    {
-        this.message = message;
-    }
-
-    public void setCancelReason(String cancelReason)
-    {
-        this.cancelReason = cancelReason;
     }
 
     public HandlerList getHandlers()

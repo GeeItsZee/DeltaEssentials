@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
  */
 public interface PotionEffectUtils
 {
-    Pattern commaPattern = Pattern.compile(",");
+    Pattern COMMA_PATTERN = Pattern.compile(",");
 
     static List<String> toStringList(Collection<PotionEffect> effects)
     {
@@ -67,7 +67,7 @@ public interface PotionEffectUtils
 
     static PotionEffect deserialize(String source)
     {
-        String split[] = commaPattern.split(source, 3);
+        String split[] = COMMA_PATTERN.split(source, 3);
         int amplifier = Integer.parseInt(split[1]);
         int duration = Integer.parseInt(split[2]);
 

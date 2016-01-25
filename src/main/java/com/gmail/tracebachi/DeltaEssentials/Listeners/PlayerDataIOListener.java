@@ -1,3 +1,19 @@
+/*
+ * This file is part of DeltaEssentials.
+ *
+ * DeltaEssentials is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * DeltaEssentials is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with DeltaEssentials.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.gmail.tracebachi.DeltaEssentials.Listeners;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
@@ -11,7 +27,6 @@ import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerEntry;
 import com.gmail.tracebachi.DeltaEssentials.Storage.SavedInventory;
 import com.gmail.tracebachi.DeltaEssentials.Utils.xAuthUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashMap;
-import com.gmail.tracebachi.DeltaRedis.Spigot.Prefixes;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
@@ -43,6 +58,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         lastSwitchTimeMap = new CaseInsensitiveHashMap<>();
     }
 
+    @Override
     public void shutdown()
     {
         for(Player player : Bukkit.getOnlinePlayers())
@@ -54,7 +70,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
             catch(Exception e)
             {
                 e.printStackTrace();
-                plugin.severe("Failed to save inventory on shutdown for " +
+                plugin.severe("Failed to save player data on shutdown for " +
                     player.getName());
             }
         }
@@ -72,10 +88,11 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
     public void onPlayerLoginEvent(PlayerLoginEvent event)
     {
         Settings settings = plugin.getSettings();
+
         if(settings.isOnLockdown())
         {
-            event.disallow(PlayerLoginEvent.Result.KICK_OTHER,
-                settings.getLockdownMessage());
+            String onLockdown = settings.format("OnLockdown");
+            event.disallow(PlayerLoginEvent.Result.KICK_OTHER, onLockdown);
         }
     }
 
@@ -85,10 +102,10 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         if(event.getStatus() == xAuthPlayer.Status.AUTHENTICATED)
         {
             String name = event.getPlayerName();
+
             if(!plugin.getPlayerMap().containsKey(name))
             {
-                Player player = Bukkit.getPlayer(name);
-                if(player != null && player.isOnline())
+                if(Bukkit.getPlayer(name) != null)
                 {
                     loadPlayerData(name);
                 }
@@ -102,10 +119,10 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         if(event.getStatus() == xAuthPlayer.Status.AUTHENTICATED)
         {
             String name = event.getPlayerName();
+
             if(!plugin.getPlayerMap().containsKey(name))
             {
-                Player player = Bukkit.getPlayer(name);
-                if(player != null && player.isOnline())
+                if(Bukkit.getPlayer(name) != null)
                 {
                     loadPlayerData(name);
                 }
@@ -117,6 +134,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
     public void onPlayerRegisterEvent(xAuthCommandRegisterEvent event)
     {
         String name = xAuthUtil.getPlayerNameFromRegisterEvent(event);
+
         if(name == null) { return; }
 
         if(event.getAction() == xAuthCommandRegisterEvent.Action.PLAYER_REGISTERED)
@@ -124,7 +142,8 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
             if(!plugin.getPlayerMap().containsKey(name))
             {
                 Player player = Bukkit.getPlayer(name);
-                if(player != null && player.isOnline())
+
+                if(player != null)
                 {
                     loadPlayerData(name);
                 }
@@ -141,9 +160,9 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
     {
         Player player = event.getPlayer();
         String name = player.getName();
-        Long lastSwitchTime = lastSwitchTimeMap.remove(name);
+        Long switchTime = lastSwitchTimeMap.remove(name);
 
-        if(lastSwitchTime == null || (System.currentTimeMillis() - lastSwitchTime) > 2000)
+        if(switchTime == null || (System.currentTimeMillis() - switchTime) > 2000)
         {
             if(plugin.getPlayerMap().containsKey(name))
             {
@@ -179,8 +198,10 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         if(settings.isGameModeDisabled(newMode) &&
             !player.hasPermission("DeltaEss.DisabledGameModeBypass." + newMode.name()))
         {
-            player.sendMessage(Prefixes.FAILURE + Prefixes.input(newMode.name()) +
-                "is disabled on this server.");
+            String onDisabledGameModeUse = settings.format(
+                "OnDisabledGameModeUse", newMode.name());
+
+            player.sendMessage(onDisabledGameModeUse);
             event.setCancelled(true);
             return;
         }
@@ -188,8 +209,9 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         // Prevent game mode change during saves
         if(plugin.getInventoryLockListener().isLocked(name))
         {
-            player.sendMessage(Prefixes.FAILURE + "Game mode changes while " +
-                "inventory is locked are not allowed.");
+            String onLockedGameModeChange = settings.format("OnLockedGameModeChange");
+
+            player.sendMessage(onLockedGameModeChange);
             event.setCancelled(true);
             return;
         }
@@ -198,8 +220,10 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         if(settings.isDefaultGameModeForced() && newMode != settings.getDefaultGameMode() &&
             !player.hasPermission("DeltaEss.ForcedGameModeBypass"))
         {
-            player.sendMessage(Prefixes.FAILURE + "Game mode is being forced. " +
-                "You are not allowed to change it.");
+            String onGameModeForced = settings.format(
+                "OnGameModeForced", settings.getDefaultGameMode().name());
+
+            player.sendMessage(onGameModeForced);
             event.setCancelled(true);
             return;
         }
@@ -221,6 +245,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         if(newMode == GameMode.SURVIVAL)
         {
             SavedInventory savedSurvival = dePlayer.getSurvival();
+
             player.getInventory().setContents(savedSurvival.getContents());
             player.getInventory().setArmorContents(savedSurvival.getArmor());
             dePlayer.setSurvival(null);
@@ -228,6 +253,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         else if(newMode == GameMode.CREATIVE)
         {
             SavedInventory savedCreative = dePlayer.getCreative();
+
             player.getInventory().setContents(savedCreative.getContents());
             player.getInventory().setArmorContents(savedCreative.getArmor());
             dePlayer.setCreative(null);
@@ -246,7 +272,8 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
     public void onPlayerLoadSuccess(String name, PlayerEntry entry)
     {
         Player player = Bukkit.getPlayer(name);
-        if(player != null && player.isOnline())
+
+        if(player != null)
         {
             DeltaEssentialsPlayer dePlayer = new DeltaEssentialsPlayer();
 
@@ -259,7 +286,8 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
     public void onPlayerNotFound(String name)
     {
         Player player = Bukkit.getPlayer(name);
-        if(player != null && player.isOnline())
+
+        if(player != null)
         {
             GameMode defaultGameMode = plugin.getSettings().getDefaultGameMode();
             DeltaEssentialsPlayer dePlayer = new DeltaEssentialsPlayer();
@@ -279,18 +307,21 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
 
     public void onPlayerLoadException(String name)
     {
+        Settings settings = plugin.getSettings();
         Player player = Bukkit.getPlayer(name);
-        if(player != null && player.isOnline())
+
+        if(player != null)
         {
-            player.sendMessage(Prefixes.FAILURE + "Failed to load inventory. " +
-                "Refer to the console for more details.");
+            String onDataLoadFailure = settings.format("OnDataLoadFailure");
+            player.sendMessage(onDataLoadFailure);
         }
     }
 
     public void onPlayerSaveSuccess(String name, String destServer)
     {
         Player player = Bukkit.getPlayer(name);
-        if(player != null && player.isOnline())
+
+        if(player != null)
         {
             if(destServer != null)
             {
@@ -310,11 +341,13 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
 
     public void onPlayerSaveException(String name)
     {
+        Settings settings = plugin.getSettings();
         Player player = Bukkit.getPlayer(name);
-        if(player != null && player.isOnline())
+
+        if(player != null)
         {
-            player.sendMessage(Prefixes.FAILURE + "Failed to save inventory. " +
-                "Refer to the console for more details.");
+            String onDataSaveFailure = settings.format("OnDataSaveFailure");
+            player.sendMessage(onDataSaveFailure);
         }
     }
 

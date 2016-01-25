@@ -18,11 +18,8 @@ package com.gmail.tracebachi.DeltaEssentials;
 
 import com.gmail.tracebachi.DeltaEssentials.Commands.*;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerServerSwitchEvent;
-import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTellEvent;
 import com.gmail.tracebachi.DeltaEssentials.Listeners.*;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssentialsPlayer;
-import com.gmail.tracebachi.DeltaEssentials.Utils.MessageUtils;
-import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.LoggablePlugin;
 import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashMap;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedis;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
@@ -34,12 +31,10 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.messaging.Messenger;
 
-import java.util.Map;
-
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/5/15.
  */
-public class DeltaEssentials extends JavaPlugin implements LoggablePlugin
+public class DeltaEssentials extends JavaPlugin
 {
     private boolean debugMode;
     private boolean disableTaskScheduling;
@@ -217,19 +212,16 @@ public class DeltaEssentials extends JavaPlugin implements LoggablePlugin
         messenger.unregisterIncomingPluginChannel(this);
     }
 
-    @Override
     public void info(String message)
     {
         getLogger().info(message);
     }
 
-    @Override
     public void severe(String message)
     {
         getLogger().severe(message);
     }
 
-    @Override
     public void debug(String message)
     {
         if(debugMode)
@@ -241,6 +233,11 @@ public class DeltaEssentials extends JavaPlugin implements LoggablePlugin
     public CaseInsensitiveHashMap<DeltaEssentialsPlayer> getPlayerMap()
     {
         return playerMap;
+    }
+
+    public ChatListener getChatListener()
+    {
+        return chatListener;
     }
 
     public PlayerDataIOListener getPlayerDataIOListener()
@@ -310,33 +307,5 @@ public class DeltaEssentials extends JavaPlugin implements LoggablePlugin
 
         playerDataIOListener.savePlayerData(player, destination);
         return true;
-    }
-
-    public PlayerTellEvent sendMessageFromPlayer(String sender, String receiver, String message)
-    {
-        // TODO Can probably update this to send messages too
-        PlayerTellEvent event = new PlayerTellEvent(sender, receiver, message);
-        Bukkit.getPluginManager().callEvent(event);
-        message = event.getMessage();
-
-        if(event.isCancelled()) { return event; }
-
-        String logFormat = MessageUtils.formatForLog(sender, receiver, message);
-        String spyFormat = MessageUtils.formatForSpy(sender, receiver, message);
-        Bukkit.getLogger().info(logFormat);
-
-        // For all players that have social spy enabled, send a message
-        for(Map.Entry<String, DeltaEssentialsPlayer> entry : playerMap.entrySet())
-        {
-            if(entry.getValue().isSocialSpyEnabled())
-            {
-                Player player = Bukkit.getPlayer(entry.getKey());
-                if(player != null && player.isOnline())
-                {
-                    player.sendMessage(spyFormat);
-                }
-            }
-        }
-        return event;
     }
 }

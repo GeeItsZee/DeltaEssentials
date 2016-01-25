@@ -17,9 +17,10 @@
 package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
+import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
+import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
-import com.gmail.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -63,12 +64,14 @@ public class CommandTpAccept extends DeltaEssentialsCommand
             return;
         }
 
+        Settings settings = plugin.getSettings();
         TeleportRequest request = plugin.getTeleportListener().getRequestMap()
             .get(sender.getName());
 
         if(request == null)
         {
-            sender.sendMessage(Prefixes.FAILURE + "Request not found.");
+            String onNoTpaRequest = settings.format("OnNoTpaRequest");
+            sender.sendMessage(onNoTpaRequest);
             return;
         }
 
@@ -83,8 +86,8 @@ public class CommandTpAccept extends DeltaEssentialsCommand
             }
             else
             {
-                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(request.getSender()) +
-                    " is not online.");
+                String playerNotOnline = settings.format("PlayerNotOnline", request.getSender());
+                sender.sendMessage(playerNotOnline);
             }
         }
         else

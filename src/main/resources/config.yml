@@ -5,9 +5,6 @@
 # Should lockdown be enabled on start
 StartWithLockdown: False
 
-# Message to deny player connections with
-LockdownMessage: 'Server is locked down'
-
 ###############################################################################
 
 # File path to the player data folder
@@ -41,11 +38,6 @@ SharedChatChannels:
 
 ###############################################################################
 
-# Format of the message displayed to the player when kicked
-KickMessageFormat: 'Kicked by {SENDER} for {REASON}'
-
-###############################################################################
-
 # Name of the server where players should be sent when jailed.
 JailServer: world
 
@@ -53,6 +45,56 @@ JailServer: world
 ValidJails:
   - Alcatraz
   - Leavenworth
+
+###############################################################################
+
+# Formatting strings for messages
+Formats:
+
+  NoPermission: 'You do not have the {0} permission.'
+  PlayerNotOnline: '{0} is not online.'
+  PlayerDataNotLoaded: 'Not allowed because player data has not been loaded.'
+  TooManyAutoCompleteMatches: 'More than one online players match {0}.'
+
+  OnMoveToSameServer: 'You are already connected to {0}.'
+  OnMoveToOfflineServer: '{0} is offline or non-existent.'
+  OnMoveToBlockedServer: '{0} is blocked and you cannot bypass it.'
+  OnMoveSuccess: 'Moving to {0} ...'
+  OnMoveOtherSuccess: 'Scheduled to moved {0} to {1}'
+  OnMoveOtherToSameServer: '{0} is already connected to {1}'
+
+  OnLockdown: 'Server is locked down.'
+
+  OnInventoryLocked: 'Your inventory is locked. Wait until it is loaded.'
+
+  OnKickPlayer: 'You have been kicked by {0} for {1}.'
+  OnKickAnnounce: '{0} was kicked by {1} for {2}.'
+
+  OnTpAttempt: 'Teleporting to {0} ...'
+  OnTpAlert: '{0} teleported to you.'
+  OnDeniedTpSender: '{0} is not allowing players to teleport to them.'
+  OnDeniedTpReceiver: '{0} tried to teleport to you, but was denied.'
+  OnUnsafeTpLocation: '{0} is not in a safe location.'
+  OnTpaReceived: '{0} wants you to TP to them. Use /tpaccept to accept within 30 seconds.'
+  OnTpaSent: 'Sent TPA request to {0}.'
+
+  OnDisabledGameModeUse: '{0} is disabled on this server.'
+  OnLockedGameModeChange: 'Game mode cannot be changed while inventory is locked'
+  OnGameModeForced: 'Game mode {0} is being forced. You do not have permission to change it.'
+
+  OnDataLoadFailure: 'Failed to load inventory. Refer to the console for more details.'
+  OnDataSaveFailure: 'Failed to save inventory. Refer to the console for more details.'
+
+  OnNoReplyTarget: 'You do not have anyone to reply to.'
+  OnNoTpaRequest: 'You do not have a pending TPA request.'
+
+  OnInvalidJail: '{0} is not a valid jail.'
+  OnInvalidDateDifference: '{0} is not a valid date difference.'
+
+  TellLog: '[{0} -> {1}] {2}'
+  TellSpy: '[{0} -> {1}] {2}'
+  TellSender: '[me -> {0}] {1}'
+  TellReceiver: '[{0} -> me] {1}'
 
 ###############################################################################
 

@@ -21,8 +21,8 @@ import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Utils.CallbackUtil;
+import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
-import com.gmail.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -80,8 +80,8 @@ public class CommandJail extends DeltaEssentialsCommand
             jailName = args[1];
             if(!settings.isValidJail(jailName))
             {
-                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(jailName) +
-                    " is not a valid jail.");
+                String onInvalidJail = settings.format("OnInvalidJail", jailName);
+                sender.sendMessage(onInvalidJail);
                 return;
             }
         }
@@ -91,8 +91,8 @@ public class CommandJail extends DeltaEssentialsCommand
             dateDiff = args[2];
             if(!isValidDateDifference(dateDiff))
             {
-                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(dateDiff) +
-                    " is not a valid date difference.");
+                String onInvalidDateDifference = settings.format("OnInvalidDateDifference", jailName);
+                sender.sendMessage(onInvalidDateDifference);
                 return;
             }
         }
@@ -110,7 +110,7 @@ public class CommandJail extends DeltaEssentialsCommand
         else
         {
             deltaRedisApi.publish(jailServer, DeltaEssentialsChannels.JAIL,
-                senderName + "/\\" + toJail + " " + jailName + " " + dateDiff);
+                senderName, toJail + " " + jailName + " " + dateDiff);
 
             if(playerToJail != null && playerToJail.isOnline())
             {
@@ -129,12 +129,16 @@ public class CommandJail extends DeltaEssentialsCommand
         {
             if(cachedPlayer != null)
             {
-                deltaRedisApi.publish(cachedPlayer.getServer(), DeltaEssentialsChannels.MOVE,
-                    senderName + "/\\" + toJail + "/\\" + jailServer);
+                deltaRedisApi.publish(cachedPlayer.getServer(),
+                    DeltaEssentialsChannels.MOVE,
+                    senderName, toJail, jailServer);
             }
             else
             {
-                CallbackUtil.sendMessage(senderName, Prefixes.FAILURE + "Player not found.");
+                Settings settings = plugin.getSettings();
+                String onPlayerNotFound = settings.format("OnPlayerNotFound", toJail);
+
+                CallbackUtil.sendMessage(senderName, onPlayerNotFound);
             }
         });
     }

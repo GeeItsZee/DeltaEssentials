@@ -18,9 +18,10 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
+import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
+import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
-import com.gmail.tracebachi.DeltaRedis.Spigot.Prefixes;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -70,29 +71,34 @@ public class CommandTpaHere extends DeltaEssentialsCommand
             return;
         }
 
-        String tpaReceiver = args[0];
-        String tpaSender = sender.getName();
-        Player destPlayer = Bukkit.getPlayer(tpaReceiver);
+        Settings settings = plugin.getSettings();
+        String receiverName = args[0];
+        String senderName = sender.getName();
+        Player receiver = Bukkit.getPlayer(receiverName);
 
-        if(destPlayer != null && destPlayer.isOnline())
+        if(receiver != null)
         {
             String currentServer = deltaRedisApi.getServerName();
-            TeleportRequest request = new TeleportRequest(tpaSender, currentServer);
-            plugin.getTeleportListener().getRequestMap().put(tpaReceiver, request);
+            TeleportRequest request = new TeleportRequest(senderName, currentServer);
 
-            destPlayer.sendMessage(Prefixes.INFO + Prefixes.input(tpaSender) +
-                " wants you to TP to them. Use /tpaccept to accept within 30 seconds.");
-            sender.sendMessage(Prefixes.SUCCESS + "Sent teleport request to player.");
+            plugin.getTeleportListener().getRequestMap().put(receiverName, request);
 
+            String onTpaReceived = settings.format("OnTpaReceived", senderName);
+            receiver.sendMessage(onTpaReceived);
+
+            String onTpaSent = settings.format("OnTpaSent", receiverName);
+            sender.sendMessage(onTpaSent);
         }
         else
         {
-            handleDiffServerRequest(tpaReceiver, tpaSender);
+            handleDiffServerRequest(receiverName, senderName);
         }
     }
 
     private void handleDiffServerRequest(String receiver, String sender)
     {
+        Settings settings = plugin.getSettings();
+
         deltaRedisApi.findPlayer(receiver, cachedPlayer ->
         {
             Player senderPlayer = Bukkit.getPlayer(sender);
@@ -103,17 +109,20 @@ public class CommandTpaHere extends DeltaEssentialsCommand
                 // Format: Receiver/\Sender/\CurrentServer
                 String destServer = cachedPlayer.getServer();
                 String currentServer = deltaRedisApi.getServerName();
-                TeleportRequest request = new TeleportRequest(sender, currentServer);
-                String message = receiver + "/\\" + sender + "/\\" + currentServer;
 
-                deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TPA_HERE, message);
+                deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TPA_HERE,
+                    receiver, sender, currentServer);
+
+                TeleportRequest request = new TeleportRequest(sender, currentServer);
                 plugin.getTeleportListener().getRequestMap().put(receiver, request);
-                senderPlayer.sendMessage(Prefixes.SUCCESS + "Teleport request sent.");
+
+                String onTpaSent = settings.format("OnTpaSent", receiver);
+                senderPlayer.sendMessage(onTpaSent);
             }
             else
             {
-                senderPlayer.sendMessage(Prefixes.FAILURE + Prefixes.input(receiver) +
-                    " is not online.");
+                String playerNotOnline = settings.format("PlayerNotOnline", receiver);
+                senderPlayer.sendMessage(playerNotOnline);
             }
         });
     }
