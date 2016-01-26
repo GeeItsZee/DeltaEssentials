@@ -42,15 +42,17 @@ public class PlayerLoad implements Runnable
 {
     private final String name;
     private final File playerDataFile;
+    private final PlayerDataIOListener listener;
     private final DeltaEssentials plugin;
 
-    public PlayerLoad(String name, DeltaEssentials plugin)
+    public PlayerLoad(String name, PlayerDataIOListener listener, DeltaEssentials plugin)
     {
         Preconditions.checkNotNull(name, "Name cannot be null.");
         Preconditions.checkNotNull(plugin, "Plugin cannot be null.");
 
         this.name = name.toLowerCase();
         this.playerDataFile = plugin.getSettings().getPlayerDataFileFor(this.name);
+        this.listener = listener;
         this.plugin = plugin;
     }
 
@@ -82,31 +84,22 @@ public class PlayerLoad implements Runnable
     private void onSuccess(PlayerEntry entry)
     {
         plugin.debug("Loaded player data for {name:" + entry.getName() + "}");
-        plugin.scheduleTaskSync(() ->
-        {
-            PlayerDataIOListener listener = plugin.getPlayerDataIOListener();
-            listener.onPlayerLoadSuccess(name, entry);
-        });
+        plugin.scheduleTaskSync(
+            () -> listener.onPlayerLoadSuccess(name, entry));
     }
 
     private void onNotFoundFailure()
     {
         plugin.debug("Player data not found for {name:" + name + "}");
-        plugin.scheduleTaskSync(() ->
-        {
-            PlayerDataIOListener listener = plugin.getPlayerDataIOListener();
-            listener.onPlayerNotFound(name);
-        });
+        plugin.scheduleTaskSync(
+            () -> listener.onPlayerNotFound(name));
     }
 
     private void onExceptionFailure()
     {
         plugin.debug("Failed to load player data for {name:" + name + "} due to an exception");
-        plugin.scheduleTaskSync(() ->
-        {
-            PlayerDataIOListener listener = plugin.getPlayerDataIOListener();
-            listener.onPlayerLoadException(name);
-        });
+        plugin.scheduleTaskSync(
+            () -> listener.onPlayerLoadException(name));
     }
 
     private PlayerEntry readPlayerDataYaml(YamlConfiguration config)

@@ -41,7 +41,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -339,7 +338,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
 
     public void loadPlayerData(String name)
     {
-        PlayerLoad runnable = new PlayerLoad(name, plugin);
+        PlayerLoad runnable = new PlayerLoad(name, this, plugin);
 
         plugin.getPlayerLockListener().add(name);
         plugin.debug("Scheduling async player data load for {name:" + name + "}" );
@@ -351,7 +350,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         String name = player.getName();
         DeltaEssentialsPlayer dePlayer = plugin.getPlayerMap().get(name);
         PlayerEntry entry = buildPlayerEntry(player, dePlayer);
-        PlayerSave runnable = new PlayerSave(entry, destServer, plugin);
+        PlayerSave runnable = new PlayerSave(entry, destServer, this, plugin);
 
         plugin.getPlayerLockListener().add(name);
         plugin.debug("Scheduling async player data save for {name:" + name + "}");

@@ -20,6 +20,7 @@ import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
+import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
@@ -33,7 +34,7 @@ import java.util.List;
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
  */
-public class CommandTpHere implements TabExecutor, Shutdownable, Registerable
+public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
 {
     private DeltaRedisApi deltaRedisApi;
     private DeltaEssentials plugin;

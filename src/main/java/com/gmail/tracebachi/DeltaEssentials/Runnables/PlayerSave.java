@@ -36,14 +36,10 @@ public class PlayerSave implements Runnable
     private final String destServer;
     private final PlayerEntry entry;
     private final File playerDataFile;
+    private final PlayerDataIOListener listener;
     private final DeltaEssentials plugin;
 
-    public PlayerSave(PlayerEntry entry, DeltaEssentials plugin)
-    {
-        this(entry, null, plugin);
-    }
-
-    public PlayerSave(PlayerEntry entry, String destServer, DeltaEssentials plugin)
+    public PlayerSave(PlayerEntry entry, String destServer, PlayerDataIOListener listener, DeltaEssentials plugin)
     {
         Preconditions.checkNotNull(entry, "Entry cannot be null.");
         Preconditions.checkNotNull(plugin, "Plugin cannot be null.");
@@ -51,6 +47,7 @@ public class PlayerSave implements Runnable
         this.entry = entry;
         this.playerDataFile = plugin.getSettings().getPlayerDataFileFor(entry.getName());
         this.destServer = destServer;
+        this.listener = listener;
         this.plugin = plugin;
     }
 
@@ -81,21 +78,15 @@ public class PlayerSave implements Runnable
     private void onSuccess()
     {
         plugin.debug("Saved inventory for {name:" + entry.getName() + "}");
-        plugin.scheduleTaskSync(() ->
-        {
-            PlayerDataIOListener listener = plugin.getPlayerDataIOListener();
-            listener.onPlayerSaveSuccess(entry.getName(), destServer);
-        });
+        plugin.scheduleTaskSync(
+            () -> listener.onPlayerSaveSuccess(entry.getName(), destServer));
     }
 
     private void onFailure()
     {
         plugin.debug("Failed to save inventory for {name:" + entry.getName() + "} due to an exception");
-        plugin.scheduleTaskSync(() ->
-        {
-            PlayerDataIOListener listener = plugin.getPlayerDataIOListener();
-            listener.onPlayerSaveException(entry.getName());
-        });
+        plugin.scheduleTaskSync(
+            () -> listener.onPlayerSaveException(entry.getName()));
     }
 
     private YamlConfiguration writePlayerDataYaml()

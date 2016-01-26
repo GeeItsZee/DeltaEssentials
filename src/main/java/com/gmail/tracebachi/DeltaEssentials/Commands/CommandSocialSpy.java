@@ -19,6 +19,7 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssentialsPlayer;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
+import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -31,7 +32,7 @@ import java.util.List;
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/4/15.
  */
-public class CommandSocialSpy implements TabExecutor, Shutdownable, Registerable
+public class CommandSocialSpy implements TabExecutor, Registerable, Shutdownable
 {
     private DeltaEssentials plugin;
 

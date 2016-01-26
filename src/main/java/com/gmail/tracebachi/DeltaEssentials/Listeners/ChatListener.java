@@ -21,20 +21,11 @@ import com.dthielke.herochat.ChatCompleteEvent;
 import com.dthielke.herochat.Herochat;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
-import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTellEvent;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
-import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssentialsPlayer;
-import com.gmail.tracebachi.DeltaEssentials.Utils.MessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Servers;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent;
-import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.HandlerList;
-
-import java.util.Map;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
@@ -61,13 +52,14 @@ public class ChatListener extends DeltaEssentialsListener
     {
         Settings settings = plugin.getSettings();
         String channel = event.getChannel().getName();
+        String permission = settings.getSharedChatChannelPermission(channel);
 
-        if(settings.isChatChannelShared(channel))
+        if(permission != null)
         {
             String message =  event.getMsg();
             deltaRedisApi.publish(Servers.SPIGOT,
                 DeltaEssentialsChannels.SHARED_CHAT,
-                channel, message);
+                channel, permission, message);
         }
     }
 
@@ -76,14 +68,22 @@ public class ChatListener extends DeltaEssentialsListener
     {
         if(event.getChannel().equals(DeltaEssentialsChannels.SHARED_CHAT))
         {
-            String[] splitMessage = DELTA_PATTERN.split(event.getMessage(), 2);
+            String[] splitMessage = DELTA_PATTERN.split(event.getMessage(), 3);
             String channelName = splitMessage[0];
-            String message = splitMessage[1];
+            String permission = splitMessage[1];
+            String message = splitMessage[2];
             Channel channel = Herochat.getChannelManager().getChannel(channelName);
 
             if(channel != null)
             {
-                channel.sendRawMessage(message);
+                if(permission.equalsIgnoreCase("NoPerm"))
+                {
+                    channel.sendRawMessage(message);
+                }
+                else
+                {
+                    plugin.getServer().broadcast(message, permission);
+                }
             }
             else
             {

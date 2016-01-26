@@ -23,6 +23,7 @@ import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssentialsPlayer;
 import com.gmail.tracebachi.DeltaEssentials.Utils.MessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
+import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashMap;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
@@ -47,7 +48,7 @@ import static com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent.DELT
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
  */
-public class CommandTell implements TabExecutor, Shutdownable, Registerable, Listener
+public class CommandTell implements TabExecutor, Registerable, Shutdownable, Listener
 {
     private static final String TOO_MANY_MATCHES = "!TOO_MANY_MATCHES!";
 

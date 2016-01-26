@@ -17,7 +17,9 @@
 package com.gmail.tracebachi.DeltaEssentials.Listeners;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
+import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 
 import java.util.regex.Pattern;
@@ -25,7 +27,7 @@ import java.util.regex.Pattern;
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 1/22/16.
  */
-public class DeltaEssentialsListener implements Listener, Shutdownable
+public class DeltaEssentialsListener implements Listener, Registerable, Shutdownable
 {
     protected static final Pattern DELTA_PATTERN = Pattern.compile("/\\\\");
 
@@ -37,18 +39,20 @@ public class DeltaEssentialsListener implements Listener, Shutdownable
     }
 
     @Override
+    public void register()
+    {
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
+    @Override
+    public void unregister()
+    {
+        HandlerList.unregisterAll(this);
+    }
+
+    @Override
     public void shutdown()
     {
         this.plugin = null;
-    }
-
-    public boolean register()
-    {
-        if(plugin != null)
-        {
-            plugin.getServer().getPluginManager().registerEvents(this, plugin);
-            return true;
-        }
-        return false;
     }
 }

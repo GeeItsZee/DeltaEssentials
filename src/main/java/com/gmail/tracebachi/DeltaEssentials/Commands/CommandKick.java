@@ -21,6 +21,7 @@ import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Utils.MessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
+import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Servers;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
@@ -44,7 +45,7 @@ import static com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent.DELT
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/4/15.
  */
-public class CommandKick implements TabExecutor, Shutdownable, Registerable, Listener
+public class CommandKick implements TabExecutor, Registerable, Shutdownable, Listener
 {
     private DeltaRedisApi deltaRedisApi;
     private DeltaEssentials plugin;

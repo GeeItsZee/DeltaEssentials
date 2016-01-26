@@ -22,10 +22,7 @@ import org.bukkit.configuration.ConfigurationSection;
 
 import java.io.File;
 import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 1/20/16.
@@ -40,7 +37,7 @@ public class Settings
     private String jailServer;
     private GameMode defaultGameMode;
     private Set<GameMode> disabledGameModes;
-    private Set<String> sharedChatChannels;
+    private Map<String, String> sharedChatChannels;
     private List<String> validJails;
     private CaseInsensitiveHashSet blockedServers;
     private HashMap<String, MessageFormat> formatMap;
@@ -56,9 +53,30 @@ public class Settings
         this.defaultGameMode = getGameMode(plugin.getConfig().getString("DefaultGameMode"));
         this.validJails = plugin.getConfig().getStringList("ValidJails");
         this.disabledGameModes = new HashSet<>();
-        this.sharedChatChannels = new HashSet<>();
+        this.sharedChatChannels = new HashMap<>();
         this.blockedServers = new CaseInsensitiveHashSet();
         this.formatMap = new HashMap<>();
+
+        ConfigurationSection section;
+
+        section = plugin.getConfig().getConfigurationSection("SharedChatChannels");
+        if(section != null)
+        {
+            for(String channel : section.getKeys(false))
+            {
+                this.sharedChatChannels.put(channel, section.getString(channel));
+            }
+        }
+
+        section = plugin.getConfig().getConfigurationSection("Formats");
+        if(section != null)
+        {
+            for(String formatKey : section.getKeys(false))
+            {
+                String format = section.getString(formatKey);
+                this.formatMap.put(formatKey, new MessageFormat(format));
+            }
+        }
 
         for(String modeName : plugin.getConfig().getStringList("DisabledGameModes"))
         {
@@ -69,24 +87,9 @@ public class Settings
             catch(IllegalArgumentException ignore) {}
         }
 
-        for(String channel : plugin.getConfig().getStringList("SharedChatChannels"))
-        {
-            this.sharedChatChannels.add(channel);
-        }
-
         for(String server : plugin.getConfig().getStringList("BlockedServers"))
         {
             this.blockedServers.add(server);
-        }
-
-        ConfigurationSection section = plugin.getConfig().getConfigurationSection("Formats");
-        if(section != null)
-        {
-            for(String formatKey : section.getKeys(false))
-            {
-                String format = section.getString(formatKey);
-                this.formatMap.put(formatKey, new MessageFormat(format));
-            }
         }
 
         File file = new File(playerDataFolderPath);
@@ -138,9 +141,9 @@ public class Settings
         return disabledGameModes.contains(gameMode);
     }
 
-    public boolean isChatChannelShared(String channel)
+    public String getSharedChatChannelPermission(String channel)
     {
-        return sharedChatChannels.contains(channel);
+        return sharedChatChannels.get(channel);
     }
 
     public boolean isServerBlocked(String serverName)

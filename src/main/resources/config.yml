@@ -31,13 +31,17 @@ DisabledGameModes:
 
 # Names of servers that players cannot access without the bypass permission
 BlockedServers:
-  - SuperSecretServer
+  - SecretServer
 
 ###############################################################################
 
-# Channels names (registered in HeroChat) that will be shared with other servers
+# Channels to share with other servers
+# {Channel Name} : {Permission to view}
+# If {Permission to view} is "NoPerm", the HeroChat channel on the other
+# servers will be used
 SharedChatChannels:
-  - Global
+  Global: NoPerm
+  Secret: Secret.Permission.Name
 
 ###############################################################################
 

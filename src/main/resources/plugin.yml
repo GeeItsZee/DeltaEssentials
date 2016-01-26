@@ -1,6 +1,6 @@
 name: DeltaEssentials
 main: com.gmail.tracebachi.DeltaEssentials.DeltaEssentials
-version: 2.1
+version: 2.2
 author: Trace Bachi (tracebachi@gmail.com, BigBossZee)
 depend: [DeltaRedis, Essentials, Herochat]
 commands:

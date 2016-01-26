@@ -18,7 +18,10 @@ package com.gmail.tracebachi.DeltaEssentials;
 
 import com.gmail.tracebachi.DeltaEssentials.Commands.*;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerServerSwitchEvent;
-import com.gmail.tracebachi.DeltaEssentials.Listeners.*;
+import com.gmail.tracebachi.DeltaEssentials.Listeners.ChatListener;
+import com.gmail.tracebachi.DeltaEssentials.Listeners.PlayerDataIOListener;
+import com.gmail.tracebachi.DeltaEssentials.Listeners.PlayerLockListener;
+import com.gmail.tracebachi.DeltaEssentials.Listeners.TeleportListener;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssentialsPlayer;
 import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashMap;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedis;
@@ -37,7 +40,7 @@ import org.bukkit.plugin.messaging.Messenger;
 public class DeltaEssentials extends JavaPlugin
 {
     private boolean debugMode;
-    private boolean disableTaskScheduling;
+    private boolean allowTaskScheduling;
 
     private Settings settings;
     private WaitingAsyncScheduler asyncScheduler;
@@ -133,17 +136,13 @@ public class DeltaEssentials extends JavaPlugin
         Messenger messenger = getServer().getMessenger();
         messenger.registerOutgoingPluginChannel(this, "BungeeCord");
 
-        disableTaskScheduling = false;
+        allowTaskScheduling = true;
     }
 
     @Override
     public void onDisable()
     {
-        disableTaskScheduling = true;
-
-        // Wait for any async tasks to finish
-        asyncScheduler.waitForTasks();
-        asyncScheduler = null;
+        allowTaskScheduling = false;
 
         // Order matters. Shut down the IO listener before the inventory lock listener
         playerDataIOListener.shutdown();
@@ -151,6 +150,10 @@ public class DeltaEssentials extends JavaPlugin
 
         playerLockListener.shutdown();
         playerLockListener = null;
+
+        // Wait for any async tasks to finish
+        asyncScheduler.waitForTasks();
+        asyncScheduler = null;
 
         teleportListener.shutdown();
         teleportListener = null;
@@ -221,16 +224,6 @@ public class DeltaEssentials extends JavaPlugin
         return playerMap;
     }
 
-    public ChatListener getChatListener()
-    {
-        return chatListener;
-    }
-
-    public PlayerDataIOListener getPlayerDataIOListener()
-    {
-        return playerDataIOListener;
-    }
-
     public PlayerLockListener getPlayerLockListener()
     {
         return playerLockListener;
@@ -248,7 +241,7 @@ public class DeltaEssentials extends JavaPlugin
 
     public void scheduleTaskSync(Runnable runnable)
     {
-        if(!disableTaskScheduling)
+        if(allowTaskScheduling)
         {
             getServer().getScheduler().runTask(this, runnable);
         }
@@ -260,7 +253,7 @@ public class DeltaEssentials extends JavaPlugin
 
     public void scheduleTaskAsync(Runnable runnable)
     {
-        if(!disableTaskScheduling)
+        if(allowTaskScheduling)
         {
             asyncScheduler.scheduleTask(runnable);
         }
