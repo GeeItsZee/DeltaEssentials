@@ -18,6 +18,7 @@ package com.gmail.tracebachi.DeltaEssentials.Listeners;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
+import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashSet;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
@@ -67,12 +68,11 @@ public class InventoryLockListener extends DeltaEssentialsListener
     public void onInventoryOpen(InventoryOpenEvent event)
     {
         HumanEntity player = event.getPlayer();
-        Settings settings = plugin.getSettings();
 
         if(locked.contains(player.getName()))
         {
-            String onInventoryLocked = settings.format("OnInventoryLocked");
-            player.sendMessage(onInventoryLocked);
+            player.sendMessage(Prefixes.FAILURE +
+                "Your inventory is locked. Wait until it is loaded.");
             event.setCancelled(true);
         }
     }
@@ -81,12 +81,11 @@ public class InventoryLockListener extends DeltaEssentialsListener
     public void onInventoryInteract(InventoryInteractEvent event)
     {
         HumanEntity player = event.getWhoClicked();
-        Settings settings = plugin.getSettings();
 
         if(locked.contains(player.getName()))
         {
-            String onInventoryLocked = settings.format("OnInventoryLocked");
-            player.sendMessage(onInventoryLocked);
+            player.sendMessage(Prefixes.FAILURE +
+                "Your inventory is locked. Wait until it is loaded.");
             event.setCancelled(true);
         }
     }
@@ -95,12 +94,11 @@ public class InventoryLockListener extends DeltaEssentialsListener
     public void onPlayerDropItemEvent(PlayerDropItemEvent event)
     {
         Player player = event.getPlayer();
-        Settings settings = plugin.getSettings();
 
         if(locked.contains(player.getName()))
         {
-            String onInventoryLocked = settings.format("OnInventoryLocked");
-            player.sendMessage(onInventoryLocked);
+            player.sendMessage(Prefixes.FAILURE +
+                "Your inventory is locked. Wait until it is loaded.");
             event.setCancelled(true);
         }
     }
@@ -109,12 +107,11 @@ public class InventoryLockListener extends DeltaEssentialsListener
     public void onPlayerPickupItemEvent(PlayerPickupItemEvent event)
     {
         Player player = event.getPlayer();
-        Settings settings = plugin.getSettings();
 
         if(locked.contains(player.getName()))
         {
-            String onInventoryLocked = settings.format("OnInventoryLocked");
-            player.sendMessage(onInventoryLocked);
+            player.sendMessage(Prefixes.FAILURE +
+                "Your inventory is locked. Wait until it is loaded.");
             event.setCancelled(true);
         }
     }

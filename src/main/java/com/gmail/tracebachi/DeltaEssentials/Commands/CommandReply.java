@@ -76,8 +76,8 @@ public class CommandReply extends DeltaEssentialsCommand
 
         if(receiverName.equals(""))
         {
-            String onNoReplyTarget = settings.format("OnNoReplyTarget");
-            sender.sendMessage(onNoReplyTarget);
+            String noReplyTarget = settings.format("NoReplyTarget");
+            sender.sendMessage(noReplyTarget);
             return;
         }
 

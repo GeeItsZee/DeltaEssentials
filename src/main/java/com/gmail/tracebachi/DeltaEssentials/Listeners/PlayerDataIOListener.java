@@ -91,8 +91,8 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
 
         if(settings.isOnLockdown())
         {
-            String onLockdown = settings.format("OnLockdown");
-            event.disallow(PlayerLoginEvent.Result.KICK_OTHER, onLockdown);
+            String lockdown = settings.format("Lockdown");
+            event.disallow(PlayerLoginEvent.Result.KICK_OTHER, lockdown);
         }
     }
 
@@ -198,10 +198,10 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         if(settings.isGameModeDisabled(newMode) &&
             !player.hasPermission("DeltaEss.DisabledGameModeBypass." + newMode.name()))
         {
-            String onDisabledGameModeUse = settings.format(
-                "OnDisabledGameModeUse", newMode.name());
+            String disabledGameModeUse = settings.format(
+                "DisabledGameModeUse", newMode.name());
 
-            player.sendMessage(onDisabledGameModeUse);
+            player.sendMessage(disabledGameModeUse);
             event.setCancelled(true);
             return;
         }
@@ -209,9 +209,9 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         // Prevent game mode change during saves
         if(plugin.getInventoryLockListener().isLocked(name))
         {
-            String onLockedGameModeChange = settings.format("OnLockedGameModeChange");
+            String lockedGameModeChange = settings.format("LockedGameModeChange");
 
-            player.sendMessage(onLockedGameModeChange);
+            player.sendMessage(lockedGameModeChange);
             event.setCancelled(true);
             return;
         }
@@ -220,10 +220,10 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         if(settings.isDefaultGameModeForced() && newMode != settings.getDefaultGameMode() &&
             !player.hasPermission("DeltaEss.ForcedGameModeBypass"))
         {
-            String onGameModeForced = settings.format(
-                "OnGameModeForced", settings.getDefaultGameMode().name());
+            String gameModeForced = settings.format(
+                "GameModeForced", settings.getDefaultGameMode().name());
 
-            player.sendMessage(onGameModeForced);
+            player.sendMessage(gameModeForced);
             event.setCancelled(true);
             return;
         }
@@ -312,8 +312,8 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
 
         if(player != null)
         {
-            String onDataLoadFailure = settings.format("OnDataLoadFailure");
-            player.sendMessage(onDataLoadFailure);
+            String dataLoadFailure = settings.format("DataLoadFailure");
+            player.sendMessage(dataLoadFailure);
         }
     }
 
@@ -346,8 +346,8 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
 
         if(player != null)
         {
-            String onDataSaveFailure = settings.format("OnDataSaveFailure");
-            player.sendMessage(onDataSaveFailure);
+            String dataSaveFailure = settings.format("DataSaveFailure");
+            player.sendMessage(dataSaveFailure);
         }
     }
 

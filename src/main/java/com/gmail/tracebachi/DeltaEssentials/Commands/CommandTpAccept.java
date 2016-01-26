@@ -70,8 +70,8 @@ public class CommandTpAccept extends DeltaEssentialsCommand
 
         if(request == null)
         {
-            String onNoTpaRequest = settings.format("OnNoTpaRequest");
-            sender.sendMessage(onNoTpaRequest);
+            String noTpaRequest = settings.format("NoTpaRequest");
+            sender.sendMessage(noTpaRequest);
             return;
         }
 
@@ -80,7 +80,8 @@ public class CommandTpAccept extends DeltaEssentialsCommand
         if(request.getDestServer().equals(deltaRedisApi.getServerName()))
         {
             Player destPlayer = Bukkit.getPlayer(request.getSender());
-            if(destPlayer != null && destPlayer.isOnline())
+
+            if(destPlayer != null)
             {
                 plugin.getTeleportListener().teleport(player, destPlayer);
             }

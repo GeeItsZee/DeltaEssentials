@@ -71,13 +71,14 @@ public class CommandKick extends DeltaEssentialsCommand
         Settings settings = plugin.getSettings();
         String nameToKick = args[0];
         String senderName = sender.getName();
-        String reason = getKickReason(args);
+        String reason = getKickReason(settings, args);
         Player playerToKick = Bukkit.getPlayer(nameToKick);
 
         if(playerToKick != null)
         {
-            String onKickPlayer = settings.format("OnKickPlayer", senderName, reason);
-            playerToKick.kickPlayer(onKickPlayer);
+            String kickPlayer = settings.format("KickPlayer", senderName, reason);
+            playerToKick.kickPlayer(kickPlayer);
+
             announceKick(settings, nameToKick, senderName, reason);
         }
         else
@@ -103,7 +104,7 @@ public class CommandKick extends DeltaEssentialsCommand
         }
     }
 
-    private String getKickReason(String[] args)
+    private String getKickReason(Settings settings, String[] args)
     {
         if(args.length > 1)
         {
@@ -112,17 +113,17 @@ public class CommandKick extends DeltaEssentialsCommand
         }
         else
         {
-            return "Kicked from server!";
+            return settings.format("DefaultKickReason");
         }
     }
 
     private void announceKick(Settings settings, String nameToKick, String senderName, String reason)
     {
-        String onKickAnnounce = settings.format("OnKickAnnounce", senderName, nameToKick, reason);
+        String kickAnnounce = settings.format("KickAnnounce", senderName, nameToKick, reason);
 
         for(Player onlinePlayer : Bukkit.getOnlinePlayers())
         {
-            onlinePlayer.sendMessage(onKickAnnounce);
+            onlinePlayer.sendMessage(kickAnnounce);
         }
     }
 }

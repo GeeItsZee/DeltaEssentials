@@ -55,46 +55,40 @@ Formats:
   PlayerNotOnline: '{0} is not online.'
   PlayerDataNotLoaded: 'Not allowed because player data has not been loaded.'
   TooManyAutoCompleteMatches: 'More than one online players match {0}.'
+  Lockdown: 'Server is locked down ... for reasons!'
 
-  OnMoveToSameServer: 'You are already connected to {0}.'
-  OnMoveToOfflineServer: '{0} is offline or non-existent.'
-  OnMoveToBlockedServer: '{0} is blocked and you cannot bypass it.'
-  OnMoveSuccess: 'Moving to {0} ...'
-  OnMoveOtherSuccess: 'Scheduled to moved {0} to {1}'
-  OnMoveOtherToSameServer: '{0} is already connected to {1}'
+  MoveToSameServer: 'You are already connected to {0}.'
+  MoveToOfflineServer: '{0} is offline or non-existent.'
+  MoveToBlockedServer: '{0} is blocked and you cannot bypass it.'
+  MoveSuccess: 'Moving to {0} ...'
+  MoveOtherSuccess: 'Scheduled to moved {0} to {1}'
+  MoveOtherToSameServer: '{0} is already connected to {1}'
 
-  OnLockdown: 'Server is locked down.'
+  DefaultKickReason: 'Kicked from server!'
+  KickPlayer: 'You have been kicked by {0} for {1}.'
+  KickAnnounce: '{0} was kicked by {1} for {2}.'
 
-  OnInventoryLocked: 'Your inventory is locked. Wait until it is loaded.'
+  TpAttempt: 'Teleporting to {0} ...'
+  TpAlert: '{0} teleported to you.'
+  DeniedTpSender: '{0} is not allowing players to teleport to them.'
+  DeniedTpReceiver: '{0} tried to teleport to you, but was denied.'
+  UnsafeTpLocation: '{0} is not in a safe location.'
+  TpaReceived: '{0} wants you to TP to them. Use /tpaccept to accept within 30 seconds.'
+  TpaSent: 'Sent TPA request to {0}.'
+  NoTpaRequest: 'You do not have a pending TPA request.'
 
-  OnKickPlayer: 'You have been kicked by {0} for {1}.'
-  OnKickAnnounce: '{0} was kicked by {1} for {2}.'
+  DisabledGameModeUse: '{0} is disabled on this server.'
+  LockedGameModeChange: 'Game mode cannot be changed while inventory is locked'
+  GameModeForced: 'Game mode {0} is being forced. You do not have permission to change it.'
 
-  OnTpAttempt: 'Teleporting to {0} ...'
-  OnTpAlert: '{0} teleported to you.'
-  OnDeniedTpSender: '{0} is not allowing players to teleport to them.'
-  OnDeniedTpReceiver: '{0} tried to teleport to you, but was denied.'
-  OnUnsafeTpLocation: '{0} is not in a safe location.'
-  OnTpaReceived: '{0} wants you to TP to them. Use /tpaccept to accept within 30 seconds.'
-  OnTpaSent: 'Sent TPA request to {0}.'
-
-  OnDisabledGameModeUse: '{0} is disabled on this server.'
-  OnLockedGameModeChange: 'Game mode cannot be changed while inventory is locked'
-  OnGameModeForced: 'Game mode {0} is being forced. You do not have permission to change it.'
-
-  OnDataLoadFailure: 'Failed to load inventory. Refer to the console for more details.'
-  OnDataSaveFailure: 'Failed to save inventory. Refer to the console for more details.'
-
-  OnNoReplyTarget: 'You do not have anyone to reply to.'
-  OnNoTpaRequest: 'You do not have a pending TPA request.'
-
-  OnInvalidJail: '{0} is not a valid jail.'
-  OnInvalidDateDifference: '{0} is not a valid date difference.'
+  DataLoadFailure: 'Failed to load inventory. Refer to the console for more details.'
+  DataSaveFailure: 'Failed to save inventory. Refer to the console for more details.'
 
   TellLog: '[{0} -> {1}] {2}'
   TellSpy: '[{0} -> {1}] {2}'
   TellSender: '[me -> {0}] {1}'
   TellReceiver: '[{0} -> me] {1}'
+  NoReplyTarget: 'You do not have anyone to reply to.'
 
 ###############################################################################
 

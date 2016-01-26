@@ -48,7 +48,8 @@ public class MessageListener extends DeltaEssentialsListener
             String destination = split[2];
 
             Player toMove = Bukkit.getPlayer(nameToMove);
-            if(toMove != null && toMove.isOnline())
+
+            if(toMove != null)
             {
                 plugin.sendToServer(toMove, destination);
                 plugin.info(sender + " moved " + nameToMove + " to " + destination);
@@ -64,17 +65,17 @@ public class MessageListener extends DeltaEssentialsListener
             Settings settings = plugin.getSettings();
             Player toKick = Bukkit.getPlayer(target);
 
-            if(toKick != null && toKick.isOnline())
+            if(toKick != null)
             {
-                String onKickPlayer = settings.format("OnKickPlayer", sender, reason);
-                toKick.kickPlayer(onKickPlayer);
+                String kickPlayer = settings.format("KickPlayer", sender, reason);
+                toKick.kickPlayer(kickPlayer);
             }
 
-            String onKickAnnounce = settings.format("OnKickAnnounce", sender, target, reason);
+            String kickAnnounce = settings.format("KickAnnounce", sender, target, reason);
 
             for(Player onlinePlayer : Bukkit.getOnlinePlayers())
             {
-                onlinePlayer.sendMessage(onKickAnnounce);
+                onlinePlayer.sendMessage(kickAnnounce);
             }
         }
         else if(channel.equals(DeltaEssentialsChannels.JAIL))

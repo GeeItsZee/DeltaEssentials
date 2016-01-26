@@ -148,11 +148,11 @@ public class TeleportListener extends DeltaEssentialsListener
         if(dePlayer != null && dePlayer.isTeleportDenyEnabled() &&
             !toTp.hasPermission("DeltaEss.TpDenyBypass"))
         {
-            String onDeniedTpSender = settings.format("OnDeniedTpSender", destName);
-            String onDeniedTpReceiver = settings.format("OnDeniedTpReceiver", senderName);
+            String deniedTpSender = settings.format("DeniedTpSender", destName);
+            String deniedTpReceiver = settings.format("DeniedTpReceiver", senderName);
 
-            toTp.sendMessage(onDeniedTpSender);
-            destination.sendMessage(onDeniedTpReceiver);
+            toTp.sendMessage(deniedTpSender);
+            destination.sendMessage(deniedTpReceiver);
             return;
         }
 
@@ -168,21 +168,21 @@ public class TeleportListener extends DeltaEssentialsListener
                 location = LocationUtil.getSafeDestination(location);
             }
 
-            String onTpAttempt = settings.format("OnTpAttempt", destName);
+            String tpAttempt = settings.format("TpAttempt", destName);
+            toTp.sendMessage(tpAttempt);
 
-            toTp.sendMessage(onTpAttempt);
             toTp.teleport(location, PlayerTeleportEvent.TeleportCause.COMMAND);
 
             if(!toTp.hasPermission("DeltaEss.SilentTp"))
             {
-                String onTpAlert = settings.format("OnTpAlert", destName);
-                destination.sendMessage(onTpAlert);
+                String tpAlert = settings.format("TpAlert", destName);
+                destination.sendMessage(tpAlert);
             }
         }
         catch(Exception ex)
         {
-            String onUnsafeTpLocation = settings.format("OnUnsafeTpLocation", destName);
-            toTp.sendMessage(onUnsafeTpLocation);
+            String unsafeTpLocation = settings.format("UnsafeTpLocation", destName);
+            toTp.sendMessage(unsafeTpLocation);
         }
     }
 
@@ -235,8 +235,8 @@ public class TeleportListener extends DeltaEssentialsListener
 
         if(receiverPlayer != null)
         {
-            String onTpaReceived = settings.format("OnTpaReceived", sender);
-            receiverPlayer.sendMessage(onTpaReceived);
+            String tpaReceived = settings.format("TpaReceived", sender);
+            receiverPlayer.sendMessage(tpaReceived);
 
             requestMap.put(receiver, request);
         }

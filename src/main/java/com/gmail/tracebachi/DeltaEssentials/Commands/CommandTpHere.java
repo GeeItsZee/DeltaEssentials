@@ -74,7 +74,7 @@ public class CommandTpHere extends DeltaEssentialsCommand
         String nameToTp = args[0];
         Player playerToTp = Bukkit.getPlayer(nameToTp);
 
-        if(playerToTp != null && playerToTp.isOnline())
+        if(playerToTp != null)
         {
             plugin.getTeleportListener().teleport(playerToTp, sendingPlayer);
         }
@@ -89,7 +89,8 @@ public class CommandTpHere extends DeltaEssentialsCommand
         deltaRedisApi.findPlayer(nameToTp, cachedPlayer ->
         {
             Player sender = Bukkit.getPlayer(senderName);
-            if(sender == null || !sender.isOnline()) { return; }
+
+            if(sender == null) { return; }
 
             if(cachedPlayer != null)
             {
@@ -97,9 +98,9 @@ public class CommandTpHere extends DeltaEssentialsCommand
                 String destServer = cachedPlayer.getServer();
                 String currentServer = deltaRedisApi.getServerName();
                 TeleportRequest request = new TeleportRequest(senderName, currentServer);
-                String message = nameToTp + "/\\" + senderName + "/\\" + currentServer;
 
-                deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TP_HERE, message);
+                deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TP_HERE,
+                    nameToTp, senderName, currentServer);
                 plugin.getTeleportListener().getRequestMap().put(nameToTp, request);
             }
             else

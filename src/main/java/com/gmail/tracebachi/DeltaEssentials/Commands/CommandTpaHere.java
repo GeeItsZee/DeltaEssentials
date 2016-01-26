@@ -83,11 +83,11 @@ public class CommandTpaHere extends DeltaEssentialsCommand
 
             plugin.getTeleportListener().getRequestMap().put(receiverName, request);
 
-            String onTpaReceived = settings.format("OnTpaReceived", senderName);
-            receiver.sendMessage(onTpaReceived);
+            String tpaReceived = settings.format("TpaReceived", senderName);
+            receiver.sendMessage(tpaReceived);
 
-            String onTpaSent = settings.format("OnTpaSent", receiverName);
-            sender.sendMessage(onTpaSent);
+            String tpaSent = settings.format("TpaSent", receiverName);
+            sender.sendMessage(tpaSent);
         }
         else
         {
@@ -102,7 +102,8 @@ public class CommandTpaHere extends DeltaEssentialsCommand
         deltaRedisApi.findPlayer(receiver, cachedPlayer ->
         {
             Player senderPlayer = Bukkit.getPlayer(sender);
-            if(senderPlayer == null || !senderPlayer.isOnline()) { return; }
+
+            if(senderPlayer == null) { return; }
 
             if(cachedPlayer != null)
             {
@@ -116,8 +117,8 @@ public class CommandTpaHere extends DeltaEssentialsCommand
                 TeleportRequest request = new TeleportRequest(sender, currentServer);
                 plugin.getTeleportListener().getRequestMap().put(receiver, request);
 
-                String onTpaSent = settings.format("OnTpaSent", receiver);
-                senderPlayer.sendMessage(onTpaSent);
+                String tpaSent = settings.format("TpaSent", receiver);
+                senderPlayer.sendMessage(tpaSent);
             }
             else
             {

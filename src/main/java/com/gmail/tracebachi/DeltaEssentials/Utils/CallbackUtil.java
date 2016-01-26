@@ -33,7 +33,8 @@ public interface CallbackUtil
         else
         {
             Player player = Bukkit.getPlayer(playerName);
-            if(player != null && player.isOnline())
+
+            if(player != null)
             {
                 player.sendMessage(message);
             }

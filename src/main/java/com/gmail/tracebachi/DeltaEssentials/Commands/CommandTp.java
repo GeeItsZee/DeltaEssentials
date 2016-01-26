@@ -67,45 +67,53 @@ public class CommandTp extends DeltaEssentialsCommand
         Settings settings = plugin.getSettings();
         String destName = args[0];
 
-        if(args.length == 1 && sender.hasPermission("DeltaEss.Tp"))
+        if(args.length == 1)
         {
-            if(sender instanceof Player)
+            if(!sender.hasPermission("DeltaEss.Tp"))
+            {
+                String noPermission = settings.format("NoPermission", "DeltaEss.Tp");
+                sender.sendMessage(noPermission);
+            }
+            else if(!(sender instanceof Player))
+            {
+                sender.sendMessage(Prefixes.FAILURE + "Only players can teleport to others.");
+            }
+            else
             {
                 Player player = (Player) sender;
                 teleport(player, destName);
             }
-            else
-            {
-                sender.sendMessage(Prefixes.FAILURE + "Only players can teleport to others.");
-            }
         }
-        else if(args.length >= 2 && sender.hasPermission("DeltaEss.TpOther"))
+        else
         {
             Player player = Bukkit.getPlayer(destName);
-            if(player != null && player.isOnline())
+
+            if(!sender.hasPermission("DeltaEss.TpOther"))
             {
-                teleport(player, destName);
+                String noPermission = settings.format("NoPermission", "DeltaEss.TpOther");
+                sender.sendMessage(noPermission);
             }
-            else
+            else if(player == null)
             {
                 String playerNotOnline = settings.format("PlayerNotOnline", destName);
                 sender.sendMessage(playerNotOnline);
             }
-        }
-        else
-        {
-            String noPermission = settings.format("NoPermission", "DeltaEss.Tp or DeltaEss.TpOther");
-            sender.sendMessage(noPermission);
+            else
+            {
+                teleport(player, destName);
+            }
         }
     }
 
     private void teleport(Player toTp, String destName)
     {
         String autoCompletedDestName = attemptAutoComplete(toTp, destName);
+
         if(autoCompletedDestName != null)
         {
             Player destination = Bukkit.getPlayer(autoCompletedDestName);
-            if(destination != null && destination.isOnline())
+
+            if(destination != null)
             {
                 plugin.getTeleportListener().teleport(toTp, destination);
             }
@@ -123,7 +131,8 @@ public class CommandTp extends DeltaEssentialsCommand
         deltaRedisApi.findPlayer(destName, cachedPlayer ->
         {
             Player toTp = Bukkit.getPlayer(senderName);
-            if(toTp == null || !toTp.isOnline()) { return; }
+
+            if(toTp == null) { return; }
 
             if(cachedPlayer != null)
             {

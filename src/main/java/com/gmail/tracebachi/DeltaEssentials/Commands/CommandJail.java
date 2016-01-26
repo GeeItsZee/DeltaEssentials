@@ -80,8 +80,8 @@ public class CommandJail extends DeltaEssentialsCommand
             jailName = args[1];
             if(!settings.isValidJail(jailName))
             {
-                String onInvalidJail = settings.format("OnInvalidJail", jailName);
-                sender.sendMessage(onInvalidJail);
+                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(jailName) +
+                    " is not a valid jail.");
                 return;
             }
         }
@@ -91,8 +91,8 @@ public class CommandJail extends DeltaEssentialsCommand
             dateDiff = args[2];
             if(!isValidDateDifference(dateDiff))
             {
-                String onInvalidDateDifference = settings.format("OnInvalidDateDifference", jailName);
-                sender.sendMessage(onInvalidDateDifference);
+                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(dateDiff) +
+                    " is not a valid time difference.");
                 return;
             }
         }
@@ -102,7 +102,7 @@ public class CommandJail extends DeltaEssentialsCommand
             String joined = String.join(" ", Arrays.asList(args));
             Bukkit.dispatchCommand(sender, "essentials:jail " + joined);
 
-            if(playerToJail == null || !playerToJail.isOnline())
+            if(playerToJail == null)
             {
                 moveToJailServer(toJail, senderName, jailServer);
             }
@@ -112,7 +112,7 @@ public class CommandJail extends DeltaEssentialsCommand
             deltaRedisApi.publish(jailServer, DeltaEssentialsChannels.JAIL,
                 senderName, toJail + " " + jailName + " " + dateDiff);
 
-            if(playerToJail != null && playerToJail.isOnline())
+            if(playerToJail != null)
             {
                 plugin.sendToServer(playerToJail, jailServer);
             }

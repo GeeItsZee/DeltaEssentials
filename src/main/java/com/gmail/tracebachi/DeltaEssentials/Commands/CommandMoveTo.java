@@ -93,24 +93,24 @@ public class CommandMoveTo extends DeltaEssentialsCommand
             }
             else if(currentServer.equalsIgnoreCase(destServer))
             {
-                String onMoveToSameServer = settings.format("OnMoveToSameServer", currentServer);
-                sender.sendMessage(onMoveToSameServer);
+                String moveToSameServer = settings.format("MoveToSameServer", currentServer);
+                sender.sendMessage(moveToSameServer);
             }
             else if(!isOnline(servers, destServer))
             {
-                String onMoveToOfflineServer = settings.format("OnMoveToOfflineServer", destServer);
-                sender.sendMessage(onMoveToOfflineServer);
+                String moveToOfflineServer = settings.format("MoveToOfflineServer", destServer);
+                sender.sendMessage(moveToOfflineServer);
             }
             else if(settings.isServerBlocked(destServer) &&
                 !sender.hasPermission("DeltaEss.BlockedServerBypass"))
             {
-                String onMoveToBlockedServer = settings.format("OnMoveToBlockedServer", destServer);
-                sender.sendMessage(onMoveToBlockedServer);
+                String moveToBlockedServer = settings.format("MoveToBlockedServer", destServer);
+                sender.sendMessage(moveToBlockedServer);
             }
             else
             {
-                String onMoveSuccess = settings.format("OnMoveSuccess", destServer);
-                sender.sendMessage(onMoveSuccess);
+                String moveSuccess = settings.format("MoveSuccess", destServer);
+                sender.sendMessage(moveSuccess);
 
                 plugin.getPlayerDataIOListener().savePlayerData((Player) sender, destServer);
             }
@@ -124,14 +124,14 @@ public class CommandMoveTo extends DeltaEssentialsCommand
             }
             else if(!isOnline(servers, destServer))
             {
-                String onMoveToOfflineServer = settings.format("OnMoveToOfflineServer", destServer);
-                sender.sendMessage(onMoveToOfflineServer);
+                String moveToOfflineServer = settings.format("MoveToOfflineServer", destServer);
+                sender.sendMessage(moveToOfflineServer);
             }
             else if(settings.isServerBlocked(destServer) &&
                 !sender.hasPermission("DeltaEss.BlockedServerBypass"))
             {
-                String onMoveToBlockedServer = settings.format("OnMoveToBlockedServer", destServer);
-                sender.sendMessage(onMoveToBlockedServer);
+                String moveToBlockedServer = settings.format("MoveToBlockedServer", destServer);
+                sender.sendMessage(moveToBlockedServer);
             }
             else
             {
@@ -139,16 +139,16 @@ public class CommandMoveTo extends DeltaEssentialsCommand
                 String targetName = args[1].toLowerCase();
                 Player target = Bukkit.getPlayer(targetName);
 
-                if(target != null && target.isOnline())
+                if(target != null)
                 {
-                    String onMoveSuccess = settings.format("OnMoveSuccess", destServer);
-                    String onMoveOtherSuccess = settings.format(
-                        "OnMoveOtherSuccess", targetName, destServer);
-
-                    target.sendMessage(onMoveSuccess);
-                    sender.sendMessage(onMoveOtherSuccess);
-
                     plugin.getPlayerDataIOListener().savePlayerData(target, destServer);
+
+                    String moveSuccess = settings.format("MoveSuccess", destServer);
+                    target.sendMessage(moveSuccess);
+
+                    String moveOtherSuccess = settings.format(
+                        "MoveOtherSuccess", targetName, destServer);
+                    sender.sendMessage(moveOtherSuccess);
                 }
                 else
                 {
@@ -171,10 +171,10 @@ public class CommandMoveTo extends DeltaEssentialsCommand
 
             if(!cachedPlayer.getServer().equalsIgnoreCase(destServer))
             {
-                String onMoveOtherToSameServer = settings.format(
-                    "OnMoveOtherToSameServer", targetName, destServer);
+                String moveOtherToSameServer = settings.format(
+                    "MoveOtherToSameServer", targetName, destServer);
 
-                CallbackUtil.sendMessage(senderName, onMoveOtherToSameServer);
+                CallbackUtil.sendMessage(senderName, moveOtherToSameServer);
                 return;
             }
 
@@ -182,10 +182,10 @@ public class CommandMoveTo extends DeltaEssentialsCommand
                 DeltaEssentialsChannels.MOVE,
                 senderName, targetName, destServer);
 
-            String onMoveOtherSuccess = settings.format(
-                "OnMoveOtherSuccess", targetName, destServer);
+            String moveOtherSuccess = settings.format(
+                "MoveOtherSuccess", targetName, destServer);
 
-            CallbackUtil.sendMessage(senderName, onMoveOtherSuccess);
+            CallbackUtil.sendMessage(senderName, moveOtherSuccess);
         });
     }
 
