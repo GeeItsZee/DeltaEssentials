@@ -20,10 +20,12 @@ import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
+import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -31,83 +33,104 @@ import java.util.List;
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
  */
-public class CommandTpHere extends DeltaEssentialsCommand
+public class CommandTpHere implements TabExecutor, Shutdownable, Registerable
 {
     private DeltaRedisApi deltaRedisApi;
+    private DeltaEssentials plugin;
 
     public CommandTpHere(DeltaRedisApi deltaRedisApi, DeltaEssentials plugin)
     {
-        super("tphere", "DeltaEss.TpOther", plugin);
         this.deltaRedisApi = deltaRedisApi;
+        this.plugin = plugin;
+    }
+
+    @Override
+    public void register()
+    {
+        plugin.getCommand("tphere").setExecutor(this);
+        plugin.getCommand("tphere").setTabCompleter(this);
+    }
+
+    @Override
+    public void unregister()
+    {
+        plugin.getCommand("tphere").setExecutor(null);
+        plugin.getCommand("tphere").setTabCompleter(null);
     }
 
     @Override
     public void shutdown()
     {
-        this.deltaRedisApi = null;
-        super.shutdown();
+        unregister();
+        deltaRedisApi = null;
+        plugin = null;
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args)
+    public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args)
     {
         String lastArg = args[args.length - 1];
         return deltaRedisApi.matchStartOfPlayerName(lastArg);
     }
 
     @Override
-    public void runCommand(CommandSender sender, Command command, String label, String[] args)
+    public boolean onCommand(CommandSender sender, Command command, String s, String[] args)
     {
         if(args.length < 1)
         {
             sender.sendMessage(Prefixes.INFO + "/tphere <player>");
-            return;
+            return true;
         }
 
         if(!(sender instanceof Player))
         {
             sender.sendMessage(Prefixes.FAILURE + "Only players can use /tphere.");
-            return;
+            return true;
         }
 
-        Player sendingPlayer = (Player) sender;
-        String nameToTp = args[0];
-        Player playerToTp = Bukkit.getPlayer(nameToTp);
-
-        if(playerToTp != null)
+        if(!sender.hasPermission("DeltaEss.TpOther"))
         {
-            plugin.getTeleportListener().teleport(playerToTp, sendingPlayer);
+            sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
+                Prefixes.input("DeltaEss.TpOther") + " permission.");
+            return true;
+        }
+
+        String senderName = sender.getName();
+        String toTpName = args[0];
+        Player toTp = Bukkit.getPlayer(toTpName);
+
+        if(toTp != null)
+        {
+            plugin.getTeleportListener().teleport(toTp, (Player) sender);
         }
         else
         {
-            handleDiffServerTeleport(nameToTp, sender.getName());
+            deltaRedisApi.findPlayer(toTpName, cachedPlayer ->
+            {
+                Player sendingPlayer = Bukkit.getPlayer(senderName);
+
+                if(sendingPlayer == null) { return; }
+
+                if(cachedPlayer != null)
+                {
+                    // Format: Receiver/\Sender/\CurrentServer
+                    String destServer = cachedPlayer.getServer();
+                    String currentServer = deltaRedisApi.getServerName();
+
+                    deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TP_HERE,
+                        toTpName, senderName, currentServer);
+
+                    TeleportRequest request = new TeleportRequest(senderName, currentServer);
+                    plugin.getTeleportListener().getRequestMap().put(toTpName, request);
+                }
+                else
+                {
+                    sendingPlayer.sendMessage(Prefixes.FAILURE + Prefixes.input(toTpName) +
+                        " is not online.");
+                }
+            });
         }
-    }
 
-    private void handleDiffServerTeleport(String nameToTp, String senderName)
-    {
-        deltaRedisApi.findPlayer(nameToTp, cachedPlayer ->
-        {
-            Player sender = Bukkit.getPlayer(senderName);
-
-            if(sender == null) { return; }
-
-            if(cachedPlayer != null)
-            {
-                // Format: Receiver/\Sender/\CurrentServer
-                String destServer = cachedPlayer.getServer();
-                String currentServer = deltaRedisApi.getServerName();
-                TeleportRequest request = new TeleportRequest(senderName, currentServer);
-
-                deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TP_HERE,
-                    nameToTp, senderName, currentServer);
-                plugin.getTeleportListener().getRequestMap().put(nameToTp, request);
-            }
-            else
-            {
-                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(nameToTp) +
-                    " is not online.");
-            }
-        });
+        return true;
     }
 }

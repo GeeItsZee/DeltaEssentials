@@ -18,33 +18,74 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
+import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+
+import java.util.List;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/4/15.
  */
-public class CommandDisposal extends DeltaEssentialsCommand
+public class CommandDisposal implements TabExecutor, Shutdownable, Registerable
 {
+    private DeltaEssentials plugin;
+
     public CommandDisposal(DeltaEssentials plugin)
     {
-        super("disposal", "DeltaEss.Disposal", plugin);
+        this.plugin = plugin;
     }
 
     @Override
-    public void runCommand(CommandSender sender, Command command, String label, String[] args)
+    public void register()
     {
-        if(sender instanceof Player)
-        {
-            Player player = (Player) sender;
-            Inventory inventory = plugin.getServer().createInventory(player, 36, "Disposal");
-            player.openInventory(inventory);
-        }
-        else
+        plugin.getCommand("disposal").setExecutor(this);
+        plugin.getCommand("disposal").setTabCompleter(this);
+    }
+
+    @Override
+    public void unregister()
+    {
+        plugin.getCommand("disposal").setExecutor(null);
+        plugin.getCommand("disposal").setTabCompleter(null);
+    }
+
+    @Override
+    public void shutdown()
+    {
+        unregister();
+        plugin = null;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args)
+    {
+        return null;
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String s, String[] args)
+    {
+        if(!(sender instanceof Player))
         {
             sender.sendMessage(Prefixes.FAILURE + "Only players can open the disposal.");
+            return true;
         }
+
+        if(!sender.hasPermission("DeltaEss.Disposal"))
+        {
+            sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
+                Prefixes.input("DeltaEss.Disposal") + " permission.");
+            return true;
+        }
+
+        Player player = (Player) sender;
+        Inventory inventory = plugin.getServer().createInventory(player, 36, "Black Hole");
+
+        player.openInventory(inventory);
+        return true;
     }
 }

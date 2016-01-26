@@ -22,7 +22,7 @@ import org.bukkit.entity.Player;
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/13/15.
  */
-public interface CallbackUtil
+public interface MessageUtil
 {
     static void sendMessage(String playerName, String message)
     {

@@ -5,6 +5,9 @@
 # Should lockdown be enabled on start
 StartWithLockdown: False
 
+# Message to display on lockdown
+LockdownMessage: 'Server is locked down ... for reasons!'
+
 ###############################################################################
 
 # File path to the player data folder
@@ -48,47 +51,17 @@ ValidJails:
 
 ###############################################################################
 
-# Formatting strings for messages
+# Formatting strings
 Formats:
-
-  NoPermission: 'You do not have the {0} permission.'
-  PlayerNotOnline: '{0} is not online.'
-  PlayerDataNotLoaded: 'Not allowed because player data has not been loaded.'
-  TooManyAutoCompleteMatches: 'More than one online players match {0}.'
-  Lockdown: 'Server is locked down ... for reasons!'
-
-  MoveToSameServer: 'You are already connected to {0}.'
-  MoveToOfflineServer: '{0} is offline or non-existent.'
-  MoveToBlockedServer: '{0} is blocked and you cannot bypass it.'
-  MoveSuccess: 'Moving to {0} ...'
-  MoveOtherSuccess: 'Scheduled to moved {0} to {1}'
-  MoveOtherToSameServer: '{0} is already connected to {1}'
 
   DefaultKickReason: 'Kicked from server!'
   KickPlayer: 'You have been kicked by {0} for {1}.'
   KickAnnounce: '{0} was kicked by {1} for {2}.'
 
-  TpAttempt: 'Teleporting to {0} ...'
-  TpAlert: '{0} teleported to you.'
-  DeniedTpSender: '{0} is not allowing players to teleport to them.'
-  DeniedTpReceiver: '{0} tried to teleport to you, but was denied.'
-  UnsafeTpLocation: '{0} is not in a safe location.'
-  TpaReceived: '{0} wants you to TP to them. Use /tpaccept to accept within 30 seconds.'
-  TpaSent: 'Sent TPA request to {0}.'
-  NoTpaRequest: 'You do not have a pending TPA request.'
-
-  DisabledGameModeUse: '{0} is disabled on this server.'
-  LockedGameModeChange: 'Game mode cannot be changed while inventory is locked'
-  GameModeForced: 'Game mode {0} is being forced. You do not have permission to change it.'
-
-  DataLoadFailure: 'Failed to load inventory. Refer to the console for more details.'
-  DataSaveFailure: 'Failed to save inventory. Refer to the console for more details.'
-
   TellLog: '[{0} -> {1}] {2}'
   TellSpy: '[{0} -> {1}] {2}'
   TellSender: '[me -> {0}] {1}'
   TellReceiver: '[{0} -> me] {1}'
-  NoReplyTarget: 'You do not have anyone to reply to.'
 
 ###############################################################################
 

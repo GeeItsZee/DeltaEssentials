@@ -44,8 +44,7 @@ public class DeltaEssentials extends JavaPlugin
     private CaseInsensitiveHashMap<DeltaEssentialsPlayer> playerMap = new CaseInsensitiveHashMap<>();
 
     private ChatListener chatListener;
-    private InventoryLockListener inventoryLockListener;
-    private MessageListener messageListener;
+    private PlayerLockListener playerLockListener;
     private PlayerDataIOListener playerDataIOListener;
     private TeleportListener teleportListener;
 
@@ -54,7 +53,6 @@ public class DeltaEssentials extends JavaPlugin
     private CommandKick commandKick;
     private CommandLockdown commandLockdown;
     private CommandMoveTo commandMoveTo;
-    private CommandReply commandReply;
     private CommandSocialSpy commandSocialSpy;
     private CommandTell commandTell;
     private CommandTp commandTp;
@@ -99,9 +97,6 @@ public class DeltaEssentials extends JavaPlugin
         commandMoveTo = new CommandMoveTo(deltaRedisApi, this);
         commandMoveTo.register();
 
-        commandReply = new CommandReply(deltaRedisApi, this);
-        commandReply.register();
-
         commandSocialSpy = new CommandSocialSpy(this);
         commandSocialSpy.register();
 
@@ -126,14 +121,11 @@ public class DeltaEssentials extends JavaPlugin
         chatListener = new ChatListener(deltaRedisApi, this);
         chatListener.register();
 
-        messageListener = new MessageListener(this);
-        messageListener.register();
-
         teleportListener = new TeleportListener(deltaRedisApi, this);
         teleportListener.register();
 
-        inventoryLockListener = new InventoryLockListener(this);
-        inventoryLockListener.register();
+        playerLockListener = new PlayerLockListener(this);
+        playerLockListener.register();
 
         playerDataIOListener = new PlayerDataIOListener(this);
         playerDataIOListener.register();
@@ -157,14 +149,11 @@ public class DeltaEssentials extends JavaPlugin
         playerDataIOListener.shutdown();
         playerDataIOListener = null;
 
-        inventoryLockListener.shutdown();
-        inventoryLockListener = null;
+        playerLockListener.shutdown();
+        playerLockListener = null;
 
         teleportListener.shutdown();
         teleportListener = null;
-
-        messageListener.shutdown();
-        messageListener = null;
 
         chatListener.shutdown();
         chatListener = null;
@@ -183,9 +172,6 @@ public class DeltaEssentials extends JavaPlugin
 
         commandMoveTo.shutdown();
         commandMoveTo = null;
-
-        commandReply.shutdown();
-        commandReply = null;
 
         commandSocialSpy.shutdown();
         commandSocialSpy = null;
@@ -245,9 +231,9 @@ public class DeltaEssentials extends JavaPlugin
         return playerDataIOListener;
     }
 
-    public InventoryLockListener getInventoryLockListener()
+    public PlayerLockListener getPlayerLockListener()
     {
-        return inventoryLockListener;
+        return playerLockListener;
     }
 
     public TeleportListener getTeleportListener()

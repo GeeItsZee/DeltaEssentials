@@ -17,13 +17,14 @@
 package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
-import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
+import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -31,48 +32,69 @@ import java.util.List;
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
  */
-public class CommandTpAccept extends DeltaEssentialsCommand
+public class CommandTpAccept implements TabExecutor, Shutdownable, Registerable
 {
     private DeltaRedisApi deltaRedisApi;
+    private DeltaEssentials plugin;
 
     public CommandTpAccept(DeltaRedisApi deltaRedisApi, DeltaEssentials plugin)
     {
-        super("tpaccept", "DeltaEss.Tpa.Accept", plugin);
         this.deltaRedisApi = deltaRedisApi;
+        this.plugin = plugin;
+    }
+
+    @Override
+    public void register()
+    {
+        plugin.getCommand("tpaccept").setExecutor(this);
+        plugin.getCommand("tpaccept").setTabCompleter(this);
+    }
+
+    @Override
+    public void unregister()
+    {
+        plugin.getCommand("tpaccept").setExecutor(null);
+        plugin.getCommand("tpaccept").setTabCompleter(null);
     }
 
     @Override
     public void shutdown()
     {
-        this.deltaRedisApi = null;
-        super.shutdown();
+        unregister();
+        deltaRedisApi = null;
+        plugin = null;
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args)
+    public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args)
     {
         String lastArg = args[args.length - 1];
         return deltaRedisApi.matchStartOfPlayerName(lastArg);
     }
 
     @Override
-    public void runCommand(CommandSender sender, Command command, String label, String[] args)
+    public boolean onCommand(CommandSender sender, Command command, String s, String[] args)
     {
         if(!(sender instanceof Player))
         {
-            sender.sendMessage(Prefixes.FAILURE + "Only players can accept teleports.");
-            return;
+            sender.sendMessage(Prefixes.FAILURE + "Only players can use /tpaccept.");
+            return true;
         }
 
-        Settings settings = plugin.getSettings();
+        if(!sender.hasPermission("DeltaEss.Tpa.Accept"))
+        {
+            sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
+                Prefixes.input("DeltaEss.Tpa.Accept") + " permission.");
+            return true;
+        }
+
         TeleportRequest request = plugin.getTeleportListener().getRequestMap()
             .get(sender.getName());
 
         if(request == null)
         {
-            String noTpaRequest = settings.format("NoTpaRequest");
-            sender.sendMessage(noTpaRequest);
-            return;
+            sender.sendMessage(Prefixes.FAILURE + "You do not have a pending TPA request.");
+            return true;
         }
 
         Player player = (Player) sender;
@@ -87,13 +109,15 @@ public class CommandTpAccept extends DeltaEssentialsCommand
             }
             else
             {
-                String playerNotOnline = settings.format("PlayerNotOnline", request.getSender());
-                sender.sendMessage(playerNotOnline);
+                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(request.getSender()) +
+                    " is not online");
             }
         }
         else
         {
             plugin.sendToServer(player, request.getDestServer());
         }
+
+        return true;
     }
 }

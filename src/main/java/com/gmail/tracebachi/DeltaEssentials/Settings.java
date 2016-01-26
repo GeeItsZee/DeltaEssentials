@@ -32,9 +32,10 @@ import java.util.Set;
  */
 public class Settings
 {
-    private boolean isOnLockdown;
+    private boolean startWithLockdown;
     private boolean isDefaultGameModeForced;
     private boolean loadAndSavePotionEffects;
+    private String lockdownMessage;
     private String playerDataFolderPath;
     private String jailServer;
     private GameMode defaultGameMode;
@@ -46,9 +47,10 @@ public class Settings
 
     public Settings(DeltaEssentials plugin)
     {
-        this.isOnLockdown = plugin.getConfig().getBoolean("StartWithLockdown");
+        this.startWithLockdown = plugin.getConfig().getBoolean("StartWithLockdown");
         this.isDefaultGameModeForced = plugin.getConfig().getBoolean("ForceDefaultGameMode");
         this.loadAndSavePotionEffects = plugin.getConfig().getBoolean("LoadAndSavePotionEffects");
+        this.lockdownMessage = plugin.getConfig().getString("LockdownMessage");
         this.playerDataFolderPath = plugin.getConfig().getString("PlayerDataFolder");
         this.jailServer = plugin.getConfig().getString("JailServer");
         this.defaultGameMode = getGameMode(plugin.getConfig().getString("DefaultGameMode"));
@@ -101,19 +103,19 @@ public class Settings
         return new File(directory, lowerCaseName + ".yml");
     }
 
-    public boolean isOnLockdown()
+    public boolean isStartWithLockdown()
     {
-        return isOnLockdown;
-    }
-
-    public void setOnLockdown(boolean onLockdown)
-    {
-        isOnLockdown = onLockdown;
+        return startWithLockdown;
     }
 
     public boolean canLoadAndSavePotionEffects()
     {
         return loadAndSavePotionEffects;
+    }
+
+    public String getLockdownMessage()
+    {
+        return lockdownMessage;
     }
 
     public String getJailServer()
@@ -143,7 +145,7 @@ public class Settings
 
     public boolean isServerBlocked(String serverName)
     {
-        return blockedServers.contains(serverName.toLowerCase());
+        return blockedServers.contains(serverName);
     }
 
     public boolean isValidJail(String jail)

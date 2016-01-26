@@ -19,37 +19,66 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
-import com.gmail.tracebachi.DeltaEssentials.Utils.CallbackUtil;
+import com.gmail.tracebachi.DeltaEssentials.Utils.MessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Servers;
+import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
+import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
 
 import java.util.Arrays;
 import java.util.List;
 
+import static com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent.DELTA_PATTERN;
+
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/4/15.
  */
-public class CommandKick extends DeltaEssentialsCommand
+public class CommandKick implements TabExecutor, Shutdownable, Registerable, Listener
 {
     private DeltaRedisApi deltaRedisApi;
+    private DeltaEssentials plugin;
 
     public CommandKick(DeltaRedisApi deltaRedisApi, DeltaEssentials plugin)
     {
-        super("kick", "DeltaEss.Kick", plugin);
         this.deltaRedisApi = deltaRedisApi;
+        this.plugin = plugin;
+    }
+
+    @Override
+    public void register()
+    {
+        plugin.getCommand("kick").setExecutor(this);
+        plugin.getCommand("kick").setTabCompleter(this);
+
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
+    @Override
+    public void unregister()
+    {
+        plugin.getCommand("kick").setExecutor(null);
+        plugin.getCommand("kick").setTabCompleter(null);
+
+        HandlerList.unregisterAll(this);
     }
 
     @Override
     public void shutdown()
     {
-        this.deltaRedisApi = null;
-        super.shutdown();
+        unregister();
+        deltaRedisApi = null;
+        plugin = null;
     }
 
     @Override
@@ -60,66 +89,94 @@ public class CommandKick extends DeltaEssentialsCommand
     }
 
     @Override
-    public void runCommand(CommandSender sender, Command command, String s, String[] args)
+    public boolean onCommand(CommandSender sender, Command command, String s, String[] args)
     {
         if(args.length < 1)
         {
             sender.sendMessage(Prefixes.INFO + "/kick <player> [message]");
-            return;
+            return true;
+        }
+
+        if(!sender.hasPermission("DeltaEss.Tell.Use"))
+        {
+            sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
+                Prefixes.input("DeltaEss.Kick") + " permission.");
+            return true;
         }
 
         Settings settings = plugin.getSettings();
-        String nameToKick = args[0];
         String senderName = sender.getName();
-        String reason = getKickReason(settings, args);
-        Player playerToKick = Bukkit.getPlayer(nameToKick);
+        String toKickName = args[0];
+        Player toKick = Bukkit.getPlayer(toKickName);
+        String reason;
 
-        if(playerToKick != null)
+        if(args.length > 1)
         {
-            String kickPlayer = settings.format("KickPlayer", senderName, reason);
-            playerToKick.kickPlayer(kickPlayer);
-
-            announceKick(settings, nameToKick, senderName, reason);
+            String joined = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+            reason = ChatColor.translateAlternateColorCodes('&', joined);
         }
         else
         {
-            deltaRedisApi.findPlayer(nameToKick, cachedPlayer ->
+            reason = settings.format("DefaultKickReason");
+        }
+
+        if(toKick != null)
+        {
+            String kickPlayer = settings.format("KickPlayer", senderName, reason);
+            toKick.kickPlayer(kickPlayer);
+
+            announceKick(settings, toKickName, senderName, reason);
+        }
+        else
+        {
+            deltaRedisApi.findPlayer(toKickName, cachedPlayer ->
             {
                 if(cachedPlayer != null)
                 {
                     deltaRedisApi.publish(Servers.SPIGOT,
                         DeltaEssentialsChannels.KICK,
-                        senderName, nameToKick, reason);
+                        senderName, toKickName, reason);
 
-                    announceKick(settings, nameToKick, senderName, reason);
+                    announceKick(settings, toKickName, senderName, reason);
                 }
                 else
                 {
-                    String playerNotOnline = settings.format(
-                        "PlayerNotOnline", nameToKick);
+                    String offlineMessage = Prefixes.FAILURE +
+                        Prefixes.input(toKickName) + " is not online";
 
-                    CallbackUtil.sendMessage(senderName, playerNotOnline);
+                    MessageUtil.sendMessage(senderName, offlineMessage);
                 }
             });
         }
+
+        return true;
     }
 
-    private String getKickReason(Settings settings, String[] args)
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = false)
+    public void onDeltaRedisMessage(DeltaRedisMessageEvent event)
     {
-        if(args.length > 1)
+        if(event.getChannel().equals(DeltaEssentialsChannels.KICK))
         {
-            String joined = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-            return ChatColor.translateAlternateColorCodes('&', joined);
-        }
-        else
-        {
-            return settings.format("DefaultKickReason");
+            Settings settings = plugin.getSettings();
+            String[] split = DELTA_PATTERN.split(event.getMessage(), 3);
+            String senderName = split[0];
+            String toKickName = split[1];
+            String reason = split[2];
+            Player toKick = Bukkit.getPlayer(toKickName);
+
+            if(toKick != null)
+            {
+                String kickPlayer = settings.format("KickPlayer", senderName, reason);
+                toKick.kickPlayer(kickPlayer);
+            }
+
+            announceKick(settings, toKickName, senderName, reason);
         }
     }
 
-    private void announceKick(Settings settings, String nameToKick, String senderName, String reason)
+    private void announceKick(Settings settings, String toKickName, String senderName, String reason)
     {
-        String kickAnnounce = settings.format("KickAnnounce", senderName, nameToKick, reason);
+        String kickAnnounce = settings.format("KickAnnounce", senderName, toKickName, reason);
 
         for(Player onlinePlayer : Bukkit.getOnlinePlayers())
         {

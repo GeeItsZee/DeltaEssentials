@@ -20,125 +20,181 @@ import com.earth2me.essentials.utils.DateUtil;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
-import com.gmail.tracebachi.DeltaEssentials.Utils.CallbackUtil;
+import com.gmail.tracebachi.DeltaEssentials.Utils.MessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
+import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
+import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
 
 import java.util.Arrays;
 import java.util.List;
 
+import static com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent.DELTA_PATTERN;
+
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/4/15.
  */
-public class CommandJail extends DeltaEssentialsCommand
+public class CommandJail implements TabExecutor, Shutdownable, Registerable, Listener
 {
     private DeltaRedisApi deltaRedisApi;
+    private DeltaEssentials plugin;
 
     public CommandJail(DeltaRedisApi deltaRedisApi, DeltaEssentials plugin)
     {
-        super("jail", "DeltaEss.Jail", plugin);
         this.deltaRedisApi = deltaRedisApi;
+        this.plugin = plugin;
+    }
+
+    @Override
+    public void register()
+    {
+        plugin.getCommand("jail").setExecutor(this);
+        plugin.getCommand("jail").setTabCompleter(this);
+
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
+    @Override
+    public void unregister()
+    {
+        plugin.getCommand("jail").setExecutor(null);
+        plugin.getCommand("jail").setTabCompleter(null);
+
+        HandlerList.unregisterAll(this);
     }
 
     @Override
     public void shutdown()
     {
-        this.deltaRedisApi = null;
-        super.shutdown();
+        unregister();
+        deltaRedisApi = null;
+        plugin = null;
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args)
+    public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args)
     {
-        String lastArg = args[args.length - 1];
-        return deltaRedisApi.matchStartOfPlayerName(lastArg);
+        String lastArg = args[args.length - 1].toLowerCase();
+        return deltaRedisApi.matchStartOfServerName(lastArg);
     }
 
     @Override
-    public void runCommand(CommandSender sender, Command command, String label, String[] args)
+    public boolean onCommand(CommandSender sender, Command command, String s, String[] args)
     {
         if(args.length < 1)
         {
             sender.sendMessage(Prefixes.INFO + "/jail <player> <jail name> [date diff]");
-            return;
+            return true;
+        }
+
+        if(!sender.hasPermission("DeltaEss.Jail"))
+        {
+            sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
+                Prefixes.input("DeltaEss.Jail") + " permission.");
+            return true;
         }
 
         Settings settings = plugin.getSettings();
         String jailServer = settings.getJailServer();
         String senderName = sender.getName();
-        String toJail = args[0];
+        String toJailName = args[0];
         String jailName = "";
         String dateDiff = "";
-        Player playerToJail = Bukkit.getPlayer(toJail);
+        Player toJail = Bukkit.getPlayer(toJailName);
 
         if(args.length >= 2)
         {
             jailName = args[1];
+
             if(!settings.isValidJail(jailName))
             {
                 sender.sendMessage(Prefixes.FAILURE + Prefixes.input(jailName) +
                     " is not a valid jail.");
-                return;
+                return true;
             }
         }
 
         if(args.length >= 3)
         {
             dateDiff = args[2];
+
             if(!isValidDateDifference(dateDiff))
             {
                 sender.sendMessage(Prefixes.FAILURE + Prefixes.input(dateDiff) +
                     " is not a valid time difference.");
-                return;
+                return true;
             }
         }
 
         if(deltaRedisApi.getServerName().equals(jailServer))
         {
             String joined = String.join(" ", Arrays.asList(args));
+
+            plugin.info(sender + " ran /essentials:jail " + joined);
             Bukkit.dispatchCommand(sender, "essentials:jail " + joined);
 
-            if(playerToJail == null)
+            if(toJail == null)
             {
-                moveToJailServer(toJail, senderName, jailServer);
+                moveToJailServer(toJailName, senderName, jailServer);
             }
         }
         else
         {
             deltaRedisApi.publish(jailServer, DeltaEssentialsChannels.JAIL,
-                senderName, toJail + " " + jailName + " " + dateDiff);
+                senderName, toJailName + " " + jailName + " " + dateDiff);
 
-            if(playerToJail != null)
+            if(toJail != null)
             {
-                plugin.sendToServer(playerToJail, jailServer);
+                plugin.sendToServer(toJail, jailServer);
             }
             else
             {
-                moveToJailServer(toJail, senderName, jailServer);
+                moveToJailServer(toJailName, senderName, jailServer);
             }
+        }
+
+        return true;
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = false)
+    public void onRedisMessageEvent(DeltaRedisMessageEvent event)
+    {
+        if(event.getChannel().equals(DeltaEssentialsChannels.JAIL))
+        {
+            String[] split = DELTA_PATTERN.split(event.getMessage(), 2);
+            String sender = split[0];
+            String command = split[1];
+
+            plugin.info(sender + " ran /essentials:jail " + command);
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "essentials:jail " + command);
         }
     }
 
-    private void moveToJailServer(String toJail, String senderName, String jailServer)
+    private void moveToJailServer(String toJailName, String senderName, String jailServer)
     {
-        deltaRedisApi.findPlayer(toJail, cachedPlayer ->
+        deltaRedisApi.findPlayer(toJailName, cachedPlayer ->
         {
             if(cachedPlayer != null)
             {
                 deltaRedisApi.publish(cachedPlayer.getServer(),
                     DeltaEssentialsChannels.MOVE,
-                    senderName, toJail, jailServer);
+                    senderName, toJailName, jailServer);
             }
             else
             {
-                Settings settings = plugin.getSettings();
-                String onPlayerNotFound = settings.format("OnPlayerNotFound", toJail);
+                String offlineMessage = Prefixes.FAILURE +
+                    Prefixes.input(toJailName) + " is not online";
 
-                CallbackUtil.sendMessage(senderName, onPlayerNotFound);
+                MessageUtil.sendMessage(senderName, offlineMessage);
             }
         });
     }

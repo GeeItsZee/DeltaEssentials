@@ -18,8 +18,15 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
+import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerLoginEvent;
 
 import java.util.Arrays;
 import java.util.List;
@@ -27,41 +34,91 @@ import java.util.List;
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/4/15.
  */
-public class CommandLockdown extends DeltaEssentialsCommand
+public class CommandLockdown implements TabExecutor, Shutdownable, Registerable, Listener
 {
+    private boolean isOnLockdown;
+    private DeltaEssentials plugin;
+
     public CommandLockdown(DeltaEssentials plugin)
     {
-        super("lockdown", "DeltaEss.Lockdown", plugin);
+        this.plugin = plugin;
+        this.isOnLockdown = plugin.getSettings().isStartWithLockdown();
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, Command command, String label, String[] args)
+    public void register()
+    {
+        plugin.getCommand("lockdown").setExecutor(this);
+        plugin.getCommand("lockdown").setTabCompleter(this);
+
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
+    @Override
+    public void unregister()
+    {
+        plugin.getCommand("lockdown").setExecutor(null);
+        plugin.getCommand("lockdown").setTabCompleter(null);
+
+        HandlerList.unregisterAll(this);
+    }
+
+    @Override
+    public void shutdown()
+    {
+        unregister();
+        plugin = null;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args)
     {
         return Arrays.asList("on", "off");
     }
 
     @Override
-    public void runCommand(CommandSender sender, Command command, String s, String[] args)
+    public boolean onCommand(CommandSender sender, Command command, String s, String[] args)
     {
         if(args.length < 1)
         {
             sender.sendMessage(Prefixes.INFO + "/lockdown <on|off>");
-            return;
+            return true;
+        }
+
+        if(!sender.hasPermission("DeltaEss.Lockdown"))
+        {
+            sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
+                Prefixes.input("DeltaEss.Lockdown") + " permission.");
+            return true;
         }
 
         if(args[0].equalsIgnoreCase("on"))
         {
-            plugin.getSettings().setOnLockdown(true);
+            isOnLockdown = true;
+
             sender.sendMessage(Prefixes.SUCCESS + "Lockdown " + Prefixes.input("enabled"));
         }
         else if(args[0].equalsIgnoreCase("off"))
         {
-            plugin.getSettings().setOnLockdown(false);
+            isOnLockdown = false;
+
             sender.sendMessage(Prefixes.SUCCESS + "Lockdown " + Prefixes.input("disabled"));
         }
         else
         {
             sender.sendMessage(Prefixes.INFO + "/lockdown <on|off>");
+        }
+
+        return true;
+    }
+
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onPlayerLoginEvent(PlayerLoginEvent event)
+    {
+        if(isOnLockdown)
+        {
+            event.disallow(PlayerLoginEvent.Result.KICK_OTHER,
+                plugin.getSettings().getLockdownMessage());
         }
     }
 }

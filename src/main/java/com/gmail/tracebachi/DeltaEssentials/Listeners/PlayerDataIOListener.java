@@ -26,6 +26,7 @@ import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssentialsPlayer;
 import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerEntry;
 import com.gmail.tracebachi.DeltaEssentials.Storage.SavedInventory;
 import com.gmail.tracebachi.DeltaEssentials.Utils.xAuthUtil;
+import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashMap;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteArrayDataOutput;
@@ -83,18 +84,6 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
     /**************************************************************************
      * Login Events
      *************************************************************************/
-
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-    public void onPlayerLoginEvent(PlayerLoginEvent event)
-    {
-        Settings settings = plugin.getSettings();
-
-        if(settings.isOnLockdown())
-        {
-            String lockdown = settings.format("Lockdown");
-            event.disallow(PlayerLoginEvent.Result.KICK_OTHER, lockdown);
-        }
-    }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onCommandLoginEvent(xAuthCommandLoginEvent event)
@@ -170,7 +159,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
             }
         }
 
-        plugin.getInventoryLockListener().remove(name);
+        plugin.getPlayerLockListener().remove(name);
         plugin.getPlayerMap().remove(name);
     }
 
@@ -198,20 +187,16 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         if(settings.isGameModeDisabled(newMode) &&
             !player.hasPermission("DeltaEss.DisabledGameModeBypass." + newMode.name()))
         {
-            String disabledGameModeUse = settings.format(
-                "DisabledGameModeUse", newMode.name());
-
-            player.sendMessage(disabledGameModeUse);
+            player.sendMessage(Prefixes.FAILURE + Prefixes.input(newMode.name()) + " mode is disabled.");
             event.setCancelled(true);
             return;
         }
 
         // Prevent game mode change during saves
-        if(plugin.getInventoryLockListener().isLocked(name))
+        if(plugin.getPlayerLockListener().isLocked(name))
         {
-            String lockedGameModeChange = settings.format("LockedGameModeChange");
-
-            player.sendMessage(lockedGameModeChange);
+            player.sendMessage(Prefixes.FAILURE +
+                "You are locked. Please wait until your data is loaded.");
             event.setCancelled(true);
             return;
         }
@@ -220,10 +205,9 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         if(settings.isDefaultGameModeForced() && newMode != settings.getDefaultGameMode() &&
             !player.hasPermission("DeltaEss.ForcedGameModeBypass"))
         {
-            String gameModeForced = settings.format(
-                "GameModeForced", settings.getDefaultGameMode().name());
+            String defaultMode = settings.getDefaultGameMode().name();
 
-            player.sendMessage(gameModeForced);
+            player.sendMessage(Prefixes.FAILURE + Prefixes.input(defaultMode) + " is being forced.");
             event.setCancelled(true);
             return;
         }
@@ -277,7 +261,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         {
             DeltaEssentialsPlayer dePlayer = new DeltaEssentialsPlayer();
 
-            plugin.getInventoryLockListener().remove(name);
+            plugin.getPlayerLockListener().remove(name);
             plugin.getPlayerMap().put(name, dePlayer);
             applyPlayerEntry(player, entry, dePlayer);
         }
@@ -292,7 +276,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
             GameMode defaultGameMode = plugin.getSettings().getDefaultGameMode();
             DeltaEssentialsPlayer dePlayer = new DeltaEssentialsPlayer();
 
-            plugin.getInventoryLockListener().remove(name);
+            plugin.getPlayerLockListener().remove(name);
             plugin.getPlayerMap().put(name, dePlayer);
 
             if(player.getGameMode() != defaultGameMode)
@@ -307,13 +291,12 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
 
     public void onPlayerLoadException(String name)
     {
-        Settings settings = plugin.getSettings();
         Player player = Bukkit.getPlayer(name);
 
         if(player != null)
         {
-            String dataLoadFailure = settings.format("DataLoadFailure");
-            player.sendMessage(dataLoadFailure);
+            player.sendMessage(Prefixes.FAILURE + "Failed to load inventory. " +
+                "Refer to the console for more details.");
         }
     }
 
@@ -334,20 +317,19 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
             }
             else
             {
-                plugin.getInventoryLockListener().remove(name);
+                plugin.getPlayerLockListener().remove(name);
             }
         }
     }
 
     public void onPlayerSaveException(String name)
     {
-        Settings settings = plugin.getSettings();
         Player player = Bukkit.getPlayer(name);
 
         if(player != null)
         {
-            String dataSaveFailure = settings.format("DataSaveFailure");
-            player.sendMessage(dataSaveFailure);
+            player.sendMessage(Prefixes.FAILURE + "Failed to save inventory. " +
+                "Refer to the console for more details.");
         }
     }
 
@@ -359,7 +341,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
     {
         PlayerLoad runnable = new PlayerLoad(name, plugin);
 
-        plugin.getInventoryLockListener().add(name);
+        plugin.getPlayerLockListener().add(name);
         plugin.debug("Scheduling async player data load for {name:" + name + "}" );
         plugin.scheduleTaskAsync(runnable);
     }
@@ -371,7 +353,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         PlayerEntry entry = buildPlayerEntry(player, dePlayer);
         PlayerSave runnable = new PlayerSave(entry, destServer, plugin);
 
-        plugin.getInventoryLockListener().add(name);
+        plugin.getPlayerLockListener().add(name);
         plugin.debug("Scheduling async player data save for {name:" + name + "}");
         plugin.scheduleTaskAsync(runnable);
     }

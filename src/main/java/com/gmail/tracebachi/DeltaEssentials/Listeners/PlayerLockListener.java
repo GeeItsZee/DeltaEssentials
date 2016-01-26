@@ -17,7 +17,6 @@
 package com.gmail.tracebachi.DeltaEssentials.Listeners;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
-import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashSet;
 import org.bukkit.entity.HumanEntity;
@@ -32,11 +31,11 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 1/20/16.
  */
-public class InventoryLockListener extends DeltaEssentialsListener
+public class PlayerLockListener extends DeltaEssentialsListener
 {
     private CaseInsensitiveHashSet locked = new CaseInsensitiveHashSet();
 
-    public InventoryLockListener(DeltaEssentials plugin)
+    public PlayerLockListener(DeltaEssentials plugin)
     {
         super(plugin);
     }
@@ -72,7 +71,7 @@ public class InventoryLockListener extends DeltaEssentialsListener
         if(locked.contains(player.getName()))
         {
             player.sendMessage(Prefixes.FAILURE +
-                "Your inventory is locked. Wait until it is loaded.");
+                "You are locked. Please wait until your data is loaded.");
             event.setCancelled(true);
         }
     }
@@ -85,7 +84,7 @@ public class InventoryLockListener extends DeltaEssentialsListener
         if(locked.contains(player.getName()))
         {
             player.sendMessage(Prefixes.FAILURE +
-                "Your inventory is locked. Wait until it is loaded.");
+                "You are locked. Please wait until your data is loaded.");
             event.setCancelled(true);
         }
     }
@@ -98,7 +97,7 @@ public class InventoryLockListener extends DeltaEssentialsListener
         if(locked.contains(player.getName()))
         {
             player.sendMessage(Prefixes.FAILURE +
-                "Your inventory is locked. Wait until it is loaded.");
+                "You are locked. Please wait until your data is loaded.");
             event.setCancelled(true);
         }
     }
@@ -111,7 +110,7 @@ public class InventoryLockListener extends DeltaEssentialsListener
         if(locked.contains(player.getName()))
         {
             player.sendMessage(Prefixes.FAILURE +
-                "Your inventory is locked. Wait until it is loaded.");
+                "You are locked. Please wait until your data is loaded.");
             event.setCancelled(true);
         }
     }

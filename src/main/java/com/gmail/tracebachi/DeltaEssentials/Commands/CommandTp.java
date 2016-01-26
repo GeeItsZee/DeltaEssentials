@@ -18,12 +18,13 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
-import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
+import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -31,129 +32,146 @@ import java.util.List;
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
  */
-public class CommandTp extends DeltaEssentialsCommand
+public class CommandTp implements TabExecutor, Shutdownable, Registerable
 {
+    private static final String TOO_MANY_MATCHES = "!TOO_MANY_MATCHES!";
+
     private DeltaRedisApi deltaRedisApi;
+    private DeltaEssentials plugin;
 
     public CommandTp(DeltaRedisApi deltaRedisApi, DeltaEssentials plugin)
     {
-        super("tp", null, plugin);
         this.deltaRedisApi = deltaRedisApi;
+        this.plugin = plugin;
+    }
+
+    @Override
+    public void register()
+    {
+        plugin.getCommand("tp").setExecutor(this);
+        plugin.getCommand("tp").setTabCompleter(this);
+    }
+
+    @Override
+    public void unregister()
+    {
+        plugin.getCommand("tp").setExecutor(null);
+        plugin.getCommand("tp").setTabCompleter(null);
     }
 
     @Override
     public void shutdown()
     {
-        this.deltaRedisApi = null;
-        super.shutdown();
+        unregister();
+        deltaRedisApi = null;
+        plugin = null;
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args)
+    public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args)
     {
         String lastArg = args[args.length - 1];
         return deltaRedisApi.matchStartOfPlayerName(lastArg);
     }
 
     @Override
-    public void runCommand(CommandSender sender, Command command, String label, String[] args)
+    public boolean onCommand(CommandSender sender, Command command, String s, String[] args)
     {
         if(args.length < 1)
         {
             sender.sendMessage(Prefixes.INFO + "/tp <player>");
-            return;
+            return true;
         }
 
-        Settings settings = plugin.getSettings();
         String destName = args[0];
 
         if(args.length == 1)
         {
-            if(!sender.hasPermission("DeltaEss.Tp"))
-            {
-                String noPermission = settings.format("NoPermission", "DeltaEss.Tp");
-                sender.sendMessage(noPermission);
-            }
-            else if(!(sender instanceof Player))
+            if(!(sender instanceof Player))
             {
                 sender.sendMessage(Prefixes.FAILURE + "Only players can teleport to others.");
+            }
+            else if(!sender.hasPermission("DeltaEss.Tp"))
+            {
+                sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
+                    Prefixes.input("DeltaEss.Tp") + " permission.");
             }
             else
             {
                 Player player = (Player) sender;
-                teleport(player, destName);
+                handleTeleport(player, destName);
             }
         }
         else
         {
             Player player = Bukkit.getPlayer(destName);
 
-            if(!sender.hasPermission("DeltaEss.TpOther"))
+            if(player == null)
             {
-                String noPermission = settings.format("NoPermission", "DeltaEss.TpOther");
-                sender.sendMessage(noPermission);
+                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
+                    " is not online");
             }
-            else if(player == null)
+            else if(!sender.hasPermission("DeltaEss.TpOther"))
             {
-                String playerNotOnline = settings.format("PlayerNotOnline", destName);
-                sender.sendMessage(playerNotOnline);
+                sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
+                    Prefixes.input("DeltaEss.TpOther") + " permission.");
             }
             else
             {
-                teleport(player, destName);
+                handleTeleport(player, destName);
             }
+        }
+
+        return true;
+    }
+
+    private void handleTeleport(Player toTp, String destName)
+    {
+        String toTpName = toTp.getName();
+        String autoCompletedDestName = attemptAutoComplete(destName);
+
+        if(autoCompletedDestName.equals(TOO_MANY_MATCHES))
+        {
+            toTp.sendMessage(Prefixes.FAILURE + "Too many online players match " +
+                Prefixes.input(destName));
+            return;
+        }
+
+        Player destination = Bukkit.getPlayer(autoCompletedDestName);
+
+        if(destination != null)
+        {
+            plugin.getTeleportListener().teleport(toTp, destination);
+        }
+        else
+        {
+            deltaRedisApi.findPlayer(destName, cachedPlayer ->
+            {
+                Player player = Bukkit.getPlayer(toTpName);
+
+                if(player == null) { return; }
+
+                if(cachedPlayer != null)
+                {
+                    // Format: TpSender/\CurrentServer
+                    String destServer = cachedPlayer.getServer();
+
+                    deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TP,
+                        toTpName, destName);
+
+                    plugin.sendToServer(player, destServer);
+                }
+                else
+                {
+                    player.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
+                        " is not online");
+                }
+            });
         }
     }
 
-    private void teleport(Player toTp, String destName)
+    private String attemptAutoComplete(String partial)
     {
-        String autoCompletedDestName = attemptAutoComplete(toTp, destName);
-
-        if(autoCompletedDestName != null)
-        {
-            Player destination = Bukkit.getPlayer(autoCompletedDestName);
-
-            if(destination != null)
-            {
-                plugin.getTeleportListener().teleport(toTp, destination);
-            }
-            else
-            {
-                handleDiffServerTeleport(toTp.getName(), autoCompletedDestName);
-            }
-        }
-    }
-
-    private void handleDiffServerTeleport(String senderName, String destName)
-    {
-        Settings settings = plugin.getSettings();
-
-        deltaRedisApi.findPlayer(destName, cachedPlayer ->
-        {
-            Player toTp = Bukkit.getPlayer(senderName);
-
-            if(toTp == null) { return; }
-
-            if(cachedPlayer != null)
-            {
-                // Format: TpSender/\CurrentServer
-                String destServer = cachedPlayer.getServer();
-
-                deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TP,
-                    senderName, destName);
-                plugin.sendToServer(toTp, destServer);
-            }
-            else
-            {
-                String playerNotOnline = settings.format("PlayerNotOnline", destName);
-                toTp.sendMessage(playerNotOnline);
-            }
-        });
-    }
-
-    private String attemptAutoComplete(CommandSender sender, String partial)
-    {
-        Settings settings = plugin.getSettings();
         List<String> partialMatches = deltaRedisApi.matchStartOfPlayerName(partial);
 
         if(!partialMatches.contains(partial.toLowerCase()))
@@ -164,11 +182,7 @@ public class CommandTp extends DeltaEssentialsCommand
             }
             else if(partialMatches.size() > 1)
             {
-                String tooManyAutoCompleteMatches = settings.format(
-                    "TooManyAutoCompleteMatches", partial);
-
-                sender.sendMessage(tooManyAutoCompleteMatches);
-                return null;
+                return TOO_MANY_MATCHES;
             }
         }
         return partial;
