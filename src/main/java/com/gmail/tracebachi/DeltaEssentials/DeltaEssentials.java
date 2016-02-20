@@ -56,6 +56,7 @@ public class DeltaEssentials extends JavaPlugin
     private CommandKick commandKick;
     private CommandLockdown commandLockdown;
     private CommandMoveTo commandMoveTo;
+    private CommandMoveAll commandMoveAll;
     private CommandSocialSpy commandSocialSpy;
     private CommandTell commandTell;
     private CommandTp commandTp;
@@ -99,6 +100,9 @@ public class DeltaEssentials extends JavaPlugin
 
         commandMoveTo = new CommandMoveTo(deltaRedisApi, this);
         commandMoveTo.register();
+
+        commandMoveAll = new CommandMoveAll(deltaRedisApi, this);
+        commandMoveAll.register();
 
         commandSocialSpy = new CommandSocialSpy(this);
         commandSocialSpy.register();
@@ -175,6 +179,9 @@ public class DeltaEssentials extends JavaPlugin
 
         commandMoveTo.shutdown();
         commandMoveTo = null;
+
+        commandMoveAll.shutdown();
+        commandMoveAll = null;
 
         commandSocialSpy.shutdown();
         commandSocialSpy = null;

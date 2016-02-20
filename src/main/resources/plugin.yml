@@ -7,6 +7,9 @@ commands:
   moveto:
     description: Sends players to different servers.
     aliases: [mt]
+  moveall:
+    description: Sends all online players to a different server.
+    aliases: [fallback]
   tell:
     description: Sends a message to another player.
     aliases: [t, tell, pm, m, msg]
@@ -53,6 +56,8 @@ permissions:
     description: Permission for /moveto <server>
   DeltaEss.MoveTo.Other:
     description: Permission for /moveto <server> <name>
+  DeltaEss.MoveAll:
+    description: Permission for /moveall <server>
   DeltaEss.Tp.Self:
     description: Permission for /tp
   DeltaEss.Tp.Other:
