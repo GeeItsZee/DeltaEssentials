@@ -17,6 +17,7 @@
 package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
+import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
@@ -62,14 +63,13 @@ public class CommandDisposal implements CommandExecutor, Shutdownable, Registera
     {
         if(!(sender instanceof Player))
         {
-            sender.sendMessage(Prefixes.FAILURE + "Only players can open the disposal.");
+            CommandMessageUtil.onlyForPlayers(sender, "disposal");
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.Disposal"))
         {
-            sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
-                Prefixes.input("DeltaEss.Disposal") + " permission.");
+            CommandMessageUtil.noPermission(sender, "DeltaEss.Disposal");
             return true;
         }
 

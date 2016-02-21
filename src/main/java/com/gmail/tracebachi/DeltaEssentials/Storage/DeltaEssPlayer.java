@@ -19,7 +19,7 @@ package com.gmail.tracebachi.DeltaEssentials.Storage;
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 1/19/16.
  */
-public class DeltaEssentialsPlayer
+public class DeltaEssPlayer
 {
     private boolean socialSpyEnabled;
     private boolean teleportDenyEnabled;

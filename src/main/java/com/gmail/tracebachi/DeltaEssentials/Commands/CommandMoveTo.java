@@ -19,7 +19,7 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
-import com.gmail.tracebachi.DeltaEssentials.Utils.MessageUtil;
+import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
@@ -95,6 +95,8 @@ public class CommandMoveTo implements TabExecutor, Registerable, Shutdownable, L
     {
         Set<String> servers = deltaRedisApi.getCachedServers();
         String currentServer = deltaRedisApi.getServerName();
+        String destServer = args[0];
+        Settings settings = plugin.getSettings();
 
         if(args.length < 1)
         {
@@ -105,15 +107,28 @@ public class CommandMoveTo implements TabExecutor, Registerable, Shutdownable, L
             return true;
         }
 
-        String destServer = args[0];
+        if(!servers.contains(destServer))
+        {
+            sender.sendMessage(Prefixes.FAILURE + Prefixes.input(destServer) +
+                " is offline or non-existent.");
+            return true;
+        }
+
+        if(settings.isServerBlocked(destServer) &&
+            !sender.hasPermission("DeltaEss.BlockedServerBypass"))
+        {
+            sender.sendMessage(Prefixes.FAILURE + Prefixes.input(destServer) +
+                " is blocked.");
+            return true;
+        }
 
         if(args.length == 1)
         {
-            handleSelfMoveTo(sender, servers, currentServer, destServer);
+            handleSelfMoveTo(sender, currentServer, destServer);
         }
         else
         {
-            handleOtherMoveTo(sender, args[1], servers, currentServer, destServer);
+            handleOtherMoveTo(sender, args[1], currentServer, destServer);
         }
 
         return true;
@@ -144,21 +159,17 @@ public class CommandMoveTo implements TabExecutor, Registerable, Shutdownable, L
         }
     }
 
-    private void handleSelfMoveTo(CommandSender sender, Set<String> servers,
-        String currentServer, String destServer)
+    private void handleSelfMoveTo(CommandSender sender, String currentServer, String destServer)
     {
-        Settings settings = plugin.getSettings();
-
         if(!(sender instanceof Player))
         {
-            sender.sendMessage(Prefixes.FAILURE + "Consoles cannot switch servers");
+            CommandMessageUtil.onlyForPlayers(sender, "moveto <server>");
             return;
         }
 
         if(!sender.hasPermission("DeltaEss.MoveTo.Self"))
         {
-            sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
-                Prefixes.input("DeltaEss.MoveTo.Self") + " permission.");
+            CommandMessageUtil.noPermission(sender, "DeltaEss.MoveTo.Self");
             return;
         }
 
@@ -169,50 +180,18 @@ public class CommandMoveTo implements TabExecutor, Registerable, Shutdownable, L
             return;
         }
 
-        if(!servers.contains(destServer))
-        {
-            sender.sendMessage(Prefixes.FAILURE + Prefixes.input(destServer) +
-                " is offline or non-existent");
-            return;
-        }
-
-        if(settings.isServerBlocked(destServer) &&
-            !sender.hasPermission("DeltaEss.BlockedServerBypass"))
-        {
-            sender.sendMessage(Prefixes.FAILURE + Prefixes.input(destServer) +
-                " is blocked");
-            return;
-        }
-
         handlePlayerInSameServer(((Player) sender), destServer);
     }
 
-    private void handleOtherMoveTo(CommandSender sender, String targetName, Set<String> servers,
-        String currentServer, String destServer)
+    private void handleOtherMoveTo(CommandSender sender, String targetName, String currentServer,
+        String destServer)
     {
-        Settings settings = plugin.getSettings();
         String senderName = sender.getName();
         Player target = Bukkit.getPlayer(targetName);
 
         if(!sender.hasPermission("DeltaEss.MoveTo.Other"))
         {
-            sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
-                Prefixes.input("DeltaEss.MoveTo.Other") + " permission.");
-            return;
-        }
-
-        if(!servers.contains(destServer))
-        {
-            sender.sendMessage(Prefixes.FAILURE + Prefixes.input(destServer) +
-                " is offline or non-existent");
-            return;
-        }
-
-        if(settings.isServerBlocked(destServer) &&
-            !sender.hasPermission("DeltaEss.BlockedServerBypass"))
-        {
-            sender.sendMessage(Prefixes.FAILURE + Prefixes.input(destServer) +
-                " is blocked");
+            CommandMessageUtil.noPermission(sender, "DeltaEss.MoveTo.Other");
             return;
         }
 
@@ -220,22 +199,20 @@ public class CommandMoveTo implements TabExecutor, Registerable, Shutdownable, L
             Prefixes.input(targetName) + " to " +
             Prefixes.input(destServer) + " ...");
 
-        if(target != null)
+        if(target == null)
         {
-            if(destServer.equals(currentServer))
-            {
-                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(targetName) +
-                    " is already on " + Prefixes.input(destServer));
-            }
-            else
-            {
-                handlePlayerInSameServer(target, destServer);
-            }
-
+            handlePlayerInDiffServer(senderName, destServer, targetName);
             return;
         }
 
-        handlePlayerInDiffServer(senderName, destServer, targetName);
+        if(destServer.equals(currentServer))
+        {
+            sender.sendMessage(Prefixes.FAILURE + Prefixes.input(targetName) +
+                " is already on " + Prefixes.input(destServer));
+            return;
+        }
+
+        handlePlayerInSameServer(target, destServer);
     }
 
     private void handlePlayerInSameServer(Player player, String destServer)
@@ -252,17 +229,14 @@ public class CommandMoveTo implements TabExecutor, Registerable, Shutdownable, L
         {
             if(cachedPlayer == null)
             {
-                String offlineMessage = Prefixes.FAILURE +
-                    Prefixes.input(targetName) + " is not online";
+                CommandMessageUtil.playerOffline(senderName, targetName);
+                return;
+            }
 
-                MessageUtil.sendMessage(senderName, offlineMessage);
-            }
-            else
-            {
-                deltaRedisApi.publish(cachedPlayer.getServer(),
-                    DeltaEssentialsChannels.MOVE,
-                    senderName, targetName, destServer);
-            }
+            // Format: SenderName/\TargetName/\DestServer
+            deltaRedisApi.publish(cachedPlayer.getServer(),
+                DeltaEssentialsChannels.MOVE,
+                senderName, targetName, destServer);
         });
     }
 

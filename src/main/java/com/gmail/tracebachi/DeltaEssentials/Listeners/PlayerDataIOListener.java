@@ -22,7 +22,7 @@ import com.gmail.tracebachi.DeltaEssentials.Events.PlayerPreSaveEvent;
 import com.gmail.tracebachi.DeltaEssentials.Runnables.PlayerLoad;
 import com.gmail.tracebachi.DeltaEssentials.Runnables.PlayerSave;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
-import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssentialsPlayer;
+import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayer;
 import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerEntry;
 import com.gmail.tracebachi.DeltaEssentials.Storage.SavedInventory;
 import com.gmail.tracebachi.DeltaEssentials.Utils.xAuthUtil;
@@ -174,7 +174,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         GameMode originalMode = player.getGameMode();
         GameMode newMode = event.getNewGameMode();
         Settings settings = plugin.getSettings();
-        DeltaEssentialsPlayer dePlayer = plugin.getPlayerMap().get(name);
+        DeltaEssPlayer dePlayer = plugin.getPlayerMap().get(name);
 
         // Ignore game mode changes to the same mode
         if(originalMode == event.getNewGameMode()) { return; }
@@ -258,7 +258,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
 
         if(player != null)
         {
-            DeltaEssentialsPlayer dePlayer = new DeltaEssentialsPlayer();
+            DeltaEssPlayer dePlayer = new DeltaEssPlayer();
 
             plugin.getPlayerLockListener().remove(name);
             plugin.getPlayerMap().put(name, dePlayer);
@@ -273,7 +273,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         if(player != null)
         {
             GameMode defaultGameMode = plugin.getSettings().getDefaultGameMode();
-            DeltaEssentialsPlayer dePlayer = new DeltaEssentialsPlayer();
+            DeltaEssPlayer dePlayer = new DeltaEssPlayer();
 
             plugin.getPlayerLockListener().remove(name);
             plugin.getPlayerMap().put(name, dePlayer);
@@ -348,7 +348,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
     public void savePlayerData(Player player, String destServer)
     {
         String name = player.getName();
-        DeltaEssentialsPlayer dePlayer = plugin.getPlayerMap().get(name);
+        DeltaEssPlayer dePlayer = plugin.getPlayerMap().get(name);
         PlayerEntry entry = buildPlayerEntry(player, dePlayer);
         PlayerSave runnable = new PlayerSave(entry, destServer, this, plugin);
 
@@ -361,7 +361,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
      * Private Methods
      *************************************************************************/
 
-    private PlayerEntry buildPlayerEntry(Player player, DeltaEssentialsPlayer dePlayer)
+    private PlayerEntry buildPlayerEntry(Player player, DeltaEssPlayer dePlayer)
     {
         Preconditions.checkNotNull(dePlayer);
 
@@ -411,7 +411,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         return entry;
     }
 
-    private void applyPlayerEntry(Player player, PlayerEntry entry, DeltaEssentialsPlayer dePlayer)
+    private void applyPlayerEntry(Player player, PlayerEntry entry, DeltaEssPlayer dePlayer)
     {
         Settings settings = plugin.getSettings();
         GameMode defaultGameMode = settings.getDefaultGameMode();

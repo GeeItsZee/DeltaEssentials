@@ -22,7 +22,7 @@ import com.gmail.tracebachi.DeltaEssentials.Listeners.ChatListener;
 import com.gmail.tracebachi.DeltaEssentials.Listeners.PlayerDataIOListener;
 import com.gmail.tracebachi.DeltaEssentials.Listeners.PlayerLockListener;
 import com.gmail.tracebachi.DeltaEssentials.Listeners.TeleportListener;
-import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssentialsPlayer;
+import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayer;
 import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashMap;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedis;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
@@ -44,7 +44,7 @@ public class DeltaEssentials extends JavaPlugin
 
     private Settings settings;
     private WaitingAsyncScheduler asyncScheduler;
-    private CaseInsensitiveHashMap<DeltaEssentialsPlayer> playerMap = new CaseInsensitiveHashMap<>();
+    private CaseInsensitiveHashMap<DeltaEssPlayer> playerMap = new CaseInsensitiveHashMap<>();
 
     private ChatListener chatListener;
     private PlayerLockListener playerLockListener;
@@ -84,7 +84,7 @@ public class DeltaEssentials extends JavaPlugin
         DeltaRedisApi deltaRedisApi = deltaRedisPlugin.getDeltaRedisApi();
 
         // Add a player for the console so the console's reply targets are stored
-        playerMap.put("console", new DeltaEssentialsPlayer());
+        playerMap.put("console", new DeltaEssPlayer());
 
         commandDisposal = new CommandDisposal(this);
         commandDisposal.register();
@@ -226,7 +226,7 @@ public class DeltaEssentials extends JavaPlugin
         }
     }
 
-    public CaseInsensitiveHashMap<DeltaEssentialsPlayer> getPlayerMap()
+    public CaseInsensitiveHashMap<DeltaEssPlayer> getPlayerMap()
     {
         return playerMap;
     }

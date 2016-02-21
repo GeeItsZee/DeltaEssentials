@@ -20,8 +20,8 @@ import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTellEvent;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
-import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssentialsPlayer;
-import com.gmail.tracebachi.DeltaEssentials.Utils.MessageUtil;
+import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayer;
+import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
@@ -50,8 +50,6 @@ import static com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent.DELT
  */
 public class CommandTell implements TabExecutor, Registerable, Shutdownable, Listener
 {
-    private static final String TOO_MANY_MATCHES = "!TOO_MANY_MATCHES!";
-
     private DeltaRedisApi deltaRedisApi;
     private DeltaEssentials plugin;
 
@@ -108,31 +106,24 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
         String receiverName;
         String message;
 
-        if(commandName.equalsIgnoreCase("reply"))
+        if(commandName.equalsIgnoreCase("reply") && args.length < 1)
         {
-            if(args.length < 1)
-            {
-                sender.sendMessage(Prefixes.INFO + "/reply <message>");
-                return true;
-            }
+            sender.sendMessage(Prefixes.INFO + "/reply <message>");
+            return true;
         }
-        else
+        else if(commandName.equalsIgnoreCase("tell") && args.length < 2)
         {
-            if(args.length < 2)
-            {
-                sender.sendMessage(Prefixes.INFO + "/tell <name> <message>");
-                return true;
-            }
+            sender.sendMessage(Prefixes.INFO + "/tell <name> <message>");
+            return true;
         }
 
         if(!sender.hasPermission("DeltaEss.Tell.Use"))
         {
-            sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
-                Prefixes.input("DeltaEss.Tell.Use") + " permission.");
+            CommandMessageUtil.noPermission(sender, "DeltaEss.Tell.Use");
             return true;
         }
 
-        DeltaEssentialsPlayer dePlayer = plugin.getPlayerMap().get(senderName);
+        DeltaEssPlayer dePlayer = plugin.getPlayerMap().get(senderName);
 
         if(dePlayer == null)
         {
@@ -160,14 +151,9 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
             }
             else
             {
-                receiverName = attemptAutoComplete(args[0]);
+                receiverName = attemptAutoComplete(sender, args[0]);
 
-                if(receiverName.equals(TOO_MANY_MATCHES))
-                {
-                    sender.sendMessage(Prefixes.FAILURE + "Too many online players match " +
-                        Prefixes.input(args[0]));
-                    return true;
-                }
+                if(receiverName == null) return true;
             }
 
             message = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
@@ -209,21 +195,18 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
 
             deltaRedisApi.findPlayer(receiverName, cachedPlayer ->
             {
-                if(cachedPlayer != null)
+                if(cachedPlayer == null)
                 {
-                    String destination = cachedPlayer.getServer();
-
-                    deltaRedisApi.publish(destination,
-                        DeltaEssentialsChannels.TELL,
-                        senderName, receiverName, finalMessage);
+                    CommandMessageUtil.playerOffline(senderName, receiverName);
+                    return;
                 }
-                else
-                {
-                    String offlineMessage = Prefixes.FAILURE +
-                        Prefixes.input(receiverName) + " is not online";
 
-                    MessageUtil.sendMessage(senderName, offlineMessage);
-                }
+                String destination = cachedPlayer.getServer();
+
+                // Format: SenderName/\ReceiverName/\Message
+                deltaRedisApi.publish(destination,
+                    DeltaEssentialsChannels.TELL,
+                    senderName, receiverName, finalMessage);
             });
         }
 
@@ -243,10 +226,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
 
             if(receiver == null)
             {
-                String offlineMessage = Prefixes.FAILURE +
-                    Prefixes.input(receiverName) + " is not online";
-
-                MessageUtil.sendMessage(senderName, offlineMessage);
+                CommandMessageUtil.playerOffline(senderName, receiverName);
                 return;
             }
 
@@ -257,29 +237,11 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
         }
     }
 
-    private String attemptAutoComplete(String partial)
-    {
-        List<String> partialMatches = deltaRedisApi.matchStartOfPlayerName(partial);
-
-        if(!partialMatches.contains(partial.toLowerCase()))
-        {
-            if(partialMatches.size() == 1)
-            {
-                return partialMatches.get(0);
-            }
-            else if(partialMatches.size() > 1)
-            {
-                return TOO_MANY_MATCHES;
-            }
-        }
-        return partial;
-    }
-
     private boolean sendMessage(String senderName, CommandSender sender,
         String receiverName, CommandSender receiver, String message)
     {
         Settings settings = plugin.getSettings();
-        CaseInsensitiveHashMap<DeltaEssentialsPlayer> playerMap = plugin.getPlayerMap();
+        CaseInsensitiveHashMap<DeltaEssPlayer> playerMap = plugin.getPlayerMap();
         PlayerTellEvent event = new PlayerTellEvent(senderName, sender,
             receiverName, receiver, message);
 
@@ -298,7 +260,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
                 String senderFormat = settings.format("TellSender", receiverName, message);
                 sender.sendMessage(senderFormat);
 
-                DeltaEssentialsPlayer dePlayer = playerMap.get(senderName);
+                DeltaEssPlayer dePlayer = playerMap.get(senderName);
                 dePlayer.setLastReplyTarget(receiverName);
             }
 
@@ -307,7 +269,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
                 String receiverFormat = settings.format("TellReceiver", senderName, message);
                 receiver.sendMessage(receiverFormat);
 
-                DeltaEssentialsPlayer dePlayer = playerMap.get(receiverName);
+                DeltaEssPlayer dePlayer = playerMap.get(receiverName);
                 dePlayer.setLastReplyTarget(senderName);
             }
 
@@ -317,10 +279,10 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
         return false;
     }
 
-    private void sendToAllSocialSpies(CaseInsensitiveHashMap<DeltaEssentialsPlayer> playerMap,
+    private void sendToAllSocialSpies(CaseInsensitiveHashMap<DeltaEssPlayer> playerMap,
         String spyFormat)
     {
-        for(Map.Entry<String, DeltaEssentialsPlayer> entry : playerMap.entrySet())
+        for(Map.Entry<String, DeltaEssPlayer> entry : playerMap.entrySet())
         {
             if(entry.getValue().isSocialSpyEnabled())
             {
@@ -332,5 +294,30 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
                 }
             }
         }
+    }
+
+    private String attemptAutoComplete(CommandSender sender, String partial)
+    {
+        List<String> partialMatches = deltaRedisApi.matchStartOfPlayerName(partial);
+
+        if(partialMatches.contains(partial.toLowerCase()))
+        {
+            return partial;
+        }
+
+        if(partialMatches.size() == 0)
+        {
+            return partial;
+        }
+
+        if(partialMatches.size() == 1)
+        {
+            return partialMatches.get(0);
+        }
+
+        sender.sendMessage(Prefixes.FAILURE + "Multiple online players match " +
+            Prefixes.input(partial));
+
+        return null;
     }
 }

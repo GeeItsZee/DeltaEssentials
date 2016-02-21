@@ -27,19 +27,21 @@ public class TeleportRequest implements Cacheable
     private final String sender;
     private final String destServer;
     private final long timeCreatedAt;
+    private final boolean tpOtherToSelf;
 
-    public TeleportRequest(String sender, String destServer)
+    public TeleportRequest(String sender, String destServer, boolean tpOtherToSelf)
     {
-        this(sender, destServer, System.currentTimeMillis());
+        this(sender, destServer, tpOtherToSelf, System.currentTimeMillis());
     }
 
-    public TeleportRequest(String sender, String destServer, long timeCreatedAt)
+    public TeleportRequest(String sender, String destServer, boolean tpOtherToSelf, long timeCreatedAt)
     {
         Preconditions.checkNotNull(sender);
         Preconditions.checkNotNull(destServer);
 
         this.sender = sender;
         this.destServer = destServer;
+        this.tpOtherToSelf = tpOtherToSelf;
         this.timeCreatedAt = timeCreatedAt;
     }
 
@@ -51,6 +53,11 @@ public class TeleportRequest implements Cacheable
     public String getDestServer()
     {
         return destServer;
+    }
+
+    public boolean isTpOtherToSelf()
+    {
+        return tpOtherToSelf;
     }
 
     @Override

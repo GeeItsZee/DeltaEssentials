@@ -17,7 +17,8 @@
 package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
-import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssentialsPlayer;
+import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayer;
+import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
@@ -71,26 +72,25 @@ public class CommandSocialSpy implements TabExecutor, Registerable, Shutdownable
     @Override
     public boolean onCommand(CommandSender sender, Command command, String s, String[] args)
     {
-        if(!(sender instanceof Player))
-        {
-            sender.sendMessage(Prefixes.FAILURE + "Only players can use SocialSpy.");
-            return true;
-        }
-
         if(args.length < 1)
         {
             sender.sendMessage(Prefixes.INFO + "/socialspy <on|off>");
             return true;
         }
 
-        if(!sender.hasPermission("DeltaEss.SocialSpy"))
+        if(!(sender instanceof Player))
         {
-            sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
-                Prefixes.input("DeltaEss.SocialSpy") + " permission.");
+            CommandMessageUtil.onlyForPlayers(sender, "socialspy");
             return true;
         }
 
-        DeltaEssentialsPlayer dePlayer = plugin.getPlayerMap().get(sender.getName());
+        if(!sender.hasPermission("DeltaEss.SocialSpy"))
+        {
+            CommandMessageUtil.noPermission(sender, "DeltaEss.SocialSpy");
+            return true;
+        }
+
+        DeltaEssPlayer dePlayer = plugin.getPlayerMap().get(sender.getName());
 
         if(dePlayer == null)
         {

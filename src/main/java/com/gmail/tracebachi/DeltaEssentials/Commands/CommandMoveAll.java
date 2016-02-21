@@ -17,6 +17,7 @@
 package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
+import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
@@ -99,8 +100,7 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
 
         if(!sender.hasPermission("DeltaEss.MoveAll"))
         {
-            sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
-                Prefixes.input("DeltaEss.MoveAll") + " permission.");
+            CommandMessageUtil.noPermission(sender, "DeltaEss.MoveAll");
             return true;
         }
 

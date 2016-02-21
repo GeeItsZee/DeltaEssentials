@@ -19,6 +19,7 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
+import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
@@ -85,14 +86,13 @@ public class CommandTpaHere implements TabExecutor, Registerable, Shutdownable
 
         if(!(sender instanceof Player))
         {
-            sender.sendMessage(Prefixes.FAILURE + "Only players can use /tpahere.");
+            CommandMessageUtil.onlyForPlayers(sender, "tpahere");
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.Tpa.Send"))
         {
-            sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
-                Prefixes.input("DeltaEss.Tpa.Send") + " permission.");
+            CommandMessageUtil.noPermission(sender, "DeltaEss.Tpa.Send");
             return true;
         }
 
@@ -103,46 +103,43 @@ public class CommandTpaHere implements TabExecutor, Registerable, Shutdownable
         if(receiver != null)
         {
             String currentServer = deltaRedisApi.getServerName();
-            TeleportRequest request = new TeleportRequest(senderName, currentServer);
+            TeleportRequest request = new TeleportRequest(senderName, currentServer, true);
 
             plugin.getTeleportListener().getRequestMap().put(receiverName, request);
 
             receiver.sendMessage(Prefixes.INFO + Prefixes.input(senderName) +
                 " sent you a TPA request. Use /tpaccept within 30 seconds to accept.");
-
             sender.sendMessage(Prefixes.INFO + Prefixes.input(receiverName) +
                 " was sent a TPA request.");
+
+            return true;
         }
-        else
+
+        deltaRedisApi.findPlayer(receiverName, cachedPlayer ->
         {
-            deltaRedisApi.findPlayer(receiverName, cachedPlayer ->
+            Player senderPlayer = Bukkit.getPlayer(senderName);
+
+            if(senderPlayer == null) return;
+
+            if(cachedPlayer == null)
             {
-                Player senderPlayer = Bukkit.getPlayer(senderName);
+                CommandMessageUtil.playerOffline(sender, receiverName);
+                return;
+            }
 
-                if(senderPlayer == null) { return; }
+            String destServer = cachedPlayer.getServer();
+            String currentServer = deltaRedisApi.getServerName();
+            TeleportRequest request = new TeleportRequest(senderName, currentServer, true);
 
-                if(cachedPlayer != null)
-                {
-                    // Format: Receiver/\Sender/\CurrentServer
-                    String destServer = cachedPlayer.getServer();
-                    String currentServer = deltaRedisApi.getServerName();
+            // Format: Receiver/\Sender/\CurrentServer
+            deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TPA_HERE,
+                receiverName, senderName, currentServer);
 
-                    deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TPA_HERE,
-                        receiverName, senderName, currentServer);
+            plugin.getTeleportListener().getRequestMap().put(receiverName, request);
 
-                    TeleportRequest request = new TeleportRequest(senderName, currentServer);
-                    plugin.getTeleportListener().getRequestMap().put(receiverName, request);
-
-                    senderPlayer.sendMessage(Prefixes.INFO + Prefixes.input(receiverName) +
-                        " was sent a TPA request.");
-                }
-                else
-                {
-                    sender.sendMessage(Prefixes.FAILURE + Prefixes.input(receiverName) +
-                        " is not online");
-                }
-            });
-        }
+            senderPlayer.sendMessage(Prefixes.INFO + Prefixes.input(receiverName) +
+                " was sent a TPA request.");
+        });
 
         return true;
     }

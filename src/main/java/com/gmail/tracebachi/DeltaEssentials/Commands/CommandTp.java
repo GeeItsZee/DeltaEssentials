@@ -18,6 +18,7 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
+import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
@@ -35,8 +36,6 @@ import java.util.List;
  */
 public class CommandTp implements TabExecutor, Registerable, Shutdownable
 {
-    private static final String TOO_MANY_MATCHES = "!TOO_MANY_MATCHES!";
-
     private DeltaRedisApi deltaRedisApi;
     private DeltaEssentials plugin;
 
@@ -84,42 +83,39 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
             return true;
         }
 
-        String destName = args[0];
-
         if(args.length == 1)
         {
             if(!(sender instanceof Player))
             {
-                sender.sendMessage(Prefixes.FAILURE + "Only players can teleport to others.");
+                CommandMessageUtil.onlyForPlayers(sender, "tp <player>");
             }
             else if(!sender.hasPermission("DeltaEss.Tp"))
             {
-                sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
-                    Prefixes.input("DeltaEss.Tp") + " permission.");
+                CommandMessageUtil.noPermission(sender, "DeltaEss.Tp");
             }
             else
             {
-                Player player = (Player) sender;
-                handleTeleport(player, destName);
+                String destName = args[0];
+                handleTeleport((Player) sender, destName);
             }
         }
         else
         {
-            Player player = Bukkit.getPlayer(destName);
+            String firstName = args[0];
+            String secondName = args[1];
+            Player firstPlayer = Bukkit.getPlayer(firstName);
 
-            if(player == null)
+            if(firstPlayer == null)
             {
-                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
-                    " is not online");
+                CommandMessageUtil.playerOffline(sender, firstName);
             }
             else if(!sender.hasPermission("DeltaEss.TpOther"))
             {
-                sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
-                    Prefixes.input("DeltaEss.TpOther") + " permission.");
+                CommandMessageUtil.noPermission(sender, "DeltaEss.TpOther");
             }
             else
             {
-                handleTeleport(player, destName);
+                handleTeleport(firstPlayer, secondName);
             }
         }
 
@@ -129,63 +125,62 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
     private void handleTeleport(Player toTp, String destName)
     {
         String toTpName = toTp.getName();
-        String autoCompletedDestName = attemptAutoComplete(destName);
+        String autoCompletedDestName = attemptAutoComplete(toTp, destName);
 
-        if(autoCompletedDestName.equals(TOO_MANY_MATCHES))
-        {
-            toTp.sendMessage(Prefixes.FAILURE + "Too many online players match " +
-                Prefixes.input(destName));
-            return;
-        }
+        if(autoCompletedDestName == null) return;
 
         Player destination = Bukkit.getPlayer(autoCompletedDestName);
 
         if(destination != null)
         {
-            plugin.getTeleportListener().teleport(toTp, destination);
+            plugin.getTeleportListener().teleport(toTp, destination, false);
+            return;
         }
-        else
+
+        deltaRedisApi.findPlayer(destName, cachedPlayer ->
         {
-            deltaRedisApi.findPlayer(destName, cachedPlayer ->
+            Player player = Bukkit.getPlayer(toTpName);
+
+            if(player == null) return;
+
+            if(cachedPlayer == null)
             {
-                Player player = Bukkit.getPlayer(toTpName);
+                CommandMessageUtil.playerOffline(player, destName);
+                return;
+            }
 
-                if(player == null) { return; }
+            String destServer = cachedPlayer.getServer();
 
-                if(cachedPlayer != null)
-                {
-                    // Format: TpSender/\CurrentServer
-                    String destServer = cachedPlayer.getServer();
+            // Format: TpSender/\CurrentServer
+            deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TP,
+                toTpName, destName);
 
-                    deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TP,
-                        toTpName, destName);
-
-                    plugin.sendToServer(player, destServer);
-                }
-                else
-                {
-                    player.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
-                        " is not online");
-                }
-            });
-        }
+            plugin.sendToServer(player, destServer);
+        });
     }
 
-    private String attemptAutoComplete(String partial)
+    private String attemptAutoComplete(CommandSender sender, String partial)
     {
         List<String> partialMatches = deltaRedisApi.matchStartOfPlayerName(partial);
 
-        if(!partialMatches.contains(partial.toLowerCase()))
+        if(partialMatches.contains(partial.toLowerCase()))
         {
-            if(partialMatches.size() == 1)
-            {
-                return partialMatches.get(0);
-            }
-            else if(partialMatches.size() > 1)
-            {
-                return TOO_MANY_MATCHES;
-            }
+            return partial;
         }
-        return partial;
+
+        if(partialMatches.size() == 0)
+        {
+            return partial;
+        }
+
+        if(partialMatches.size() == 1)
+        {
+            return partialMatches.get(0);
+        }
+
+        sender.sendMessage(Prefixes.FAILURE + "Multiple online players match " +
+            Prefixes.input(partial));
+
+        return null;
     }
 }

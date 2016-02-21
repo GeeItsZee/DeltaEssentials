@@ -18,6 +18,7 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
+import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
@@ -78,14 +79,13 @@ public class CommandTpAccept implements TabExecutor, Registerable, Shutdownable
     {
         if(!(sender instanceof Player))
         {
-            sender.sendMessage(Prefixes.FAILURE + "Only players can use /tpaccept.");
+            CommandMessageUtil.onlyForPlayers(sender, "tpaccept");
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.Tpa.Accept"))
         {
-            sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
-                Prefixes.input("DeltaEss.Tpa.Accept") + " permission.");
+            CommandMessageUtil.noPermission(sender, "DeltaEss.Tpa.Accept");
             return true;
         }
 
@@ -99,24 +99,24 @@ public class CommandTpAccept implements TabExecutor, Registerable, Shutdownable
         }
 
         Player player = (Player) sender;
+        String currentServerName = deltaRedisApi.getServerName();
+        String destServerName = request.getDestServer();
 
-        if(request.getDestServer().equals(deltaRedisApi.getServerName()))
+        if(!destServerName.equals(currentServerName))
         {
-            Player destPlayer = Bukkit.getPlayer(request.getSender());
+            plugin.sendToServer(player, destServerName);
+            return true;
+        }
 
-            if(destPlayer != null)
-            {
-                plugin.getTeleportListener().teleport(player, destPlayer);
-            }
-            else
-            {
-                sender.sendMessage(Prefixes.FAILURE + Prefixes.input(request.getSender()) +
-                    " is not online");
-            }
+        Player destPlayer = Bukkit.getPlayer(request.getSender());
+
+        if(destPlayer != null)
+        {
+            plugin.getTeleportListener().teleport(player, destPlayer);
         }
         else
         {
-            plugin.sendToServer(player, request.getDestServer());
+            CommandMessageUtil.playerOffline(sender, request.getSender());
         }
 
         return true;

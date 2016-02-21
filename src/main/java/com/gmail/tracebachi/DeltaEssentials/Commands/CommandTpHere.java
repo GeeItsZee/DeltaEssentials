@@ -19,6 +19,7 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
+import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
@@ -85,14 +86,13 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
 
         if(!(sender instanceof Player))
         {
-            sender.sendMessage(Prefixes.FAILURE + "Only players can use /tphere.");
+            CommandMessageUtil.onlyForPlayers(sender, "tphere");
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.TpOther"))
         {
-            sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
-                Prefixes.input("DeltaEss.TpOther") + " permission.");
+            CommandMessageUtil.noPermission(sender, "DeltaEss.TpOther");
             return true;
         }
 
@@ -102,35 +102,32 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
 
         if(toTp != null)
         {
-            plugin.getTeleportListener().teleport(toTp, (Player) sender);
+            plugin.getTeleportListener().teleport(toTp, (Player) sender, true);
+            return true;
         }
-        else
+
+        deltaRedisApi.findPlayer(toTpName, cachedPlayer ->
         {
-            deltaRedisApi.findPlayer(toTpName, cachedPlayer ->
+            Player sendingPlayer = Bukkit.getPlayer(senderName);
+
+            if(sendingPlayer == null) return;
+
+            if(cachedPlayer == null)
             {
-                Player sendingPlayer = Bukkit.getPlayer(senderName);
+                CommandMessageUtil.playerOffline(sender, toTpName);
+                return;
+            }
 
-                if(sendingPlayer == null) { return; }
+            String destServer = cachedPlayer.getServer();
+            String currentServer = deltaRedisApi.getServerName();
+            TeleportRequest request = new TeleportRequest(senderName, currentServer, true);
 
-                if(cachedPlayer != null)
-                {
-                    // Format: Receiver/\Sender/\CurrentServer
-                    String destServer = cachedPlayer.getServer();
-                    String currentServer = deltaRedisApi.getServerName();
+            // Format: Receiver/\Sender/\CurrentServer
+            deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TP_HERE,
+                toTpName, senderName, currentServer);
 
-                    deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TP_HERE,
-                        toTpName, senderName, currentServer);
-
-                    TeleportRequest request = new TeleportRequest(senderName, currentServer);
-                    plugin.getTeleportListener().getRequestMap().put(toTpName, request);
-                }
-                else
-                {
-                    sendingPlayer.sendMessage(Prefixes.FAILURE + Prefixes.input(toTpName) +
-                        " is not online.");
-                }
-            });
-        }
+            plugin.getTeleportListener().getRequestMap().put(toTpName, request);
+        });
 
         return true;
     }

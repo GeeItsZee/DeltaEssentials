@@ -20,8 +20,9 @@ import com.earth2me.essentials.utils.LocationUtil;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
-import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssentialsPlayer;
+import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayer;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
+import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashMap;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
@@ -125,21 +126,20 @@ public class TeleportListener extends DeltaEssentialsListener
         }
         else
         {
-            teleport(toTp, destination);
+            teleport(toTp, destination, request.isTpOtherToSelf());
         }
     }
 
-    public boolean teleport(Player toTp, Player destination)
+    public boolean teleport(Player toTp, Player destination, boolean ignoreVanish)
     {
         String senderName = toTp.getName();
         String destName = destination.getName();
         Location location = destination.getLocation();
-        DeltaEssentialsPlayer dePlayer = plugin.getPlayerMap().get(destName);
+        DeltaEssPlayer dePlayer = plugin.getPlayerMap().get(destName);
 
-        if(!toTp.canSee(destination) && !toTp.hasPermission("DeltaEss.TpVanishBypass"))
+        if(!ignoreVanish && !toTp.canSee(destination) && !toTp.hasPermission("DeltaEss.TpVanishBypass"))
         {
-            toTp.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
-                " is not online");
+            CommandMessageUtil.playerOffline(toTp, destName);
             return false;
         }
 
@@ -190,7 +190,8 @@ public class TeleportListener extends DeltaEssentialsListener
 
     private void handleTpChannel(String tpSender, String destName)
     {
-        TeleportRequest request = new TeleportRequest(destName, deltaRedisApi.getServerName());
+        String destServer = deltaRedisApi.getServerName();
+        TeleportRequest request = new TeleportRequest(destName, destServer, false);
         Player toTp = Bukkit.getPlayer(tpSender);
 
         if(toTp == null)
@@ -208,7 +209,7 @@ public class TeleportListener extends DeltaEssentialsListener
         }
         else
         {
-            teleport(toTp, destination);
+            teleport(toTp, destination, false);
         }
     }
 
@@ -223,13 +224,13 @@ public class TeleportListener extends DeltaEssentialsListener
         else
         {
             deltaRedisApi.sendMessageToPlayer(tpHereSender,
-                Prefixes.INFO + Prefixes.input(nameToTp) + "is not online");
+                Prefixes.INFO + Prefixes.input(nameToTp) + " is not online");
         }
     }
 
     private void handleTpaHereChannel(String receiver, String sender, String destServer)
     {
-        TeleportRequest request = new TeleportRequest(sender, destServer);
+        TeleportRequest request = new TeleportRequest(sender, destServer, true);
         Player receiverPlayer = Bukkit.getPlayer(receiver);
 
         if(receiverPlayer != null)
@@ -242,7 +243,7 @@ public class TeleportListener extends DeltaEssentialsListener
         else
         {
             deltaRedisApi.sendMessageToPlayer(sender,
-                Prefixes.INFO + Prefixes.input(receiver) + "is not online");
+                Prefixes.INFO + Prefixes.input(receiver) + " is not online");
         }
     }
 
