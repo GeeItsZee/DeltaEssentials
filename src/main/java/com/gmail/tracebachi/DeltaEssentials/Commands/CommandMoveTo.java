@@ -95,8 +95,6 @@ public class CommandMoveTo implements TabExecutor, Registerable, Shutdownable, L
     {
         Set<String> servers = deltaRedisApi.getCachedServers();
         String currentServer = deltaRedisApi.getServerName();
-        String destServer = args[0];
-        Settings settings = plugin.getSettings();
 
         if(args.length < 1)
         {
@@ -106,6 +104,9 @@ public class CommandMoveTo implements TabExecutor, Registerable, Shutdownable, L
                 getFormattedServerList(servers));
             return true;
         }
+
+        String destServer = args[0];
+        Settings settings = plugin.getSettings();
 
         if(!servers.contains(destServer))
         {
