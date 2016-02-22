@@ -58,10 +58,6 @@ ValidJails:
 # Formatting strings
 Formats:
 
-  DefaultKickReason: 'Kicked from server!'
-  KickPlayer: 'You have been kicked by {0} for {1}.'
-  KickAnnounce: '{0} was kicked by {1} for {2}.'
-
   TellLog: '[{0} -> {1}] {2}'
   TellSpy: '[{0} -> {1}] {2}'
   TellSender: '[me -> {0}] {1}'

@@ -53,7 +53,6 @@ public class DeltaEssentials extends JavaPlugin
 
     private CommandDisposal commandDisposal;
     private CommandJail commandJail;
-    private CommandKick commandKick;
     private CommandLockdown commandLockdown;
     private CommandMoveTo commandMoveTo;
     private CommandMoveAll commandMoveAll;
@@ -91,9 +90,6 @@ public class DeltaEssentials extends JavaPlugin
 
         commandJail = new CommandJail(deltaRedisApi, this);
         commandJail.register();
-
-        commandKick = new CommandKick(deltaRedisApi, this);
-        commandKick.register();
 
         commandLockdown = new CommandLockdown(this);
         commandLockdown.register();
@@ -170,9 +166,6 @@ public class DeltaEssentials extends JavaPlugin
 
         commandJail.shutdown();
         commandJail = null;
-
-        commandKick.shutdown();
-        commandKick = null;
 
         commandLockdown.shutdown();
         commandLockdown = null;

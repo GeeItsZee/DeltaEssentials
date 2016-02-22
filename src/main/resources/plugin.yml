@@ -34,9 +34,6 @@ commands:
   tpdeny:
     description: Controls if players can teleport to the player.
     aliases: [detpdeny]
-  kick:
-    description: Kicks the player from the server.
-    aliases: [dekick]
   jail:
     description: Sends a player to the jail server and jails them.
     aliases: [dejail]
@@ -68,8 +65,6 @@ permissions:
     description: Permission for /tpaccept
   DeltaEss.TpDeny:
     description: Permission for /tpdeny
-  DeltaEss.Kick:
-    description: Permission for /kick
   DeltaEss.Jail:
     description: Permission for /jail
   DeltaEss.SocialSpy:
