@@ -26,16 +26,25 @@ import org.bukkit.event.HandlerList;
  */
 public class PlayerTpEvent extends Event implements Cancellable
 {
+    public enum TeleportType
+    {
+        NORMAL_TP,
+        TP_HERE,
+        TPA_HERE
+    }
+
     private static final HandlerList handlers = new HandlerList();
 
     private final Player playerToTeleport;
     private final Player destination;
+    private final TeleportType teleportType;
     private boolean cancelled;
 
-    public PlayerTpEvent(Player playerToTeleport, Player destination)
+    public PlayerTpEvent(Player playerToTeleport, Player destination, TeleportType teleportType)
     {
         this.playerToTeleport = playerToTeleport;
         this.destination = destination;
+        this.teleportType = teleportType;
     }
 
     public Player getPlayerToTeleport()
@@ -46,6 +55,11 @@ public class PlayerTpEvent extends Event implements Cancellable
     public Player getDestination()
     {
         return destination;
+    }
+
+    public TeleportType getTeleportType()
+    {
+        return teleportType;
     }
 
     public HandlerList getHandlers()

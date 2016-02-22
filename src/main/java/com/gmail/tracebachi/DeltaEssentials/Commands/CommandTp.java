@@ -18,6 +18,7 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
+import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
 import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
@@ -133,7 +134,8 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
 
         if(destination != null)
         {
-            plugin.getTeleportListener().teleport(toTp, destination, false);
+            plugin.getTeleportListener().teleport(toTp, destination,
+                PlayerTpEvent.TeleportType.NORMAL_TP);
             return;
         }
 

@@ -16,6 +16,7 @@
  */
 package com.gmail.tracebachi.DeltaEssentials.Storage;
 
+import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
 import com.gmail.tracebachi.DeltaRedis.Shared.Cache.Cacheable;
 import com.google.common.base.Preconditions;
 
@@ -26,22 +27,22 @@ public class TeleportRequest implements Cacheable
 {
     private final String sender;
     private final String destServer;
+    private final PlayerTpEvent.TeleportType teleportType;
     private final long timeCreatedAt;
-    private final boolean tpOtherToSelf;
 
-    public TeleportRequest(String sender, String destServer, boolean tpOtherToSelf)
+    public TeleportRequest(String sender, String destServer, PlayerTpEvent.TeleportType teleportType)
     {
-        this(sender, destServer, tpOtherToSelf, System.currentTimeMillis());
+        this(sender, destServer, teleportType, System.currentTimeMillis());
     }
 
-    public TeleportRequest(String sender, String destServer, boolean tpOtherToSelf, long timeCreatedAt)
+    public TeleportRequest(String sender, String destServer, PlayerTpEvent.TeleportType teleportType, long timeCreatedAt)
     {
         Preconditions.checkNotNull(sender);
         Preconditions.checkNotNull(destServer);
 
         this.sender = sender;
         this.destServer = destServer;
-        this.tpOtherToSelf = tpOtherToSelf;
+        this.teleportType = teleportType;
         this.timeCreatedAt = timeCreatedAt;
     }
 
@@ -55,9 +56,9 @@ public class TeleportRequest implements Cacheable
         return destServer;
     }
 
-    public boolean isTpOtherToSelf()
+    public PlayerTpEvent.TeleportType getTeleportType()
     {
-        return tpOtherToSelf;
+        return teleportType;
     }
 
     @Override

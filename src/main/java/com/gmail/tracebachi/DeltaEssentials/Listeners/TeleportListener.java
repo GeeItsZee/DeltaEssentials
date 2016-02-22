@@ -126,18 +126,20 @@ public class TeleportListener extends DeltaEssentialsListener
         }
         else
         {
-            teleport(toTp, destination, request.isTpOtherToSelf());
+            teleport(toTp, destination, request.getTeleportType());
         }
     }
 
-    public boolean teleport(Player toTp, Player destination, boolean ignoreVanish)
+    public boolean teleport(Player toTp, Player destination, PlayerTpEvent.TeleportType teleportType)
     {
         String senderName = toTp.getName();
         String destName = destination.getName();
         Location location = destination.getLocation();
         DeltaEssPlayer dePlayer = plugin.getPlayerMap().get(destName);
 
-        if(!ignoreVanish && !toTp.canSee(destination) && !toTp.hasPermission("DeltaEss.TpVanishBypass"))
+        if(teleportType == PlayerTpEvent.TeleportType.NORMAL_TP &&
+            !toTp.canSee(destination) &&
+            !toTp.hasPermission("DeltaEss.TpVanishBypass"))
         {
             CommandMessageUtil.playerOffline(toTp, destName);
             return false;
@@ -153,25 +155,25 @@ public class TeleportListener extends DeltaEssentialsListener
             return false;
         }
 
-        PlayerTpEvent event = new PlayerTpEvent(toTp, destination);
+        try
+        {
+            if(!toTp.getAllowFlight() || !toTp.isFlying())
+            {
+                location = LocationUtil.getSafeDestination(location);
+            }
+        }
+        catch(Exception ex)
+        {
+            toTp.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
+                " is in an unsafe location.");
+            return false;
+        }
+
+        PlayerTpEvent event = new PlayerTpEvent(toTp, destination, teleportType);
         Bukkit.getPluginManager().callEvent(event);
 
         if(!event.isCancelled())
         {
-            try
-            {
-                if(!toTp.getAllowFlight() || !toTp.isFlying())
-                {
-                    location = LocationUtil.getSafeDestination(location);
-                }
-            }
-            catch(Exception ex)
-            {
-                toTp.sendMessage(Prefixes.FAILURE + Prefixes.input(destName) +
-                    " is in an unsafe location.");
-                return false;
-            }
-
             toTp.sendMessage(Prefixes.SUCCESS + "Teleporting to " +
                 Prefixes.input(destName));
 
@@ -191,7 +193,8 @@ public class TeleportListener extends DeltaEssentialsListener
     private void handleTpChannel(String tpSender, String destName)
     {
         String destServer = deltaRedisApi.getServerName();
-        TeleportRequest request = new TeleportRequest(destName, destServer, false);
+        TeleportRequest request = new TeleportRequest(destName, destServer,
+            PlayerTpEvent.TeleportType.NORMAL_TP);
         Player toTp = Bukkit.getPlayer(tpSender);
 
         if(toTp == null)
@@ -209,7 +212,7 @@ public class TeleportListener extends DeltaEssentialsListener
         }
         else
         {
-            teleport(toTp, destination, false);
+            teleport(toTp, destination, PlayerTpEvent.TeleportType.NORMAL_TP);
         }
     }
 
@@ -230,7 +233,8 @@ public class TeleportListener extends DeltaEssentialsListener
 
     private void handleTpaHereChannel(String receiver, String sender, String destServer)
     {
-        TeleportRequest request = new TeleportRequest(sender, destServer, true);
+        TeleportRequest request = new TeleportRequest(sender, destServer,
+            PlayerTpEvent.TeleportType.TPA_HERE);
         Player receiverPlayer = Bukkit.getPlayer(receiver);
 
         if(receiverPlayer != null)

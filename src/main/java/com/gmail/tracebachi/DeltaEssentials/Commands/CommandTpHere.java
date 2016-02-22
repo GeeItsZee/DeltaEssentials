@@ -18,6 +18,7 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
+import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
 import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
@@ -102,7 +103,8 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
 
         if(toTp != null)
         {
-            plugin.getTeleportListener().teleport(toTp, (Player) sender, true);
+            plugin.getTeleportListener().teleport(toTp, (Player) sender,
+                PlayerTpEvent.TeleportType.TP_HERE);
             return true;
         }
 
@@ -120,7 +122,8 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
 
             String destServer = cachedPlayer.getServer();
             String currentServer = deltaRedisApi.getServerName();
-            TeleportRequest request = new TeleportRequest(senderName, currentServer, true);
+            TeleportRequest request = new TeleportRequest(senderName, currentServer,
+                PlayerTpEvent.TeleportType.TP_HERE);
 
             // Format: Receiver/\Sender/\CurrentServer
             deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TP_HERE,
