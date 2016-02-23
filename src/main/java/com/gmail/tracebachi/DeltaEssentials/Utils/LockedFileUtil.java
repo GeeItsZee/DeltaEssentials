@@ -32,7 +32,7 @@ public interface LockedFileUtil
 {
     static String read(File file) throws IOException
     {
-        return read(file, StandardCharsets.UTF_16);
+        return read(file, StandardCharsets.UTF_8);
     }
 
     static String read(File file, Charset charset) throws IOException
@@ -66,7 +66,7 @@ public interface LockedFileUtil
 
     static boolean write(String toWrite, File file) throws IOException
     {
-        return write(toWrite, file, StandardCharsets.UTF_16);
+        return write(toWrite, file, StandardCharsets.UTF_8);
     }
 
     static boolean write(String toWrite, File file, Charset charset) throws IOException
