@@ -25,7 +25,7 @@
         <dependency>
             <groupId>com.gmail.tracebachi</groupId>
             <artifactId>DeltaRedis</artifactId>
-            <version>1.6</version>
+            <version>1.7</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

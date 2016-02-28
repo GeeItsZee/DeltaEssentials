@@ -416,7 +416,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         Settings settings = plugin.getSettings();
         GameMode defaultGameMode = settings.getDefaultGameMode();
         boolean isDefaultGameModeForced = settings.isDefaultGameModeForced();
-        boolean bypassForced = player.hasPermission("DeltaInv.Forced.Bypass");
+        boolean bypassForced = player.hasPermission("DeltaEss.Forced.Bypass");
 
         dePlayer.setSurvival(entry.getSurvival());
         dePlayer.setCreative(entry.getCreative());

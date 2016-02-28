@@ -22,7 +22,6 @@ package com.gmail.tracebachi.DeltaEssentials;
 public interface DeltaEssentialsChannels
 {
     String MOVE = "DE-Move";
-    String KICK = "DE-Kick";
     String JAIL = "DE-Jail";
     String TELL = "DE-Tell";
     String SHARED_CHAT = "DE-HeroChat";
