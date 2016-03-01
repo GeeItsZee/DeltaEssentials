@@ -26,6 +26,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 
 /**
@@ -80,6 +81,19 @@ public class PlayerLockListener extends DeltaEssentialsListener
     public void onInventoryInteract(InventoryInteractEvent event)
     {
         HumanEntity player = event.getWhoClicked();
+
+        if(locked.contains(player.getName()))
+        {
+            player.sendMessage(Prefixes.FAILURE +
+                "You are locked. Please wait until your data is loaded.");
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    public void onPlayerInteractEvent(PlayerInteractEvent event)
+    {
+        Player player = event.getPlayer();
 
         if(locked.contains(player.getName()))
         {
