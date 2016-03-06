@@ -27,7 +27,6 @@ import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerEntry;
 import com.gmail.tracebachi.DeltaEssentials.Storage.SavedInventory;
 import com.gmail.tracebachi.DeltaEssentials.Utils.xAuthUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
-import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashMap;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
@@ -50,12 +49,9 @@ import org.bukkit.potion.PotionEffect;
  */
 public class PlayerDataIOListener extends DeltaEssentialsListener
 {
-    private CaseInsensitiveHashMap<Long> lastSwitchTimeMap;
-
     public PlayerDataIOListener(DeltaEssentials plugin)
     {
         super(plugin);
-        lastSwitchTimeMap = new CaseInsensitiveHashMap<>();
     }
 
     @Override
@@ -75,8 +71,6 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
             }
         }
 
-        lastSwitchTimeMap.clear();
-        lastSwitchTimeMap = null;
         super.shutdown();
     }
 
@@ -148,7 +142,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
     {
         Player player = event.getPlayer();
         String name = player.getName();
-        Long switchTime = lastSwitchTimeMap.remove(name);
+        Long switchTime = plugin.getTimedPlayerLockManager().remove(name);
 
         if(switchTime == null || (System.currentTimeMillis() - switchTime) > 2000)
         {
@@ -312,7 +306,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
                 output.writeUTF(destServer);
                 player.sendPluginMessage(plugin, "BungeeCord", output.toByteArray());
 
-                lastSwitchTimeMap.put(name, System.currentTimeMillis());
+                plugin.getTimedPlayerLockManager().add(name);
             }
             else
             {

@@ -33,6 +33,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.messaging.Messenger;
+import org.bukkit.scheduler.BukkitTask;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/5/15.
@@ -50,6 +51,9 @@ public class DeltaEssentials extends JavaPlugin
     private PlayerLockListener playerLockListener;
     private PlayerDataIOListener playerDataIOListener;
     private TeleportListener teleportListener;
+
+    private BukkitTask timedPlayerLockTask;
+    private TimedPlayerLockManager timedPlayerLockManager;
 
     private CommandDisposal commandDisposal;
     private CommandJail commandJail;
@@ -133,20 +137,33 @@ public class DeltaEssentials extends JavaPlugin
         playerDataIOListener = new PlayerDataIOListener(this);
         playerDataIOListener.register();
 
+        timedPlayerLockManager = new TimedPlayerLockManager(playerLockListener);
+
         Messenger messenger = getServer().getMessenger();
         messenger.registerOutgoingPluginChannel(this, "BungeeCord");
 
         allowTaskScheduling = true;
+
+        // Schedule timed cleanup
+        timedPlayerLockTask = getServer().getScheduler().runTaskTimer(this,
+            () -> timedPlayerLockManager.cleanup(), 20, 20);
     }
 
     @Override
     public void onDisable()
     {
+        // Cancel timed cleanup
+        timedPlayerLockTask.cancel();
+        timedPlayerLockTask = null;
+
         allowTaskScheduling = false;
 
         // Order matters. Shut down the IO listener before the inventory lock listener
         playerDataIOListener.shutdown();
         playerDataIOListener = null;
+
+        timedPlayerLockManager.shutdown();
+        timedPlayerLockManager = null;
 
         playerLockListener.shutdown();
         playerLockListener = null;
@@ -227,6 +244,11 @@ public class DeltaEssentials extends JavaPlugin
     public PlayerLockListener getPlayerLockListener()
     {
         return playerLockListener;
+    }
+
+    public TimedPlayerLockManager getTimedPlayerLockManager()
+    {
+        return timedPlayerLockManager;
     }
 
     public TeleportListener getTeleportListener()

@@ -72,7 +72,7 @@ public class PlayerLockListener extends DeltaEssentialsListener
         if(locked.contains(player.getName()))
         {
             player.sendMessage(Prefixes.FAILURE +
-                "You are locked. Please wait until your data is loaded.");
+                "You are locked. Please wait until your data is loaded or saved.");
             event.setCancelled(true);
         }
     }
@@ -85,7 +85,7 @@ public class PlayerLockListener extends DeltaEssentialsListener
         if(locked.contains(player.getName()))
         {
             player.sendMessage(Prefixes.FAILURE +
-                "You are locked. Please wait until your data is loaded.");
+                "You are locked. Please wait until your data is loaded or saved.");
             event.setCancelled(true);
         }
     }
@@ -98,7 +98,7 @@ public class PlayerLockListener extends DeltaEssentialsListener
         if(locked.contains(player.getName()))
         {
             player.sendMessage(Prefixes.FAILURE +
-                "You are locked. Please wait until your data is loaded.");
+                "You are locked. Please wait until your data is loaded or saved.");
             event.setCancelled(true);
         }
     }
@@ -111,7 +111,7 @@ public class PlayerLockListener extends DeltaEssentialsListener
         if(locked.contains(player.getName()))
         {
             player.sendMessage(Prefixes.FAILURE +
-                "You are locked. Please wait until your data is loaded.");
+                "You are locked. Please wait until your data is loaded or saved.");
             event.setCancelled(true);
         }
     }
@@ -124,7 +124,7 @@ public class PlayerLockListener extends DeltaEssentialsListener
         if(locked.contains(player.getName()))
         {
             player.sendMessage(Prefixes.FAILURE +
-                "You are locked. Please wait until your data is loaded.");
+                "You are locked. Please wait until your data is loaded or saved.");
             event.setCancelled(true);
         }
     }
