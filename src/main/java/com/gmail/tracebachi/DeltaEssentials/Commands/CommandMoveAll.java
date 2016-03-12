@@ -104,19 +104,19 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
             return true;
         }
 
-        String destServer = args[0];
+        String destServer = getMatchInSet(servers, args[0]);
 
-        if(currentServer.equalsIgnoreCase(destServer))
+        if(destServer == null)
         {
-            sender.sendMessage(Prefixes.FAILURE + "You are already connected to " +
-                Prefixes.input(currentServer));
+            sender.sendMessage(Prefixes.FAILURE + Prefixes.input(args[0]) +
+                " is offline or non-existent");
             return true;
         }
 
-        if(!servers.contains(destServer))
+        if(currentServer.equalsIgnoreCase(destServer))
         {
-            sender.sendMessage(Prefixes.FAILURE + Prefixes.input(destServer) +
-                " is offline or non-existent");
+            sender.sendMessage(Prefixes.FAILURE + "You cannot move all players on" +
+                " this server to the current server.");
             return true;
         }
 
@@ -136,5 +136,17 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
         List<String> serverList = new ArrayList<>(servers);
         Collections.sort(serverList);
         return ChatColor.WHITE + String.join(ChatColor.GRAY + ", " + ChatColor.WHITE, serverList);
+    }
+
+    private String getMatchInSet(Set<String> set, String source)
+    {
+        for(String item : set)
+        {
+            if(item.equalsIgnoreCase(source))
+            {
+                return item;
+            }
+        }
+        return null;
     }
 }

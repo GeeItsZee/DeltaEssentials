@@ -105,12 +105,12 @@ public class CommandMoveTo implements TabExecutor, Registerable, Shutdownable, L
             return true;
         }
 
-        String destServer = args[0];
+        String destServer = getMatchInSet(servers, args[0]);
         Settings settings = plugin.getSettings();
 
-        if(!servers.contains(destServer))
+        if(destServer == null)
         {
-            sender.sendMessage(Prefixes.FAILURE + Prefixes.input(destServer) +
+            sender.sendMessage(Prefixes.FAILURE + Prefixes.input(args[0]) +
                 " is offline or non-existent.");
             return true;
         }
@@ -246,5 +246,17 @@ public class CommandMoveTo implements TabExecutor, Registerable, Shutdownable, L
         List<String> serverList = new ArrayList<>(servers);
         Collections.sort(serverList);
         return ChatColor.WHITE + String.join(ChatColor.GRAY + ", " + ChatColor.WHITE, serverList);
+    }
+
+    private String getMatchInSet(Set<String> set, String source)
+    {
+        for(String item : set)
+        {
+            if(item.equalsIgnoreCase(source))
+            {
+                return item;
+            }
+        }
+        return null;
     }
 }
