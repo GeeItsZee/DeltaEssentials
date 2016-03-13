@@ -261,7 +261,11 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
                 sender.sendMessage(senderFormat);
 
                 DeltaEssPlayer dePlayer = playerMap.get(senderName);
-                dePlayer.setLastReplyTarget(receiverName);
+
+                if(dePlayer != null)
+                {
+                    dePlayer.setLastReplyTarget(receiverName);
+                }
             }
 
             if(receiver != null)
@@ -270,7 +274,11 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
                 receiver.sendMessage(receiverFormat);
 
                 DeltaEssPlayer dePlayer = playerMap.get(receiverName);
-                dePlayer.setLastReplyTarget(senderName);
+
+                if(dePlayer != null)
+                {
+                    dePlayer.setLastReplyTarget(senderName);
+                }
             }
 
             return true;
