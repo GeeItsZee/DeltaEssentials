@@ -38,10 +38,11 @@ public interface LockedFileUtil
     static String read(File file, Charset charset) throws IOException
     {
         FileLock lock = null;
+        FileChannel fileChannel = null;
 
         try
         {
-            FileChannel fileChannel = FileChannel.open(file.toPath(),
+            fileChannel = FileChannel.open(file.toPath(),
                 StandardOpenOption.READ, StandardOpenOption.WRITE);
 
             // Lock the file
@@ -50,15 +51,21 @@ public interface LockedFileUtil
             ByteBuffer buffer = ByteBuffer.allocate((int) fileChannel.size());
             fileChannel.read(buffer);
 
-            // Unlock the file
+            // Unlock and close the file
             lock.release();
+            fileChannel.close();
             return new String(buffer.array(), charset);
         }
         finally
         {
-            if(lock != null)
+            if(lock != null && lock.isValid())
             {
                 lock.release();
+            }
+
+            if(fileChannel != null)
+            {
+                fileChannel.close();
             }
             // Note: Do NOT return from a finally-block
         }
@@ -72,6 +79,7 @@ public interface LockedFileUtil
     static boolean write(String toWrite, File file, Charset charset) throws IOException
     {
         FileLock lock = null;
+        FileChannel fileChannel = null;
 
         try
         {
@@ -80,7 +88,7 @@ public interface LockedFileUtil
                 return false;
             }
 
-            FileChannel fileChannel = FileChannel.open(file.toPath(),
+            fileChannel = FileChannel.open(file.toPath(),
                 StandardOpenOption.READ, StandardOpenOption.WRITE);
             ByteBuffer buffer = ByteBuffer.wrap(toWrite.getBytes(charset));
 
@@ -91,15 +99,21 @@ public interface LockedFileUtil
             fileChannel.truncate(0);
             fileChannel.write(buffer);
 
-            // Unlock the file
+            // Unlock and close the file
             lock.release();
+            fileChannel.close();
             return true;
         }
         finally
         {
-            if(lock != null)
+            if(lock != null && lock.isValid())
             {
                 lock.release();
+            }
+
+            if(fileChannel != null)
+            {
+                fileChannel.close();
             }
             // Note: Do NOT return from a finally-block
         }
