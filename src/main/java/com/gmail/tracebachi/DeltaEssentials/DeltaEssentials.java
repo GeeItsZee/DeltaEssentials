@@ -169,7 +169,7 @@ public class DeltaEssentials extends JavaPlugin
         playerLockListener = null;
 
         // Wait for any async tasks to finish
-        asyncScheduler.waitForTasks();
+        asyncScheduler.waitForTasks(true);
         asyncScheduler = null;
 
         teleportListener.shutdown();
