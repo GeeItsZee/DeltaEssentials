@@ -19,9 +19,9 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
+import com.gmail.tracebachi.DeltaEssentials.Settings;
+import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
-import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
-import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
@@ -81,19 +81,27 @@ public class CommandTpaHere implements TabExecutor, Registerable, Shutdownable
     {
         if(args.length < 1)
         {
-            sender.sendMessage(Prefixes.INFO + "/tpahere <player>");
+            sender.sendMessage(Settings.format("TeleportRequestUsage"));
             return true;
         }
 
         if(!(sender instanceof Player))
         {
-            CommandMessageUtil.onlyForPlayers(sender, "tpahere");
+            sender.sendMessage(Settings.format("PlayersOnly", "/tpahere"));
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.Tpa.Send"))
         {
-            CommandMessageUtil.noPermission(sender, "DeltaEss.Tpa.Send");
+            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Tpa.Send"));
+            return true;
+        }
+
+        DeltaEssPlayerData playerData = plugin.getPlayerMap().get(sender.getName());
+
+        if(playerData == null)
+        {
+            sender.sendMessage(Settings.format("PlayerDataNotLoaded"));
             return true;
         }
 
@@ -109,10 +117,8 @@ public class CommandTpaHere implements TabExecutor, Registerable, Shutdownable
 
             plugin.getTeleportListener().getRequestMap().put(receiverName, request);
 
-            receiver.sendMessage(Prefixes.INFO + Prefixes.input(senderName) +
-                " sent you a TPA request. Use /tpaccept within 30 seconds to accept.");
-            sender.sendMessage(Prefixes.INFO + Prefixes.input(receiverName) +
-                " was sent a TPA request.");
+            receiver.sendMessage(Settings.format("ReceivedTeleportRequest", senderName));
+            sender.sendMessage(Settings.format("SentTeleportRequest", receiverName));
 
             return true;
         }
@@ -125,7 +131,7 @@ public class CommandTpaHere implements TabExecutor, Registerable, Shutdownable
 
             if(cachedPlayer == null)
             {
-                CommandMessageUtil.playerOffline(sender, receiverName);
+                senderPlayer.sendMessage(Settings.format("PlayerOffline", receiverName));
                 return;
             }
 
@@ -140,8 +146,7 @@ public class CommandTpaHere implements TabExecutor, Registerable, Shutdownable
 
             plugin.getTeleportListener().getRequestMap().put(receiverName, request);
 
-            senderPlayer.sendMessage(Prefixes.INFO + Prefixes.input(receiverName) +
-                " was sent a TPA request.");
+            senderPlayer.sendMessage(Settings.format("SentTeleportRequest", receiverName));
         });
 
         return true;

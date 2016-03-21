@@ -1,8 +1,8 @@
 name: DeltaEssentials
 main: com.gmail.tracebachi.DeltaEssentials.DeltaEssentials
-version: 2.2
+version: 2.3
 author: Trace Bachi (tracebachi@gmail.com, BigBossZee)
-depend: [DeltaRedis, Essentials, Herochat]
+depend: [DeltaRedis, DeltaExecutor, Essentials, Herochat]
 commands:
   moveto:
     description: Sends players to different servers.
@@ -19,6 +19,9 @@ commands:
   socialspy:
     description: Shows a copy of all private messages on the server when enabled.
     aliases: [spy]
+  dvanish:
+    description: Hides the player from personal messages and teleports.
+    aliases: [dv]
   tp:
     description: Teleports players.
     aliases: [detp]
@@ -69,6 +72,8 @@ permissions:
     description: Permission for /jail
   DeltaEss.SocialSpy:
     description: Permission for /socialspy
+  DeltaEss.DVanish:
+    description: Permission for /dvanish
   DeltaEss.Lockdown:
     description: Permission for /lockdown
   DeltaEss.Disposal:

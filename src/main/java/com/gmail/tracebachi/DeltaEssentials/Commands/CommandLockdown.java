@@ -17,8 +17,7 @@
 package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
-import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
-import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
+import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import org.bukkit.command.Command;
@@ -38,13 +37,11 @@ import java.util.List;
  */
 public class CommandLockdown implements TabExecutor, Registerable, Shutdownable, Listener
 {
-    private boolean isOnLockdown;
     private DeltaEssentials plugin;
 
     public CommandLockdown(DeltaEssentials plugin)
     {
         this.plugin = plugin;
-        this.isOnLockdown = plugin.getSettings().isStartWithLockdown();
     }
 
     @Override
@@ -83,31 +80,31 @@ public class CommandLockdown implements TabExecutor, Registerable, Shutdownable,
     {
         if(args.length < 1)
         {
-            sender.sendMessage(Prefixes.INFO + "/lockdown <on|off>");
+            sender.sendMessage(Settings.format("LockdownUsage"));
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.Lockdown"))
         {
-            CommandMessageUtil.noPermission(sender, "DeltaEss.Lockdown");
+            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Lockdown"));
             return true;
         }
 
         if(args[0].equalsIgnoreCase("on"))
         {
-            isOnLockdown = true;
+            Settings.setInLockdown(true);
 
-            sender.sendMessage(Prefixes.SUCCESS + "Lockdown " + Prefixes.input("enabled"));
+            sender.sendMessage(Settings.format("LockdownChange", "enabled"));
         }
         else if(args[0].equalsIgnoreCase("off"))
         {
-            isOnLockdown = false;
+            Settings.setInLockdown(false);
 
-            sender.sendMessage(Prefixes.SUCCESS + "Lockdown " + Prefixes.input("disabled"));
+            sender.sendMessage(Settings.format("LockdownChange", "disabled"));
         }
         else
         {
-            sender.sendMessage(Prefixes.INFO + "/lockdown <on|off>");
+            sender.sendMessage(Settings.format("LockdownUsage"));
         }
 
         return true;
@@ -116,10 +113,10 @@ public class CommandLockdown implements TabExecutor, Registerable, Shutdownable,
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onPlayerLoginEvent(PlayerLoginEvent event)
     {
-        if(isOnLockdown)
+        if(Settings.isInLockdown())
         {
             event.disallow(PlayerLoginEvent.Result.KICK_OTHER,
-                plugin.getSettings().getLockdownMessage());
+                Settings.format("LockdownMessage"));
         }
     }
 }

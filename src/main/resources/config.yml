@@ -1,17 +1,9 @@
+###############################################################################
 # DeltaEssentials Configuration File
-
 ###############################################################################
 
 # Should lockdown be enabled on start
 StartWithLockdown: False
-
-# Message to display on lockdown
-LockdownMessage: 'Server is locked down ... for reasons!'
-
-###############################################################################
-
-# File path to the player data folder
-PlayerDataFolder: 'plugins/DeltaEssentials/PlayerData/'
 
 # Default game mode for players who do not have player data
 DefaultGameMode: SURVIVAL
@@ -27,21 +19,26 @@ DisabledGameModes:
   - ADVENTURE
   - SPECTATOR
 
-###############################################################################
-
 # Names of servers that players cannot access without the bypass permission
 BlockedServers:
   - SecretServer
 
-###############################################################################
+# Commands run by the player before switching servers or disconnecting from
+# the network (used to remove players from minigames or other activites that
+# alter player inventory so that they can restore the actual inventories
+# before it is saved by DeltaEssentials)
+PreSaveCommands:
+  - leave-minigame
 
 # Channels to share with other servers
-# {Channel Name} : {Permission to view}
-# If {Permission to view} is "NoPerm", the HeroChat channel on the other
-# servers will be used
+# {Name} : {Use HeroChat Channel}
+# If {Use HeroChat Channel} is '':
+#   HeroChat channel on the other servers will be used.
+# Else:
+#   SharedChatEvent will be fired on other servers to handle as desired
 SharedChatChannels:
-  Global: NoPerm
-  Secret: Secret.Permission.Name
+  Global: True
+  Secret: False
 
 ###############################################################################
 
@@ -58,10 +55,57 @@ ValidJails:
 # Formatting strings
 Formats:
 
+  NoPermission: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not have the {0} permission.'
+  PlayersOnly: '&8[&c!&8] &cFailure &8[&c!&8]&7 Only players can use {0}'
+  PlayerDataNotLoaded: '&8[&c!&8] &cFailure &8[&c!&8]&7 Player data has not been loaded yet.'
+  PlayerOffline: '&8[&c!&8] &cFailure &8[&c!&8]&7 {0} is offline.'
+  TooManyAutoCompleteMatches: '&8[&c!&8] &cFailure &8[&c!&8]&7 Multiple online players match {0}.'
+  PlayerLocked: '&8[&c!&8] &cFailure &8[&c!&8]&7 You are locked. Please wait until your data is loaded or saved.'
+
+  LockdownUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /lockdown <on|off>'
+  LockdownMessage: 'Server is locked down ... for reasons!'
+  LockdownChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Lockdown has been {0}.'
+
+  MovingToMessage: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Moving to {0} ...'
+  MovingOtherToMessage: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Moving {0} to {1} ...'
+  CurrentServer: '&8[&9!&8] &9Info &8[&9!&8]&7 Current server: {0}'
+  OnlineServerList: '&8[&9!&8] &9Info &8[&9!&8]&7 Online Servers: {0}'
+  ServerOffline: '&8[&c!&8] &cFailure &8[&c!&8]&7 {0} is offline.'
+  InputIsCurrentServer: '&8[&c!&8] &cFailure &8[&c!&8]&7 {0} is the current server.'
+  OtherAlreadyOnServer: '&8[&c!&8] &cFailure &8[&c!&8]&7 {0} is already on {1}.'
+  BlockedServer: '&8[&c!&8] &cFailure &8[&c!&8]&7 {0} is blocked for you.'
+
+  SocialSpyUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /socialspy <on|off>'
+  SocialSpyChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 SocialSpy has been {0}.'
+
+  DVanishUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /dvanish <on|off>'
+  DVanishChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 DeltaVanish has been {0}.'
+
+  TellUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tell <name> <message>'
+  ReplyUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /reply <message>'
+  NoReplyTarget: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not have anyone to reply to.'
+
   TellLog: '[{0} -> {1}] {2}'
   TellSpy: '[{0} -> {1}] {2}'
   TellSender: '[me -> {0}] {1}'
   TellReceiver: '[{0} -> me] {1}'
+
+  TeleportUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tp <name>'
+  TeleportRequestUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tpahere <name>'
+  TeleportHereUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tphere <name>'
+  NoPendingTeleportRequest: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not having a pending teleport request.'
+  SentTeleportRequest: '&8[&a!&8] &aSuccess &8[&a!&8]&7 You sent {0} a teleport request.'
+  ReceivedTeleportRequest: '&8[&a!&8] &aSuccess &8[&a!&8]&7 {0} sent you a teleport request. Type /tpaccept to accept within 30 seconds.'
+
+  TeleportDenyUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tpdeny <on|off>'
+  TeleportDenyChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 TeleportDeny has been {0}.'
+  TeleportingMessage: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Teleporting to {0} ...'
+  TeleportedToYou: '&8[&9!&8] &9Info &8[&9!&8]&7 {0} teleported to you.'
+  DeniedTeleport: '&8[&9!&8] &9Info &8[&9!&8]&7 {0} was denied a teleport to you.'
+  OtherDenyingTeleport: '&8[&c!&8] &cFailure &8[&c!&8]&7 {0} is denying teleports.'
+  UnsafeLocation: '&8[&c!&8] &cFailure &8[&c!&8]&7 {0} is not in a safe location.'
+
+  GameModeBeingForced: '&8[&c!&8] &cFailure &8[&c!&8]&7 {0} is being forced on this server.'
 
 ###############################################################################
 

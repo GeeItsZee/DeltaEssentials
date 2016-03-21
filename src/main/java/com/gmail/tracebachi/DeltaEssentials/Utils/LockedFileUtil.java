@@ -51,22 +51,36 @@ public interface LockedFileUtil
             ByteBuffer buffer = ByteBuffer.allocate((int) fileChannel.size());
             fileChannel.read(buffer);
 
-            // Unlock and close the file
-            lock.release();
-            fileChannel.close();
             return new String(buffer.array(), charset);
         }
         finally
         {
-            if(lock != null && lock.isValid())
+            // Release the file lock
+            if(lock != null)
             {
-                lock.release();
+                try
+                {
+                    lock.release();
+                }
+                catch(IOException ex)
+                {
+                    ex.printStackTrace();
+                }
             }
 
+            // Close the file channel
             if(fileChannel != null)
             {
-                fileChannel.close();
+                try
+                {
+                    fileChannel.close();
+                }
+                catch(IOException ex)
+                {
+                    ex.printStackTrace();
+                }
             }
+
             // Note: Do NOT return from a finally-block
         }
     }
@@ -99,22 +113,36 @@ public interface LockedFileUtil
             fileChannel.truncate(0);
             fileChannel.write(buffer);
 
-            // Unlock and close the file
-            lock.release();
-            fileChannel.close();
             return true;
         }
         finally
         {
-            if(lock != null && lock.isValid())
+            // Release the file lock
+            if(lock != null)
             {
-                lock.release();
+                try
+                {
+                    lock.release();
+                }
+                catch(IOException ex)
+                {
+                    ex.printStackTrace();
+                }
             }
 
+            // Close the file channel
             if(fileChannel != null)
             {
-                fileChannel.close();
+                try
+                {
+                    fileChannel.close();
+                }
+                catch(IOException ex)
+                {
+                    ex.printStackTrace();
+                }
             }
+
             // Note: Do NOT return from a finally-block
         }
     }

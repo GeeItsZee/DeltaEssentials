@@ -18,7 +18,10 @@ package com.gmail.tracebachi.DeltaEssentials.Runnables;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.Listeners.PlayerDataIOListener;
+import com.gmail.tracebachi.DeltaEssentials.Settings;
+import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerEntry;
+import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerStats;
 import com.gmail.tracebachi.DeltaEssentials.Utils.InventoryUtils;
 import com.gmail.tracebachi.DeltaEssentials.Utils.LockedFileUtil;
 import com.gmail.tracebachi.DeltaEssentials.Utils.PotionEffectUtils;
@@ -35,7 +38,6 @@ public class PlayerSave implements Runnable
 {
     private final String destServer;
     private final PlayerEntry entry;
-    private final File playerDataFile;
     private final PlayerDataIOListener listener;
     private final DeltaEssentials plugin;
 
@@ -45,7 +47,6 @@ public class PlayerSave implements Runnable
         Preconditions.checkNotNull(plugin, "Plugin cannot be null.");
 
         this.entry = entry;
-        this.playerDataFile = plugin.getSettings().getPlayerDataFileFor(entry.getName());
         this.destServer = destServer;
         this.listener = listener;
         this.plugin = plugin;
@@ -54,6 +55,8 @@ public class PlayerSave implements Runnable
     @Override
     public void run()
     {
+        File playerDataFile = Settings.getPlayerDataFileFor(entry.getName());
+
         try
         {
             YamlConfiguration configuration = writePlayerDataYaml();
@@ -93,30 +96,32 @@ public class PlayerSave implements Runnable
     {
         YamlConfiguration serialized;
         YamlConfiguration config = new YamlConfiguration();
+        PlayerStats playerStats = entry.getPlayerStats();
+        DeltaEssPlayerData playerData = entry.getDeltaEssPlayerData();
 
         config.set("LastSave", System.currentTimeMillis());
-        config.set("Health", entry.getHealth());
-        config.set("Hunger", entry.getFoodLevel());
-        config.set("XpLevel", entry.getXpLevel());
-        config.set("XpProgress", entry.getXpProgress());
-        config.set("Gamemode", entry.getGameMode().toString());
-        config.set("Effects", PotionEffectUtils.toStringList(entry.getPotionEffects()));
-        config.set("SocialSpyEnabled", entry.isSocialSpyEnabled());
-        config.set("TeleportDenyEnabled", entry.isTeleportDenyEnabled());
-        config.set("LastReplyTarget", entry.getLastReplyTarget());
+        config.set("Health", playerStats.getHealth());
+        config.set("Hunger", playerStats.getFoodLevel());
+        config.set("XpLevel", playerStats.getXpLevel());
+        config.set("XpProgress", playerStats.getXpProgress());
+        config.set("Gamemode", playerStats.getGameMode().toString());
+        config.set("Effects", PotionEffectUtils.toStringList(playerStats.getPotionEffects()));
+        config.set("SocialSpyEnabled", playerData.isSocialSpyEnabled());
+        config.set("TeleportDenyEnabled", playerData.isTeleportDenyEnabled());
+        config.set("ReplyTo", playerData.getReplyTo());
         config.set("MetaData", entry.getMetaData());
 
-        serialized = InventoryUtils.toYamlSection(entry.getSurvival().getArmor());
+        serialized = InventoryUtils.toYamlSection(playerData.getSurvival().getArmor());
         config.set("Survival.Armor", serialized);
-        serialized = InventoryUtils.toYamlSection(entry.getSurvival().getContents());
+        serialized = InventoryUtils.toYamlSection(playerData.getSurvival().getContents());
         config.set("Survival.Contents", serialized);
 
-        serialized = InventoryUtils.toYamlSection(entry.getCreative().getArmor());
+        serialized = InventoryUtils.toYamlSection(playerData.getCreative().getArmor());
         config.set("Creative.Armor", serialized);
-        serialized = InventoryUtils.toYamlSection(entry.getCreative().getContents());
+        serialized = InventoryUtils.toYamlSection(playerData.getCreative().getContents());
         config.set("Creative.Contents", serialized);
 
-        serialized = InventoryUtils.toYamlSection(entry.getEnderChest());
+        serialized = InventoryUtils.toYamlSection(playerStats.getEnderChest());
         config.set("EnderChest", serialized);
         return config;
     }

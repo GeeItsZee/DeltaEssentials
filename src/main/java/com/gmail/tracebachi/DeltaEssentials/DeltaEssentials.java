@@ -18,42 +18,33 @@ package com.gmail.tracebachi.DeltaEssentials;
 
 import com.gmail.tracebachi.DeltaEssentials.Commands.*;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerServerSwitchEvent;
-import com.gmail.tracebachi.DeltaEssentials.Listeners.ChatListener;
-import com.gmail.tracebachi.DeltaEssentials.Listeners.PlayerDataIOListener;
-import com.gmail.tracebachi.DeltaEssentials.Listeners.PlayerLockListener;
-import com.gmail.tracebachi.DeltaEssentials.Listeners.TeleportListener;
-import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayer;
+import com.gmail.tracebachi.DeltaEssentials.Listeners.*;
+import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
+import com.gmail.tracebachi.DeltaExecutor.DeltaExecutor;
 import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashMap;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedis;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
-import com.gmail.tracebachi.DeltaRedis.Spigot.WaitingAsyncScheduler;
 import com.google.common.base.Preconditions;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.messaging.Messenger;
-import org.bukkit.scheduler.BukkitTask;
+
+import java.util.Map;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/5/15.
  */
 public class DeltaEssentials extends JavaPlugin
 {
-    private boolean debugMode;
-    private boolean allowTaskScheduling;
+    private CaseInsensitiveHashMap<DeltaEssPlayerData> playerMap = new CaseInsensitiveHashMap<>();
 
-    private Settings settings;
-    private WaitingAsyncScheduler asyncScheduler;
-    private CaseInsensitiveHashMap<DeltaEssPlayer> playerMap = new CaseInsensitiveHashMap<>();
-
-    private ChatListener chatListener;
+    private SharedChatListener sharedChatListener;
     private PlayerLockListener playerLockListener;
     private PlayerDataIOListener playerDataIOListener;
     private TeleportListener teleportListener;
-
-    private BukkitTask timedPlayerLockTask;
-    private TimedPlayerLockManager timedPlayerLockManager;
+    private TellChatListener tellChatListener;
 
     private CommandDisposal commandDisposal;
     private CommandJail commandJail;
@@ -78,16 +69,15 @@ public class DeltaEssentials extends JavaPlugin
     public void onEnable()
     {
         reloadConfig();
-        debugMode = getConfig().getBoolean("DebugMode", false);
-        settings = new Settings(this);
-        asyncScheduler = new WaitingAsyncScheduler(this);
+        Settings.read(getConfig());
+        Settings.setSyncTaskSchedulingAllowed(true);
 
         PluginManager pluginManager = getServer().getPluginManager();
         DeltaRedis deltaRedisPlugin = (DeltaRedis) pluginManager.getPlugin("DeltaRedis");
         DeltaRedisApi deltaRedisApi = deltaRedisPlugin.getDeltaRedisApi();
 
         // Add a player for the console so the console's reply targets are stored
-        playerMap.put("console", new DeltaEssPlayer());
+        playerMap.put("console", new DeltaEssPlayerData());
 
         commandDisposal = new CommandDisposal(this);
         commandDisposal.register();
@@ -125,11 +115,14 @@ public class DeltaEssentials extends JavaPlugin
         commandTpDeny = new CommandTpDeny(this);
         commandTpDeny.register();
 
-        chatListener = new ChatListener(deltaRedisApi, this);
-        chatListener.register();
+        sharedChatListener = new SharedChatListener(deltaRedisApi, this);
+        sharedChatListener.register();
 
         teleportListener = new TeleportListener(deltaRedisApi, this);
         teleportListener.register();
+
+        tellChatListener = new TellChatListener(deltaRedisApi, this);
+        tellChatListener.register();
 
         playerLockListener = new PlayerLockListener(this);
         playerLockListener.register();
@@ -137,46 +130,48 @@ public class DeltaEssentials extends JavaPlugin
         playerDataIOListener = new PlayerDataIOListener(this);
         playerDataIOListener.register();
 
-        timedPlayerLockManager = new TimedPlayerLockManager(playerLockListener);
-
         Messenger messenger = getServer().getMessenger();
         messenger.registerOutgoingPluginChannel(this, "BungeeCord");
-
-        allowTaskScheduling = true;
-
-        // Schedule timed cleanup
-        timedPlayerLockTask = getServer().getScheduler().runTaskTimer(this,
-            () -> timedPlayerLockManager.cleanup(), 20, 20);
     }
 
     @Override
     public void onDisable()
     {
-        // Cancel timed cleanup
-        timedPlayerLockTask.cancel();
-        timedPlayerLockTask = null;
+        Settings.setSyncTaskSchedulingAllowed(false);
 
-        allowTaskScheduling = false;
+        // Save player data for all players
+        for(Player player : Bukkit.getOnlinePlayers())
+        {
+            try
+            {
+                playerDataIOListener.savePlayer(player, null);
+            }
+            catch(Exception ex)
+            {
+                ex.printStackTrace();
+                severe("Failed to save player data on shutdown for " +
+                    player.getName());
+            }
+        }
+
+        // Shutdown the async executor (will wait for all tasks to complete)
+        DeltaExecutor.instance().shutdown();
 
         // Order matters. Shut down the IO listener before the inventory lock listener
         playerDataIOListener.shutdown();
         playerDataIOListener = null;
 
-        timedPlayerLockManager.shutdown();
-        timedPlayerLockManager = null;
-
         playerLockListener.shutdown();
         playerLockListener = null;
 
-        // Wait for any async tasks to finish
-        asyncScheduler.waitForTasks(true);
-        asyncScheduler = null;
+        tellChatListener.shutdown();
+        tellChatListener = null;
 
         teleportListener.shutdown();
         teleportListener = null;
 
-        chatListener.shutdown();
-        chatListener = null;
+        sharedChatListener.shutdown();
+        sharedChatListener = null;
 
         commandDisposal.shutdown();
         commandDisposal = null;
@@ -230,13 +225,13 @@ public class DeltaEssentials extends JavaPlugin
 
     public void debug(String message)
     {
-        if(debugMode)
+        if(Settings.isDebugEnabled())
         {
             getLogger().info("[Debug] " + message);
         }
     }
 
-    public CaseInsensitiveHashMap<DeltaEssPlayer> getPlayerMap()
+    public Map<String, DeltaEssPlayerData> getPlayerMap()
     {
         return playerMap;
     }
@@ -246,24 +241,19 @@ public class DeltaEssentials extends JavaPlugin
         return playerLockListener;
     }
 
-    public TimedPlayerLockManager getTimedPlayerLockManager()
-    {
-        return timedPlayerLockManager;
-    }
-
     public TeleportListener getTeleportListener()
     {
         return teleportListener;
     }
 
-    public Settings getSettings()
+    public TellChatListener getTellChatListener()
     {
-        return settings;
+        return tellChatListener;
     }
 
     public void scheduleTaskSync(Runnable runnable)
     {
-        if(allowTaskScheduling)
+        if(Settings.isSyncTaskSchedulingAllowed())
         {
             getServer().getScheduler().runTask(this, runnable);
         }
@@ -275,14 +265,7 @@ public class DeltaEssentials extends JavaPlugin
 
     public void scheduleTaskAsync(Runnable runnable)
     {
-        if(allowTaskScheduling)
-        {
-            asyncScheduler.scheduleTask(runnable);
-        }
-        else
-        {
-            runnable.run();
-        }
+        DeltaExecutor.instance().execute(runnable);
     }
 
     public boolean sendToServer(Player player, String destination)
@@ -306,7 +289,7 @@ public class DeltaEssentials extends JavaPlugin
             }
         }
 
-        playerDataIOListener.savePlayerData(player, destination);
+        playerDataIOListener.savePlayer(player, destination);
         return true;
     }
 }

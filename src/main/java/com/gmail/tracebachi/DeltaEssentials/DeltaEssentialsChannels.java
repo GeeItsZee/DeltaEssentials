@@ -24,7 +24,8 @@ public interface DeltaEssentialsChannels
     String MOVE = "DE-Move";
     String JAIL = "DE-Jail";
     String TELL = "DE-Tell";
-    String SHARED_CHAT = "DE-HeroChat";
+    String TELL_SPY = "DE-TellSpy";
+    String SHARED_CHAT = "DE-SharedChat";
     String TP = "DE-TP";
     String TP_HERE = "DE-TPHere";
     String TPA_HERE = "DE-TPAHere";

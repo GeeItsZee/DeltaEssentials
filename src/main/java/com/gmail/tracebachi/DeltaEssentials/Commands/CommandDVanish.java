@@ -30,13 +30,13 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/4/15.
+ * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
  */
-public class CommandSocialSpy implements TabExecutor, Registerable, Shutdownable
+public class CommandDVanish implements TabExecutor, Registerable, Shutdownable
 {
     private DeltaEssentials plugin;
 
-    public CommandSocialSpy(DeltaEssentials plugin)
+    public CommandDVanish(DeltaEssentials plugin)
     {
         this.plugin = plugin;
     }
@@ -44,15 +44,15 @@ public class CommandSocialSpy implements TabExecutor, Registerable, Shutdownable
     @Override
     public void register()
     {
-        plugin.getCommand("socialspy").setExecutor(this);
-        plugin.getCommand("socialspy").setTabCompleter(this);
+        plugin.getCommand("dvanish").setExecutor(this);
+        plugin.getCommand("dvanish").setTabCompleter(this);
     }
 
     @Override
     public void unregister()
     {
-        plugin.getCommand("socialspy").setExecutor(null);
-        plugin.getCommand("socialspy").setTabCompleter(null);
+        plugin.getCommand("dvanish").setExecutor(null);
+        plugin.getCommand("dvanish").setTabCompleter(null);
     }
 
     @Override
@@ -73,19 +73,19 @@ public class CommandSocialSpy implements TabExecutor, Registerable, Shutdownable
     {
         if(args.length < 1)
         {
-            sender.sendMessage(Settings.format("SocialSpyUsage"));
+            sender.sendMessage(Settings.format("DVanishUsage"));
             return true;
         }
 
         if(!(sender instanceof Player))
         {
-            sender.sendMessage(Settings.format("PlayersOnly", "/socialspy"));
+            sender.sendMessage(Settings.format("PlayersOnly", "/dvanish"));
             return true;
         }
 
-        if(!sender.hasPermission("DeltaEss.SocialSpy"))
+        if(!sender.hasPermission("DeltaEss.DVanish"))
         {
-            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.SocialSpy"));
+            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.DVanish"));
             return true;
         }
 
@@ -99,19 +99,19 @@ public class CommandSocialSpy implements TabExecutor, Registerable, Shutdownable
 
         if(args[0].equalsIgnoreCase("on"))
         {
-            playerData.setSocialSpyEnabled(true);
+            playerData.setVanishEnabled(true);
 
-            sender.sendMessage(Settings.format("SocialSpyChange", "enabled"));
+            sender.sendMessage(Settings.format("DVanishChange", "enabled"));
         }
         else if(args[0].equalsIgnoreCase("off"))
         {
-            playerData.setSocialSpyEnabled(false);
+            playerData.setVanishEnabled(false);
 
-            sender.sendMessage(Settings.format("SocialSpyChange", "enabled"));
+            sender.sendMessage(Settings.format("DVanishChange", "disabled"));
         }
         else
         {
-            sender.sendMessage(Settings.format("SocialSpyUsage"));
+            sender.sendMessage(Settings.format("DVanishUsage"));
         }
 
         return true;

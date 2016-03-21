@@ -99,13 +99,11 @@ public class CommandJail implements TabExecutor, Registerable, Shutdownable, Lis
 
         if(!sender.hasPermission("DeltaEss.Jail"))
         {
-            sender.sendMessage(Prefixes.FAILURE + "You do not have the " +
-                Prefixes.input("DeltaEss.Jail") + " permission.");
+            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Jail"));
             return true;
         }
 
-        Settings settings = plugin.getSettings();
-        String jailServer = settings.getJailServer();
+        String jailServer = Settings.getJailServer();
         String senderName = sender.getName();
         String toJailName = args[0];
         String jailName = "";
@@ -116,7 +114,7 @@ public class CommandJail implements TabExecutor, Registerable, Shutdownable, Lis
         {
             jailName = args[1];
 
-            if(!settings.isValidJail(jailName))
+            if(!Settings.isValidJail(jailName))
             {
                 sender.sendMessage(Prefixes.FAILURE + Prefixes.input(jailName) +
                     " is not a valid jail.");

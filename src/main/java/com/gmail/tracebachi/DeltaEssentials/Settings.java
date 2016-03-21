@@ -17,8 +17,11 @@
 package com.gmail.tracebachi.DeltaEssentials;
 
 import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashSet;
+import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.text.MessageFormat;
@@ -29,147 +32,175 @@ import java.util.*;
  */
 public class Settings
 {
-    private boolean startWithLockdown;
-    private boolean isDefaultGameModeForced;
-    private boolean loadAndSavePotionEffects;
-    private String lockdownMessage;
-    private String playerDataFolderPath;
-    private String jailServer;
-    private GameMode defaultGameMode;
-    private Set<GameMode> disabledGameModes;
-    private Map<String, String> sharedChatChannels;
-    private List<String> validJails;
-    private CaseInsensitiveHashSet blockedServers;
-    private HashMap<String, MessageFormat> formatMap;
+    private static volatile boolean debugEnabled;
+    private static volatile boolean syncTaskSchedulingAllowed;
+    private static boolean inLockdown;
+    private static boolean defaultGameModeForced;
+    private static boolean loadAndSavePotionEffects;
+    private static String jailServer;
+    private static GameMode defaultGameMode;
+    private static Set<GameMode> disabledGameModes;
+    private static Map<String, Boolean> sharedChatChannels;
+    private static List<String> validJails;
+    private static CaseInsensitiveHashSet blockedServers;
+    private static List<String> preSaveCommands;
+    private static HashMap<String, MessageFormat> formatMap;
 
-    public Settings(DeltaEssentials plugin)
+    private Settings() {}
+
+    public static void read(FileConfiguration config)
     {
-        this.startWithLockdown = plugin.getConfig().getBoolean("StartWithLockdown");
-        this.isDefaultGameModeForced = plugin.getConfig().getBoolean("ForceDefaultGameMode");
-        this.loadAndSavePotionEffects = plugin.getConfig().getBoolean("LoadAndSavePotionEffects");
-        this.lockdownMessage = plugin.getConfig().getString("LockdownMessage");
-        this.playerDataFolderPath = plugin.getConfig().getString("PlayerDataFolder");
-        this.jailServer = plugin.getConfig().getString("JailServer");
-        this.defaultGameMode = getGameMode(plugin.getConfig().getString("DefaultGameMode"));
-        this.validJails = plugin.getConfig().getStringList("ValidJails");
-        this.disabledGameModes = new HashSet<>();
-        this.sharedChatChannels = new HashMap<>();
-        this.blockedServers = new CaseInsensitiveHashSet();
-        this.formatMap = new HashMap<>();
-
         ConfigurationSection section;
 
-        section = plugin.getConfig().getConfigurationSection("SharedChatChannels");
+        debugEnabled = config.getBoolean("Debug");
+        inLockdown = config.getBoolean("StartWithLockdown");
+        defaultGameModeForced = config.getBoolean("ForceDefaultGameMode");
+        loadAndSavePotionEffects = config.getBoolean("LoadAndSavePotionEffects");
+        jailServer = config.getString("JailServer");
+        defaultGameMode = getGameMode(config.getString("DefaultGameMode"));
+        validJails = config.getStringList("ValidJails");
+        disabledGameModes = new HashSet<>();
+        sharedChatChannels = new HashMap<>();
+        blockedServers = new CaseInsensitiveHashSet();
+        preSaveCommands = new ArrayList<>();
+        formatMap = new HashMap<>();
+
+        blockedServers.addAll(config.getStringList("BlockedServers"));
+        preSaveCommands.addAll(config.getStringList("PreSaveCommands"));
+
+        for(String modeName : config.getStringList("DisabledGameModes"))
+        {
+            disabledGameModes.add(getGameMode(modeName));
+        }
+
+        section = config.getConfigurationSection("SharedChatChannels");
+
         if(section != null)
         {
             for(String channel : section.getKeys(false))
             {
-                this.sharedChatChannels.put(channel, section.getString(channel));
+                sharedChatChannels.put(channel, section.getBoolean(channel, true));
             }
         }
 
-        section = plugin.getConfig().getConfigurationSection("Formats");
+        section = config.getConfigurationSection("Formats");
+
         if(section != null)
         {
             for(String formatKey : section.getKeys(false))
             {
-                String format = section.getString(formatKey);
-                this.formatMap.put(formatKey, new MessageFormat(format));
+                String format = ChatColor.translateAlternateColorCodes(
+                    '&', section.getString(formatKey));
+
+                formatMap.put(formatKey, new MessageFormat(format));
             }
         }
-
-        for(String modeName : plugin.getConfig().getStringList("DisabledGameModes"))
-        {
-            try
-            {
-                this.disabledGameModes.add(GameMode.valueOf(modeName.toUpperCase()));
-            }
-            catch(IllegalArgumentException ignore) {}
-        }
-
-        for(String server : plugin.getConfig().getStringList("BlockedServers"))
-        {
-            this.blockedServers.add(server);
-        }
-
-        File file = new File(playerDataFolderPath);
-        file.mkdirs();
     }
 
-    public File getPlayerDataFileFor(String name)
+    public static File getPlayerDataFileFor(String playerName)
     {
-        String lowerCaseName = name.toLowerCase();
-        File directory = new File(playerDataFolderPath +
-            File.separator + lowerCaseName.charAt(0));
+        String lowerCaseName = playerName.toLowerCase();
+        File directory = new File(
+            "plugins" + File.separator +
+            "DeltaEssentials" + File.separator +
+            "PlayerData" + File.separator +
+            lowerCaseName.charAt(0));
 
         directory.mkdirs();
+
         return new File(directory, lowerCaseName + ".yml");
     }
 
-    public boolean isStartWithLockdown()
+    public static boolean isDebugEnabled()
     {
-        return startWithLockdown;
+        return debugEnabled;
     }
 
-    public boolean canLoadAndSavePotionEffects()
+    public static void setDebugEnabled(boolean debugEnabled)
+    {
+        Settings.debugEnabled = debugEnabled;
+    }
+
+    public static boolean isSyncTaskSchedulingAllowed()
+    {
+        return syncTaskSchedulingAllowed;
+    }
+
+    public static void setSyncTaskSchedulingAllowed(boolean syncTaskSchedulingAllowed)
+    {
+        Settings.syncTaskSchedulingAllowed = syncTaskSchedulingAllowed;
+    }
+
+    public static boolean isInLockdown()
+    {
+        return inLockdown;
+    }
+
+    public static void setInLockdown(boolean inLockdown)
+    {
+        Settings.inLockdown = inLockdown;
+    }
+
+    public static boolean canLoadAndSavePotionEffects()
     {
         return loadAndSavePotionEffects;
     }
 
-    public String getLockdownMessage()
-    {
-        return lockdownMessage;
-    }
-
-    public String getJailServer()
+    public static String getJailServer()
     {
         return jailServer;
     }
 
-    public GameMode getDefaultGameMode()
+    public static GameMode getDefaultGameMode()
     {
         return defaultGameMode;
     }
 
-    public boolean isDefaultGameModeForced()
+    public static boolean isDefaultGameModeForced()
     {
-        return isDefaultGameModeForced;
+        return defaultGameModeForced;
     }
 
-    public boolean isGameModeDisabled(GameMode gameMode)
+    public static boolean isGameModeDisabled(GameMode gameMode)
     {
         return disabledGameModes.contains(gameMode);
     }
 
-    public String getSharedChatChannelPermission(String channel)
+    public static Boolean useHeroChatForSharedChatChannel(String channel)
     {
         return sharedChatChannels.get(channel);
     }
 
-    public boolean isServerBlocked(String serverName)
+    public static boolean isServerBlocked(String serverName)
     {
         return blockedServers.contains(serverName);
     }
 
-    public boolean isValidJail(String jail)
+    public static void runPreSaveCommands(Player player)
+    {
+        preSaveCommands.forEach(player::performCommand);
+    }
+
+    public static boolean isValidJail(String jail)
     {
         return validJails.contains(jail);
     }
 
-    public String format(String key, String... args)
+    public static String format(String key, String... args)
     {
         MessageFormat messageFormat = formatMap.get(key);
+
         if(messageFormat != null)
         {
             return messageFormat.format(args);
         }
         else
         {
-            return "Format (" + key + ") has not been specified.";
+            return "Unspecified format: " + key;
         }
     }
 
-    private GameMode getGameMode(String source)
+    private static GameMode getGameMode(String source)
     {
         if(source == null) { return GameMode.SURVIVAL; }
 

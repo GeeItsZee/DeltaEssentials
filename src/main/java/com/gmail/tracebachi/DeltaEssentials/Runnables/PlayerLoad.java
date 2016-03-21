@@ -18,7 +18,10 @@ package com.gmail.tracebachi.DeltaEssentials.Runnables;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.Listeners.PlayerDataIOListener;
+import com.gmail.tracebachi.DeltaEssentials.Settings;
+import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerEntry;
+import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerStats;
 import com.gmail.tracebachi.DeltaEssentials.Storage.SavedInventory;
 import com.gmail.tracebachi.DeltaEssentials.Utils.InventoryUtils;
 import com.gmail.tracebachi.DeltaEssentials.Utils.LockedFileUtil;
@@ -29,11 +32,9 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffect;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/12/15.
@@ -41,17 +42,16 @@ import java.util.List;
 public class PlayerLoad implements Runnable
 {
     private final String name;
-    private final File playerDataFile;
     private final PlayerDataIOListener listener;
     private final DeltaEssentials plugin;
 
     public PlayerLoad(String name, PlayerDataIOListener listener, DeltaEssentials plugin)
     {
         Preconditions.checkNotNull(name, "Name cannot be null.");
+        Preconditions.checkNotNull(listener, "PlayerDataIOListener cannot be null.");
         Preconditions.checkNotNull(plugin, "Plugin cannot be null.");
 
         this.name = name.toLowerCase();
-        this.playerDataFile = plugin.getSettings().getPlayerDataFileFor(this.name);
         this.listener = listener;
         this.plugin = plugin;
     }
@@ -59,6 +59,8 @@ public class PlayerLoad implements Runnable
     @Override
     public void run()
     {
+        File playerDataFile = Settings.getPlayerDataFileFor(name);
+
         if(!playerDataFile.exists())
         {
             onNotFoundFailure();
@@ -107,33 +109,38 @@ public class PlayerLoad implements Runnable
         ItemStack[] itemStacks;
         ConfigurationSection section;
         SavedInventory savedInventory;
-        List<PotionEffect> effects;
         PlayerEntry entry = new PlayerEntry(name);
+        PlayerStats playerStats = new PlayerStats();
+        DeltaEssPlayerData playerData = new DeltaEssPlayerData();
 
-        entry.setHealth(config.getDouble("Health", 20.0));
-        entry.setFoodLevel(config.getInt("Hunger", 20));
-        entry.setXpLevel(config.getInt("XpLevel", 0));
-        entry.setXpProgress(config.getDouble("XpProgress", 0.0));
-        entry.setGameMode(GameMode.valueOf(config.getString("Gamemode", "SURVIVAL")));
-        entry.setSocialSpyEnabled(config.getBoolean("SocialSpyEnabled", false));
-        entry.setTeleportDenyEnabled(config.getBoolean("TeleportDenyEnabled", false));
-        entry.setLastReplyTarget(config.getString("LastReplyTarget", ""));
-        entry.setMetaData(config.getConfigurationSection("MetaData"));
-
-        effects = PotionEffectUtils.toEffectList(config.getStringList("Effects"));
-        entry.setPotionEffects(effects);
-
-        section = config.getConfigurationSection("Survival");
-        savedInventory = InventoryUtils.toSavedInventory(section);
-        entry.setSurvival(savedInventory);
-
-        section = config.getConfigurationSection("Creative");
-        savedInventory = InventoryUtils.toSavedInventory(section);
-        entry.setCreative(savedInventory);
+        playerStats.setHealth(config.getDouble("Health", 20.0));
+        playerStats.setFoodLevel(config.getInt("Hunger", 20));
+        playerStats.setXpLevel(config.getInt("XpLevel", 0));
+        playerStats.setXpProgress((float) config.getDouble("XpProgress", 0.0));
+        playerStats.setGameMode(GameMode.valueOf(config.getString("Gamemode", "SURVIVAL")));
+        playerStats.setPotionEffects(PotionEffectUtils.toEffectList(config.getStringList("Effects")));
 
         section = config.getConfigurationSection("EnderChest");
         itemStacks = InventoryUtils.toItemStacks(section, 27);
-        entry.setEnderChest(itemStacks);
+        playerStats.setEnderChest(itemStacks);
+
+        playerData.setSocialSpyEnabled(config.getBoolean("SocialSpyEnabled", false));
+        playerData.setTeleportDenyEnabled(config.getBoolean("TeleportDenyEnabled", false));
+        playerData.setVanishEnabled(config.getBoolean("VanishEnabled", false));
+        playerData.setReplyTo(config.getString("ReplyTo", ""));
+
+        section = config.getConfigurationSection("Survival");
+        savedInventory = InventoryUtils.toSavedInventory(section);
+        playerData.setSurvival(savedInventory);
+
+        section = config.getConfigurationSection("Creative");
+        savedInventory = InventoryUtils.toSavedInventory(section);
+        playerData.setCreative(savedInventory);
+
+        entry.setPlayerStats(playerStats);
+        entry.setDeltaEssPlayerData(playerData);
+        entry.setMetaData(config.getConfigurationSection("MetaData"));
+
         return entry;
     }
 }

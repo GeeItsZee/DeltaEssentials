@@ -18,9 +18,9 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
+import com.gmail.tracebachi.DeltaEssentials.Settings;
+import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
-import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
-import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
@@ -80,22 +80,30 @@ public class CommandTpAccept implements TabExecutor, Registerable, Shutdownable
     {
         if(!(sender instanceof Player))
         {
-            CommandMessageUtil.onlyForPlayers(sender, "tpaccept");
+            sender.sendMessage(Settings.format("PlayersOnly", "/tpaccept"));
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.Tpa.Accept"))
         {
-            CommandMessageUtil.noPermission(sender, "DeltaEss.Tpa.Accept");
+            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Tpa.Accept"));
             return true;
         }
 
-        TeleportRequest request = plugin.getTeleportListener().getRequestMap()
-            .get(sender.getName());
+        DeltaEssPlayerData playerData = plugin.getPlayerMap().get(sender.getName());
+
+        if(playerData == null)
+        {
+            sender.sendMessage(Settings.format("PlayerDataNotLoaded"));
+            return true;
+        }
+
+        TeleportRequest request = plugin.getTeleportListener()
+            .getRequestMap().get(sender.getName());
 
         if(request == null)
         {
-            sender.sendMessage(Prefixes.FAILURE + "You do not have a pending TPA request.");
+            sender.sendMessage(Settings.format("NoPendingTeleportRequest"));
             return true;
         }
 
@@ -111,15 +119,13 @@ public class CommandTpAccept implements TabExecutor, Registerable, Shutdownable
 
         Player destPlayer = Bukkit.getPlayer(request.getSender());
 
-        if(destPlayer != null)
+        if(destPlayer == null)
         {
-            plugin.getTeleportListener().teleport(player, destPlayer, PlayerTpEvent.TeleportType.TPA_HERE);
-        }
-        else
-        {
-            CommandMessageUtil.playerOffline(sender, request.getSender());
+            sender.sendMessage(Settings.format("PlayerOffline", request.getSender()));
+            return true;
         }
 
+        plugin.getTeleportListener().teleport(player, destPlayer, PlayerTpEvent.TeleportType.TPA_HERE);
         return true;
     }
 }

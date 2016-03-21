@@ -27,14 +27,16 @@ import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent;
 import org.bukkit.event.EventHandler;
 
+import static com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent.DELTA_PATTERN;
+
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
  */
-public class ChatListener extends DeltaEssentialsListener
+public class SharedChatListener extends DeltaEssentialsListener
 {
     private DeltaRedisApi deltaRedisApi;
 
-    public ChatListener(DeltaRedisApi deltaRedisApi, DeltaEssentials plugin)
+    public SharedChatListener(DeltaRedisApi deltaRedisApi, DeltaEssentials plugin)
     {
         super(plugin);
         this.deltaRedisApi = deltaRedisApi;
@@ -47,20 +49,19 @@ public class ChatListener extends DeltaEssentialsListener
         super.shutdown();
     }
 
+    // TODO Get rid of HeroChat dependency. Make a plugin and an event that plugin can fire to trigger this
     @EventHandler
     public void onChatComplete(ChatCompleteEvent event)
     {
-        Settings settings = plugin.getSettings();
         String channel = event.getChannel().getName();
-        String permission = settings.getSharedChatChannelPermission(channel);
+        Boolean useHeroChat = Settings.useHeroChatForSharedChatChannel(channel);
 
-        if(permission != null)
-        {
-            String message =  event.getMsg();
-            deltaRedisApi.publish(Servers.SPIGOT,
-                DeltaEssentialsChannels.SHARED_CHAT,
-                channel, permission, message);
-        }
+        if(!useHeroChat) return;
+
+        String message =  event.getMsg();
+
+        deltaRedisApi.publish(Servers.SPIGOT, DeltaEssentialsChannels.SHARED_CHAT,
+            channel, useHeroChat.toString(), message);
     }
 
     @EventHandler
@@ -74,21 +75,20 @@ public class ChatListener extends DeltaEssentialsListener
             String message = splitMessage[2];
             Channel channel = Herochat.getChannelManager().getChannel(channelName);
 
-            if(channel != null)
-            {
-                if(permission.equalsIgnoreCase("NoPerm"))
-                {
-                    channel.sendRawMessage(message);
-                }
-                else
-                {
-                    plugin.getServer().broadcast(message, permission);
-                }
-            }
-            else
+            if(channel == null)
             {
                 plugin.severe("HeroChat channel (" + channelName + ") not found!");
+                return;
             }
+
+            if(permission.equalsIgnoreCase("false"))
+            {
+                channel.sendRawMessage(message);
+                return;
+            }
+
+            // TODO SharedChatEvent
+            plugin.getServer().broadcast(message, permission);
         }
     }
 }

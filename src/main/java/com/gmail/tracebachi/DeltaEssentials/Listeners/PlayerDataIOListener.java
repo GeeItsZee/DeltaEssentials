@@ -18,12 +18,15 @@ package com.gmail.tracebachi.DeltaEssentials.Listeners;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerLoadedEvent;
+import com.gmail.tracebachi.DeltaEssentials.Events.PlayerPreLoadEvent;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerPreSaveEvent;
+import com.gmail.tracebachi.DeltaEssentials.Events.PlayerSavedEvent;
 import com.gmail.tracebachi.DeltaEssentials.Runnables.PlayerLoad;
 import com.gmail.tracebachi.DeltaEssentials.Runnables.PlayerSave;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
-import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayer;
+import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerEntry;
+import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerStats;
 import com.gmail.tracebachi.DeltaEssentials.Storage.SavedInventory;
 import com.gmail.tracebachi.DeltaEssentials.Utils.xAuthUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
@@ -36,6 +39,7 @@ import de.luricos.bukkit.xAuth.event.player.xAuthPlayerJoinEvent;
 import de.luricos.bukkit.xAuth.xAuthPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -57,20 +61,6 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
     @Override
     public void shutdown()
     {
-        for(Player player : Bukkit.getOnlinePlayers())
-        {
-            try
-            {
-                savePlayerData(player, null);
-            }
-            catch(Exception e)
-            {
-                e.printStackTrace();
-                plugin.severe("Failed to save player data on shutdown for " +
-                    player.getName());
-            }
-        }
-
         super.shutdown();
     }
 
@@ -81,35 +71,31 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onCommandLoginEvent(xAuthCommandLoginEvent event)
     {
-        if(event.getStatus() == xAuthPlayer.Status.AUTHENTICATED)
-        {
-            String name = event.getPlayerName();
+        if(event.getStatus() != xAuthPlayer.Status.AUTHENTICATED) return;
 
-            if(!plugin.getPlayerMap().containsKey(name))
-            {
-                if(Bukkit.getPlayer(name) != null)
-                {
-                    loadPlayerData(name);
-                }
-            }
-        }
+        String name = event.getPlayerName();
+        Player player = Bukkit.getPlayer(name);
+
+        if(player == null) return;
+
+        if(plugin.getPlayerMap().containsKey(name)) return;
+
+        loadPlayer(player);
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPlayerJoinEvent(xAuthPlayerJoinEvent event)
     {
-        if(event.getStatus() == xAuthPlayer.Status.AUTHENTICATED)
-        {
-            String name = event.getPlayerName();
+        if(event.getStatus() != xAuthPlayer.Status.AUTHENTICATED) return;
 
-            if(!plugin.getPlayerMap().containsKey(name))
-            {
-                if(Bukkit.getPlayer(name) != null)
-                {
-                    loadPlayerData(name);
-                }
-            }
-        }
+        String name = event.getPlayerName();
+        Player player = Bukkit.getPlayer(name);
+
+        if(player == null) return;
+
+        if(plugin.getPlayerMap().containsKey(name)) return;
+
+        loadPlayer(player);
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
@@ -117,38 +103,36 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
     {
         String name = xAuthUtil.getPlayerNameFromRegisterEvent(event);
 
-        if(name == null) { return; }
+        if(name == null) return;
 
-        if(event.getAction() == xAuthCommandRegisterEvent.Action.PLAYER_REGISTERED)
-        {
-            if(!plugin.getPlayerMap().containsKey(name))
-            {
-                Player player = Bukkit.getPlayer(name);
+        if(event.getAction() != xAuthCommandRegisterEvent.Action.PLAYER_REGISTERED) return;
 
-                if(player != null)
-                {
-                    loadPlayerData(name);
-                }
-            }
-        }
+        Player player = Bukkit.getPlayer(name);
+
+        if(player == null) return;
+
+        if(plugin.getPlayerMap().containsKey(name)) return;
+
+        loadPlayer(player);
     }
 
     /**************************************************************************
      * Logout Event
      *************************************************************************/
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
+    @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerQuit(PlayerQuitEvent event)
     {
         Player player = event.getPlayer();
         String name = player.getName();
-        Long switchTime = plugin.getTimedPlayerLockManager().remove(name);
+        Long switchTime = plugin.getPlayerLockListener().remove(name);
 
+        // TODO Make the time configurable?
         if(switchTime == null || (System.currentTimeMillis() - switchTime) > 2000)
         {
             if(plugin.getPlayerMap().containsKey(name))
             {
-                savePlayerData(player, null);
+                savePlayer(player, null);
             }
         }
 
@@ -167,20 +151,19 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         String name = player.getName();
         GameMode originalMode = player.getGameMode();
         GameMode newMode = event.getNewGameMode();
-        Settings settings = plugin.getSettings();
-        DeltaEssPlayer dePlayer = plugin.getPlayerMap().get(name);
+        DeltaEssPlayerData playerData = plugin.getPlayerMap().get(name);
+        String gameModeBypassPerm = "DeltaEss.DisabledGameModeBypass." + newMode.name();
 
         // Ignore game mode changes to the same mode
-        if(originalMode == event.getNewGameMode()) { return; }
+        if(originalMode == event.getNewGameMode()) return;
 
         // Ignore if DeltaEssPlayer does not exist
-        if(dePlayer == null) { return; }
+        if(playerData == null) return;
 
         // Check if the game mode is disabled
-        if(settings.isGameModeDisabled(newMode) &&
-            !player.hasPermission("DeltaEss.DisabledGameModeBypass." + newMode.name()))
+        if(Settings.isGameModeDisabled(newMode) && !player.hasPermission(gameModeBypassPerm))
         {
-            player.sendMessage(Prefixes.FAILURE + Prefixes.input(newMode.name()) + " mode is disabled.");
+            player.sendMessage(Settings.format("NoPermission", gameModeBypassPerm));
             event.setCancelled(true);
             return;
         }
@@ -188,52 +171,52 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         // Prevent game mode change during saves
         if(plugin.getPlayerLockListener().isLocked(name))
         {
-            player.sendMessage(Prefixes.FAILURE +
-                "You are locked. Please wait until your data is loaded.");
+            player.sendMessage(Settings.format("PlayerLocked"));
             event.setCancelled(true);
             return;
         }
 
         // Prevent game mode changes unless there is no forced game mode or player is exempt
-        if(settings.isDefaultGameModeForced() && newMode != settings.getDefaultGameMode() &&
+        if(Settings.isDefaultGameModeForced() &&
+            newMode != Settings.getDefaultGameMode() &&
             !player.hasPermission("DeltaEss.ForcedGameModeBypass"))
         {
-            String defaultMode = settings.getDefaultGameMode().name();
+            String defaultMode = Settings.getDefaultGameMode().name();
 
-            player.sendMessage(Prefixes.FAILURE + Prefixes.input(defaultMode) + " is being forced.");
+            player.sendMessage(Settings.format("GameModeBeingForced", defaultMode));
             event.setCancelled(true);
             return;
         }
 
         // Ignore players that have the single inventory permission
-        if(player.hasPermission("DeltaEss.SingleInventory")) { return; }
+        if(player.hasPermission("DeltaEss.SingleInventory")) return;
 
         // Save the inventory associated with the old game mode
         if(originalMode == GameMode.SURVIVAL)
         {
-            dePlayer.setSurvival(new SavedInventory(player));
+            playerData.setSurvival(new SavedInventory(player));
         }
         else if(originalMode == GameMode.CREATIVE)
         {
-            dePlayer.setCreative(new SavedInventory(player));
+            playerData.setCreative(new SavedInventory(player));
         }
 
         // Apply the inventory associated with the new game mode
         if(newMode == GameMode.SURVIVAL)
         {
-            SavedInventory savedSurvival = dePlayer.getSurvival();
+            SavedInventory savedSurvival = playerData.getSurvival();
 
             player.getInventory().setContents(savedSurvival.getContents());
             player.getInventory().setArmorContents(savedSurvival.getArmor());
-            dePlayer.setSurvival(null);
+            playerData.setSurvival(null);
         }
         else if(newMode == GameMode.CREATIVE)
         {
-            SavedInventory savedCreative = dePlayer.getCreative();
+            SavedInventory savedCreative = playerData.getCreative();
 
             player.getInventory().setContents(savedCreative.getContents());
             player.getInventory().setArmorContents(savedCreative.getArmor());
-            dePlayer.setCreative(null);
+            playerData.setCreative(null);
         }
         else
         {
@@ -250,103 +233,120 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
     {
         Player player = Bukkit.getPlayer(name);
 
-        if(player != null)
-        {
-            DeltaEssPlayer dePlayer = new DeltaEssPlayer();
+        if(player == null) return;
 
-            plugin.getPlayerLockListener().remove(name);
-            plugin.getPlayerMap().put(name, dePlayer);
-            applyPlayerEntry(player, entry, dePlayer);
-        }
+        DeltaEssPlayerData playerData = new DeltaEssPlayerData();
+
+        plugin.getPlayerLockListener().remove(name);
+        plugin.getPlayerMap().put(name, playerData);
+
+        applyPlayerEntry(player, entry, playerData);
+
+        PlayerLoadedEvent loadedEvent = new PlayerLoadedEvent(player, entry.getMetaData());
+        Bukkit.getPluginManager().callEvent(loadedEvent);
     }
 
     public void onPlayerNotFound(String name)
     {
         Player player = Bukkit.getPlayer(name);
 
-        if(player != null)
+        if(player == null) return;
+
+        DeltaEssPlayerData playerData = new DeltaEssPlayerData();
+
+        plugin.getPlayerLockListener().remove(name);
+        plugin.getPlayerMap().put(name, playerData);
+
+        GameMode defaultGameMode = Settings.getDefaultGameMode();
+
+        if(player.getGameMode() != defaultGameMode)
         {
-            GameMode defaultGameMode = plugin.getSettings().getDefaultGameMode();
-            DeltaEssPlayer dePlayer = new DeltaEssPlayer();
-
-            plugin.getPlayerLockListener().remove(name);
-            plugin.getPlayerMap().put(name, dePlayer);
-
-            if(player.getGameMode() != defaultGameMode)
-            {
-                player.setGameMode(defaultGameMode);
-            }
-
-            PlayerLoadedEvent event = new PlayerLoadedEvent(player);
-            Bukkit.getPluginManager().callEvent(event);
+            player.setGameMode(defaultGameMode);
         }
+
+        PlayerLoadedEvent event = new PlayerLoadedEvent(player);
+        Bukkit.getPluginManager().callEvent(event);
     }
 
     public void onPlayerLoadException(String name)
     {
         Player player = Bukkit.getPlayer(name);
 
-        if(player != null)
-        {
-            player.sendMessage(Prefixes.FAILURE + "Failed to load inventory. " +
-                "Refer to the console for more details.");
-        }
+        if(player == null) return;
+
+        player.sendMessage(Prefixes.FAILURE + "Failed to load inventory.");
+        player.sendMessage(Prefixes.FAILURE + "Refer to the console for more details.");
     }
 
     public void onPlayerSaveSuccess(String name, String destServer)
     {
         Player player = Bukkit.getPlayer(name);
 
-        if(player != null)
-        {
-            if(destServer != null)
-            {
-                ByteArrayDataOutput output = ByteStreams.newDataOutput();
-                output.writeUTF("Connect");
-                output.writeUTF(destServer);
-                player.sendPluginMessage(plugin, "BungeeCord", output.toByteArray());
+        if(player == null) return;
 
-                plugin.getTimedPlayerLockManager().add(name);
-            }
-            else
-            {
-                plugin.getPlayerLockListener().remove(name);
-            }
+        PlayerSavedEvent savedEvent = new PlayerSavedEvent(name, player);
+        Bukkit.getPluginManager().callEvent(savedEvent);
+
+        if(destServer == null)
+        {
+            plugin.getPlayerLockListener().remove(name);
+            return;
         }
+
+        ByteArrayDataOutput output = ByteStreams.newDataOutput();
+        output.writeUTF("Connect");
+        output.writeUTF(destServer);
+        player.sendPluginMessage(plugin, "BungeeCord", output.toByteArray());
+
+        plugin.getPlayerLockListener().add(name, System.currentTimeMillis() + 15000);
     }
 
     public void onPlayerSaveException(String name)
     {
         Player player = Bukkit.getPlayer(name);
 
-        if(player != null)
-        {
-            player.sendMessage(Prefixes.FAILURE + "Failed to save inventory. " +
-                "Refer to the console for more details.");
-        }
+        if(player == null) return;
+
+        player.sendMessage(Prefixes.FAILURE + "Failed to save inventory.");
+        player.sendMessage(Prefixes.FAILURE + "Refer to the console for more details.");
     }
 
     /**************************************************************************
      * Player Loading / Saving Scheduling Methods
      *************************************************************************/
 
-    public void loadPlayerData(String name)
+    public void loadPlayer(Player player)
     {
+        Preconditions.checkNotNull(player);
+
+        PlayerPreLoadEvent preLoadEvent = new PlayerPreLoadEvent(player);
+        Bukkit.getPluginManager().callEvent(preLoadEvent);
+
+        String name = player.getName();
         PlayerLoad runnable = new PlayerLoad(name, this, plugin);
 
         plugin.getPlayerLockListener().add(name);
+
         plugin.debug("Scheduling async player data load for {name:" + name + "}" );
         plugin.scheduleTaskAsync(runnable);
     }
 
-    public void savePlayerData(Player player, String destServer)
+    public void savePlayer(Player player, String destServer)
     {
+        Preconditions.checkNotNull(player);
+
+        Settings.runPreSaveCommands(player);
+
+        PlayerPreSaveEvent preSaveEvent = new PlayerPreSaveEvent(player);
+        Bukkit.getPluginManager().callEvent(preSaveEvent);
+
         String name = player.getName();
-        DeltaEssPlayer dePlayer = plugin.getPlayerMap().get(name);
-        PlayerEntry entry = buildPlayerEntry(player, dePlayer);
+        DeltaEssPlayerData playerData = plugin.getPlayerMap().get(name);
+        PlayerEntry entry = buildPlayerEntry(player, playerData, preSaveEvent.getMetaData());
         PlayerSave runnable = new PlayerSave(entry, destServer, this, plugin);
 
         plugin.getPlayerLockListener().add(name);
+
         plugin.debug("Scheduling async player data save for {name:" + name + "}");
         plugin.scheduleTaskAsync(runnable);
     }
@@ -355,109 +355,101 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
      * Private Methods
      *************************************************************************/
 
-    private PlayerEntry buildPlayerEntry(Player player, DeltaEssPlayer dePlayer)
+    private PlayerEntry buildPlayerEntry(Player player, DeltaEssPlayerData playerData, ConfigurationSection metadata)
     {
-        Preconditions.checkNotNull(dePlayer);
+        Preconditions.checkNotNull(player);
+        Preconditions.checkNotNull(playerData);
+        Preconditions.checkNotNull(metadata);
 
-        PlayerPreSaveEvent preSaveEvent = new PlayerPreSaveEvent(player);
-        Bukkit.getPluginManager().callEvent(preSaveEvent);
-
-        Settings settings = plugin.getSettings();
+        PlayerStats playerStats = new PlayerStats(player);
         PlayerEntry entry = new PlayerEntry(player.getName());
         SavedInventory inventory = new SavedInventory(player);
 
-        entry.setHealth(player.getHealth());
-        entry.setFoodLevel(player.getFoodLevel());
-        entry.setXpLevel(player.getLevel());
-        entry.setXpProgress(player.getExp());
-        entry.setEnderChest(player.getEnderChest().getContents());
-        entry.setGameMode(player.getGameMode());
-        entry.setSocialSpyEnabled(dePlayer.isSocialSpyEnabled());
-        entry.setTeleportDenyEnabled(dePlayer.isTeleportDenyEnabled());
-        entry.setLastReplyTarget(dePlayer.getLastReplyTarget());
-        entry.setMetaData(preSaveEvent.getMetaData());
-
-        if(settings.canLoadAndSavePotionEffects())
+        if(!Settings.canLoadAndSavePotionEffects())
         {
-            entry.setPotionEffects(player.getActivePotionEffects());
+            playerStats.setPotionEffects(null);
         }
 
         if(player.hasPermission("DeltaEss.SingleInventory"))
         {
-            entry.setGameMode(player.getGameMode());
-            entry.setSurvival(inventory);
+            playerData.setSurvival(inventory);
+            playerData.setCreative(SavedInventory.EMPTY);
         }
         else if(player.getGameMode() == GameMode.SURVIVAL)
         {
-            entry.setSurvival(inventory);
-            entry.setCreative(dePlayer.getCreative());
+            playerData.setSurvival(inventory);
         }
         else if(player.getGameMode() == GameMode.CREATIVE)
         {
-            entry.setCreative(inventory);
-            entry.setSurvival(dePlayer.getSurvival());
+            playerData.setCreative(inventory);
         }
-        else
-        {
-            entry.setSurvival(dePlayer.getSurvival());
-            entry.setCreative(dePlayer.getCreative());
-        }
+
+        entry.setPlayerStats(playerStats);
+        entry.setDeltaEssPlayerData(playerData);
+        entry.setMetaData(metadata);
+
         return entry;
     }
 
-    private void applyPlayerEntry(Player player, PlayerEntry entry, DeltaEssPlayer dePlayer)
+    private void applyPlayerEntry(Player player, PlayerEntry entry, DeltaEssPlayerData playerData)
     {
-        Settings settings = plugin.getSettings();
-        GameMode defaultGameMode = settings.getDefaultGameMode();
-        boolean isDefaultGameModeForced = settings.isDefaultGameModeForced();
-        boolean bypassForced = player.hasPermission("DeltaEss.Forced.Bypass");
+        Preconditions.checkNotNull(player);
+        Preconditions.checkNotNull(entry);
+        Preconditions.checkNotNull(playerData);
 
-        dePlayer.setSurvival(entry.getSurvival());
-        dePlayer.setCreative(entry.getCreative());
-        dePlayer.setSocialSpyEnabled(entry.isSocialSpyEnabled());
-        dePlayer.setTeleportDenyEnabled(entry.isTeleportDenyEnabled());
-        dePlayer.setLastReplyTarget(entry.getLastReplyTarget());
+        PlayerStats playerStats = entry.getPlayerStats();
+        DeltaEssPlayerData dataFromEntry = entry.getDeltaEssPlayerData();
 
-        player.setHealth(entry.getHealth());
-        player.setFoodLevel(entry.getFoodLevel());
-        player.setLevel(entry.getXpLevel());
-        player.setExp((float) entry.getXpProgress());
-        player.getEnderChest().setContents(entry.getEnderChest());
+        player.setHealth(playerStats.getHealth());
+        player.setFoodLevel(playerStats.getFoodLevel());
+        player.setLevel(playerStats.getXpLevel());
+        player.setExp(playerStats.getXpProgress());
+        player.getEnderChest().setContents(playerStats.getEnderChest());
 
-        if(settings.canLoadAndSavePotionEffects())
+        if(Settings.canLoadAndSavePotionEffects())
         {
             for(PotionEffect effect : player.getActivePotionEffects())
             {
                 player.removePotionEffect(effect.getType());
             }
 
-            for(PotionEffect effect : entry.getPotionEffects())
+            for(PotionEffect effect : playerStats.getPotionEffects())
             {
                 player.addPotionEffect(effect);
             }
         }
 
+        playerData.setSurvival(dataFromEntry.getSurvival());
+        playerData.setCreative(dataFromEntry.getCreative());
+        playerData.setSocialSpyEnabled(dataFromEntry.isSocialSpyEnabled());
+        playerData.setTeleportDenyEnabled(dataFromEntry.isTeleportDenyEnabled());
+        playerData.setReplyTo(dataFromEntry.getReplyTo());
+        playerData.setVanishEnabled(dataFromEntry.isVanishEnabled());
+
         if(player.hasPermission("DeltaEss.SingleInventory"))
         {
-            SavedInventory survival = dePlayer.getSurvival();
+            SavedInventory survival = playerData.getSurvival();
+
             player.getInventory().setContents(survival.getContents());
             player.getInventory().setArmorContents(survival.getArmor());
-            dePlayer.setSurvival(null);
-            dePlayer.setCreative(null);
+            playerData.setSurvival(null);
+            playerData.setCreative(null);
         }
         else if(player.getGameMode() == GameMode.SURVIVAL)
         {
-            SavedInventory survival = dePlayer.getSurvival();
+            SavedInventory survival = playerData.getSurvival();
+
             player.getInventory().setContents(survival.getContents());
             player.getInventory().setArmorContents(survival.getArmor());
-            dePlayer.setSurvival(null);
+            playerData.setSurvival(null);
         }
         else if(player.getGameMode() == GameMode.CREATIVE)
         {
-            SavedInventory creative = dePlayer.getCreative();
+            SavedInventory creative = playerData.getCreative();
+
             player.getInventory().setContents(creative.getContents());
             player.getInventory().setArmorContents(creative.getArmor());
-            dePlayer.setCreative(null);
+            playerData.setCreative(null);
         }
         else
         {
@@ -465,19 +457,19 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
             player.getInventory().setArmorContents(new ItemStack[4]);
         }
 
-        if(bypassForced || !isDefaultGameModeForced)
+        GameMode defaultGameMode = Settings.getDefaultGameMode();
+        boolean bypassForced = player.hasPermission("DeltaEss.Forced.Bypass");
+
+        if(bypassForced || !Settings.isDefaultGameModeForced())
         {
-            if(player.getGameMode() != entry.getGameMode())
+            if(player.getGameMode() != playerStats.getGameMode())
             {
-                player.setGameMode(entry.getGameMode());
+                player.setGameMode(playerStats.getGameMode());
             }
         }
         else if(player.getGameMode() != defaultGameMode)
         {
             player.setGameMode(defaultGameMode);
         }
-
-        PlayerLoadedEvent loadedEvent = new PlayerLoadedEvent(player, entry.getMetaData());
-        Bukkit.getPluginManager().callEvent(loadedEvent);
     }
 }

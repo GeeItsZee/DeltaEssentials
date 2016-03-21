@@ -17,7 +17,7 @@
 package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
-import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
+import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import org.bukkit.command.Command;
@@ -62,13 +62,13 @@ public class CommandDisposal implements CommandExecutor, Shutdownable, Registera
     {
         if(!(sender instanceof Player))
         {
-            CommandMessageUtil.onlyForPlayers(sender, "disposal");
+            sender.sendMessage(Settings.format("PlayersOnly", "/disposal"));
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.Disposal"))
         {
-            CommandMessageUtil.noPermission(sender, "DeltaEss.Disposal");
+            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Disposal"));
             return true;
         }
 

@@ -14,41 +14,39 @@
  * You should have received a copy of the GNU General Public License
  * along with DeltaEssentials.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.gmail.tracebachi.DeltaEssentials.Listeners;
+package com.gmail.tracebachi.DeltaEssentials.Events;
 
-import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
-import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
-import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
+import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-import org.bukkit.event.Listener;
 
 /**
- * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 1/22/16.
+ * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/12/15.
  */
-public abstract class DeltaEssentialsListener implements Listener, Registerable, Shutdownable
+public class PlayerPreLoadEvent extends Event
 {
-    protected DeltaEssentials plugin;
+    private static final HandlerList handlers = new HandlerList();
 
-    public DeltaEssentialsListener(DeltaEssentials plugin)
+    private final Player player;
+
+    public PlayerPreLoadEvent(Player player)
     {
-        this.plugin = plugin;
+        this.player = player;
+    }
+
+    public Player getPlayer()
+    {
+        return player;
     }
 
     @Override
-    public void register()
+    public HandlerList getHandlers()
     {
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        return handlers;
     }
 
-    @Override
-    public void unregister()
+    public static HandlerList getHandlerList()
     {
-        HandlerList.unregisterAll(this);
-    }
-
-    @Override
-    public void shutdown()
-    {
-        this.plugin = null;
+        return handlers;
     }
 }

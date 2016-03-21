@@ -19,9 +19,9 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
+import com.gmail.tracebachi.DeltaEssentials.Settings;
+import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
-import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
-import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
@@ -81,19 +81,27 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
     {
         if(args.length < 1)
         {
-            sender.sendMessage(Prefixes.INFO + "/tphere <player>");
+            sender.sendMessage(Settings.format("TeleportHereUsage"));
             return true;
         }
 
         if(!(sender instanceof Player))
         {
-            CommandMessageUtil.onlyForPlayers(sender, "tphere");
+            sender.sendMessage(Settings.format("PlayersOnly", "/tphere"));
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.TpOther"))
         {
-            CommandMessageUtil.noPermission(sender, "DeltaEss.TpOther");
+            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.TpOther"));
+            return true;
+        }
+
+        DeltaEssPlayerData playerData = plugin.getPlayerMap().get(sender.getName());
+
+        if(playerData == null)
+        {
+            sender.sendMessage(Settings.format("PlayerDataNotLoaded"));
             return true;
         }
 
@@ -105,6 +113,7 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
         {
             plugin.getTeleportListener().teleport(toTp, (Player) sender,
                 PlayerTpEvent.TeleportType.TP_HERE);
+
             return true;
         }
 
@@ -116,7 +125,7 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
 
             if(cachedPlayer == null)
             {
-                CommandMessageUtil.playerOffline(sender, toTpName);
+                sendingPlayer.sendMessage(Settings.format("PlayerOffline", toTpName));
                 return;
             }
 

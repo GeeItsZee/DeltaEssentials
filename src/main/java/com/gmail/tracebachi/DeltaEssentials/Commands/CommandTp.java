@@ -19,8 +19,9 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
-import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
-import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
+import com.gmail.tracebachi.DeltaEssentials.Settings;
+import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
+import com.gmail.tracebachi.DeltaEssentials.Utils.MessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
@@ -80,7 +81,7 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
     {
         if(args.length < 1)
         {
-            sender.sendMessage(Prefixes.INFO + "/tp <player>");
+            sender.sendMessage(Settings.format("TeleportUsage"));
             return true;
         }
 
@@ -88,17 +89,25 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
         {
             if(!(sender instanceof Player))
             {
-                CommandMessageUtil.onlyForPlayers(sender, "tp <player>");
+                sender.sendMessage(Settings.format("PlayersOnly", "/tp <player>"));
+                return true;
             }
-            else if(!sender.hasPermission("DeltaEss.Tp"))
+
+            if(!sender.hasPermission("DeltaEss.Tp"))
             {
-                CommandMessageUtil.noPermission(sender, "DeltaEss.Tp");
+                sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Tp"));
+                return true;
             }
-            else
+
+            DeltaEssPlayerData playerData = plugin.getPlayerMap().get(sender.getName());
+
+            if(playerData == null)
             {
-                String destName = args[0];
-                handleTeleport((Player) sender, destName);
+                sender.sendMessage(Settings.format("PlayerDataNotLoaded"));
+                return true;
             }
+
+            handleTeleport((Player) sender, args[0]);
         }
         else
         {
@@ -108,16 +117,25 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
 
             if(firstPlayer == null)
             {
-                CommandMessageUtil.playerOffline(sender, firstName);
+                sender.sendMessage(Settings.format("PlayerOffline", firstName));
+                return true;
             }
-            else if(!sender.hasPermission("DeltaEss.TpOther"))
+
+            if(!sender.hasPermission("DeltaEss.TpOther"))
             {
-                CommandMessageUtil.noPermission(sender, "DeltaEss.TpOther");
+                sender.sendMessage(Settings.format("NoPermission", "DeltaEss.TpOther"));
+                return true;
             }
-            else
+
+            DeltaEssPlayerData playerData = plugin.getPlayerMap().get(firstName);
+
+            if(playerData == null)
             {
-                handleTeleport(firstPlayer, secondName);
+                sender.sendMessage(Settings.format("PlayerDataNotLoaded"));
+                return true;
             }
+
+            handleTeleport(firstPlayer, secondName);
         }
 
         return true;
@@ -136,6 +154,7 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
         {
             plugin.getTeleportListener().teleport(toTp, destination,
                 PlayerTpEvent.TeleportType.NORMAL_TP);
+
             return;
         }
 
@@ -147,7 +166,8 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
 
             if(cachedPlayer == null)
             {
-                CommandMessageUtil.playerOffline(player, destName);
+                MessageUtil.sendMessage(toTpName,
+                    Settings.format("PlayerOffline", destName));
                 return;
             }
 
@@ -180,9 +200,7 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
             return partialMatches.get(0);
         }
 
-        sender.sendMessage(Prefixes.FAILURE + "Multiple online players match " +
-            Prefixes.input(partial));
-
+        sender.sendMessage(Settings.format("TooManyAutoCompleteMatches", partial));
         return null;
     }
 }

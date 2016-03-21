@@ -17,13 +17,11 @@
 package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
-import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
-import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
+import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -91,16 +89,14 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
 
         if(args.length < 1)
         {
-            sender.sendMessage(Prefixes.INFO + "Currently in " +
-                Prefixes.input(currentServer));
-            sender.sendMessage(Prefixes.INFO + "Online servers: " +
-                getFormattedServerList(servers));
+            sender.sendMessage(Settings.format("CurrentServer", currentServer));
+            sender.sendMessage(Settings.format("OnlineServerList", getFormattedServerList(servers)));
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.MoveAll"))
         {
-            CommandMessageUtil.noPermission(sender, "DeltaEss.MoveAll");
+            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.MoveAll"));
             return true;
         }
 
@@ -108,23 +104,19 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
 
         if(destServer == null)
         {
-            sender.sendMessage(Prefixes.FAILURE + Prefixes.input(args[0]) +
-                " is offline or non-existent");
+            sender.sendMessage(Settings.format("ServerOffline", args[0]));
             return true;
         }
 
         if(currentServer.equalsIgnoreCase(destServer))
         {
-            sender.sendMessage(Prefixes.FAILURE + "You cannot move all players on" +
-                " this server to the current server.");
+            sender.sendMessage(Settings.format("InputIsCurrentServer", destServer));
             return true;
         }
 
         for(Player player : Bukkit.getOnlinePlayers())
         {
-            player.sendMessage(Prefixes.SUCCESS + "Moving to " +
-                Prefixes.input(destServer) + " ...");
-
+            player.sendMessage(Settings.format("MovingToMessage", destServer));
             plugin.sendToServer(player, destServer);
         }
 
@@ -135,7 +127,7 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
     {
         List<String> serverList = new ArrayList<>(servers);
         Collections.sort(serverList);
-        return ChatColor.WHITE + String.join(ChatColor.GRAY + ", " + ChatColor.WHITE, serverList);
+        return String.join(", ", serverList);
     }
 
     private String getMatchInSet(Set<String> set, String source)

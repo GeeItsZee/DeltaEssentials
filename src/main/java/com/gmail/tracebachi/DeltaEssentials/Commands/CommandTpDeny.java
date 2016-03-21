@@ -17,9 +17,8 @@
 package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
-import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayer;
-import com.gmail.tracebachi.DeltaEssentials.Utils.CommandMessageUtil;
-import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
+import com.gmail.tracebachi.DeltaEssentials.Settings;
+import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import org.bukkit.command.Command;
@@ -74,45 +73,45 @@ public class CommandTpDeny implements TabExecutor, Registerable, Shutdownable
     {
         if(args.length < 1)
         {
-            sender.sendMessage(Prefixes.INFO + "/tpdeny <on|off>");
+            sender.sendMessage(Settings.format("TeleportDenyUsage"));
             return true;
         }
 
         if(!(sender instanceof Player))
         {
-            CommandMessageUtil.onlyForPlayers(sender, "tpdeny");
+            sender.sendMessage(Settings.format("PlayersOnly", "/tpdeny"));
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.TpDeny"))
         {
-            CommandMessageUtil.noPermission(sender, "DeltaEss.TpDeny");
+            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.TpDeny"));
             return true;
         }
 
-        DeltaEssPlayer dePlayer = plugin.getPlayerMap().get(sender.getName());
+        DeltaEssPlayerData playerData = plugin.getPlayerMap().get(sender.getName());
 
-        if(dePlayer == null)
+        if(playerData == null)
         {
-            sender.sendMessage(Prefixes.FAILURE + "Player data has not been loaded.");
+            sender.sendMessage(Settings.format("PlayerDataNotLoaded"));
             return true;
         }
 
         if(args[0].equalsIgnoreCase("on"))
         {
-            dePlayer.setTeleportDenyEnabled(true);
+            playerData.setTeleportDenyEnabled(true);
 
-            sender.sendMessage(Prefixes.SUCCESS + "TpDeny " + Prefixes.input("enabled"));
+            sender.sendMessage(Settings.format("TeleportDenyChange", "enabled"));
         }
         else if(args[0].equalsIgnoreCase("off"))
         {
-            dePlayer.setTeleportDenyEnabled(false);
+            playerData.setTeleportDenyEnabled(false);
 
-            sender.sendMessage(Prefixes.SUCCESS + "TpDeny " + Prefixes.input("disabled"));
+            sender.sendMessage(Settings.format("TeleportDenyChange", "disabled"));
         }
         else
         {
-            sender.sendMessage(Prefixes.INFO + "/tpdeny <on|off>");
+            sender.sendMessage(Settings.format("TeleportDenyUsage"));
         }
 
         return true;

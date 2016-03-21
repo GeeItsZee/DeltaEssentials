@@ -19,11 +19,12 @@ package com.gmail.tracebachi.DeltaEssentials.Storage;
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 1/19/16.
  */
-public class DeltaEssPlayer
+public class DeltaEssPlayerData
 {
     private boolean socialSpyEnabled;
     private boolean teleportDenyEnabled;
-    private String lastReplyTarget;
+    private boolean vanishEnabled;
+    private String replyTo;
     private SavedInventory survival;
     private SavedInventory creative;
 
@@ -47,14 +48,24 @@ public class DeltaEssPlayer
         this.teleportDenyEnabled = teleportDenyEnabled;
     }
 
-    public String getLastReplyTarget()
+    public boolean isVanishEnabled()
     {
-        return (lastReplyTarget != null) ? lastReplyTarget : "";
+        return vanishEnabled;
     }
 
-    public void setLastReplyTarget(String lastReplyTarget)
+    public void setVanishEnabled(boolean vanishEnabled)
     {
-        this.lastReplyTarget = lastReplyTarget;
+        this.vanishEnabled = vanishEnabled;
+    }
+
+    public String getReplyTo()
+    {
+        return (replyTo != null) ? replyTo : "";
+    }
+
+    public void setReplyTo(String replyTo)
+    {
+        this.replyTo = replyTo;
     }
 
     public SavedInventory getSurvival()
