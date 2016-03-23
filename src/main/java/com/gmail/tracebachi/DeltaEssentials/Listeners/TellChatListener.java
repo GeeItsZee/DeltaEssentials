@@ -21,7 +21,6 @@ import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTellEvent;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
-import com.gmail.tracebachi.DeltaEssentials.Utils.MessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Servers;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent;
@@ -70,7 +69,7 @@ public class TellChatListener extends DeltaEssentialsListener
 
             if(receiver == null)
             {
-                MessageUtil.sendMessage(senderName,
+                deltaRedisApi.sendMessageToPlayer(senderName,
                     Settings.format("PlayerOffline", receiverName));
                 return;
             }
@@ -79,7 +78,7 @@ public class TellChatListener extends DeltaEssentialsListener
 
             if(playerData != null && playerData.isVanishEnabled())
             {
-                MessageUtil.sendMessage(senderName,
+                deltaRedisApi.sendMessageToPlayer(senderName,
                     Settings.format("PlayerOffline", receiverName));
                 return;
             }
@@ -87,7 +86,7 @@ public class TellChatListener extends DeltaEssentialsListener
             sendMessage(
                 senderName, null,
                 receiverName, receiver,
-                message);
+                message, false);
         }
         else if(channel.equals(DeltaEssentialsChannels.TELL_SPY))
         {
@@ -101,7 +100,7 @@ public class TellChatListener extends DeltaEssentialsListener
     }
 
     public boolean sendMessage(String senderName, CommandSender sender,
-        String receiverName, CommandSender receiver, String message)
+        String receiverName, CommandSender receiver, String message, boolean sendToSpies)
     {
         Map<String, DeltaEssPlayerData> playerMap = plugin.getPlayerMap();
         PlayerTellEvent event = new PlayerTellEvent(senderName, sender,
@@ -140,10 +139,13 @@ public class TellChatListener extends DeltaEssentialsListener
         String logFormat = Settings.format("TellLog", senderName, receiverName, message);
         Bukkit.getLogger().info(logFormat);
 
-        sendToSpies(senderName, receiverName, message);
+        if(sendToSpies)
+        {
+            sendToSpies(senderName, receiverName, message);
 
-        deltaRedisApi.publish(Servers.SPIGOT, DeltaEssentialsChannels.TELL_SPY,
-            senderName, receiverName, message);
+            deltaRedisApi.publish(Servers.SPIGOT, DeltaEssentialsChannels.TELL_SPY,
+                senderName, receiverName, message);
+        }
 
         return true;
     }

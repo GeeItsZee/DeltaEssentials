@@ -159,7 +159,8 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable
             tellChatListener.sendMessage(
                 senderName, sender,
                 receiverName, Bukkit.getConsoleSender(),
-                message);
+                message, true);
+
             return true;
         }
 
@@ -179,7 +180,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable
                 tellChatListener.sendMessage(
                     senderName, sender,
                     receiverName, receiver,
-                    message);
+                    message, true);
             }
 
             return true;
@@ -188,7 +189,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable
         boolean result = tellChatListener.sendMessage(
             senderName, sender,
             receiverName, null,
-            message);
+            message, true);
 
         if(result)
         {

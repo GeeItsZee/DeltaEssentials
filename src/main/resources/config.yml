@@ -86,9 +86,9 @@ Formats:
   NoReplyTarget: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not have anyone to reply to.'
 
   TellLog: '[{0} -> {1}] {2}'
-  TellSpy: '[{0} -> {1}] {2}'
-  TellSender: '[me -> {0}] {1}'
-  TellReceiver: '[{0} -> me] {1}'
+  TellSpy: '&8[&7Spy&8]&7=&8[&7{0} &8-> &7{1}&8] &7{2}'
+  TellSender: '&8[&dPM&8]&7=&8[&eMe -> {0}&8] &d{1}'
+  TellReceiver: '&8[&dPM&8]&7=&8[&e{0} -> Me&8] &d{1}'
 
   TeleportUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tp <name>'
   TeleportRequestUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tpahere <name>'

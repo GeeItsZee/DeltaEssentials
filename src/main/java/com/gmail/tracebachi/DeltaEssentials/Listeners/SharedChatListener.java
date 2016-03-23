@@ -81,7 +81,7 @@ public class SharedChatListener extends DeltaEssentialsListener
                 return;
             }
 
-            if(permission.equalsIgnoreCase("false"))
+            if(permission.equalsIgnoreCase("true"))
             {
                 channel.sendRawMessage(message);
                 return;

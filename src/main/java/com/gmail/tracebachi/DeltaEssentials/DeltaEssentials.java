@@ -47,6 +47,7 @@ public class DeltaEssentials extends JavaPlugin
     private TellChatListener tellChatListener;
 
     private CommandDisposal commandDisposal;
+    private CommandDVanish commandDVanish;
     private CommandJail commandJail;
     private CommandLockdown commandLockdown;
     private CommandMoveTo commandMoveTo;
@@ -81,6 +82,9 @@ public class DeltaEssentials extends JavaPlugin
 
         commandDisposal = new CommandDisposal(this);
         commandDisposal.register();
+
+        commandDVanish = new CommandDVanish(this);
+        commandDVanish.register();
 
         commandJail = new CommandJail(deltaRedisApi, this);
         commandJail.register();
@@ -175,6 +179,9 @@ public class DeltaEssentials extends JavaPlugin
 
         commandDisposal.shutdown();
         commandDisposal = null;
+
+        commandDVanish.shutdown();
+        commandDVanish = null;
 
         commandJail.shutdown();
         commandJail = null;

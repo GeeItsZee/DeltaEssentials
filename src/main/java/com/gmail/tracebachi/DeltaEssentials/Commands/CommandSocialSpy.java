@@ -107,7 +107,7 @@ public class CommandSocialSpy implements TabExecutor, Registerable, Shutdownable
         {
             playerData.setSocialSpyEnabled(false);
 
-            sender.sendMessage(Settings.format("SocialSpyChange", "enabled"));
+            sender.sendMessage(Settings.format("SocialSpyChange", "disabled"));
         }
         else
         {

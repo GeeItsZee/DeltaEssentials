@@ -108,6 +108,7 @@ public class PlayerSave implements Runnable
         config.set("Effects", PotionEffectUtils.toStringList(playerStats.getPotionEffects()));
         config.set("SocialSpyEnabled", playerData.isSocialSpyEnabled());
         config.set("TeleportDenyEnabled", playerData.isTeleportDenyEnabled());
+        config.set("VanishEnabled", playerData.isVanishEnabled());
         config.set("ReplyTo", playerData.getReplyTo());
         config.set("MetaData", entry.getMetaData());
 
