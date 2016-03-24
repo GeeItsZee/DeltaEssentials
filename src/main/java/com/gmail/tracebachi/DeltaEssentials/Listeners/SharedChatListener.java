@@ -56,7 +56,7 @@ public class SharedChatListener extends DeltaEssentialsListener
         String channel = event.getChannel().getName();
         Boolean useHeroChat = Settings.useHeroChatForSharedChatChannel(channel);
 
-        if(!useHeroChat) return;
+        if(useHeroChat == null || !useHeroChat) return;
 
         String message =  event.getMsg();
 
