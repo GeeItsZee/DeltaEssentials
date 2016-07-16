@@ -24,6 +24,7 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -132,6 +133,20 @@ public class PlayerLockListener extends DeltaEssentialsListener
     public void onPlayerPickupItemEvent(PlayerPickupItemEvent event)
     {
         Player player = event.getPlayer();
+
+        if(locked.containsKey(player.getName()))
+        {
+            player.sendMessage(Settings.format("PlayerLocked"));
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    public void onPlayerDamagedEvent(EntityDamageEvent event)
+    {
+        if(!(event.getEntity() instanceof Player)) return;
+
+        Player player = (Player) event.getEntity();
 
         if(locked.containsKey(player.getName()))
         {

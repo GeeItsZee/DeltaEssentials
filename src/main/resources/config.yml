@@ -30,16 +30,6 @@ BlockedServers:
 PreSaveCommands:
   - leave-minigame
 
-# Channels to share with other servers
-# {Name} : {Use HeroChat Channel}
-# If {Use HeroChat Channel} is '':
-#   HeroChat channel on the other servers will be used.
-# Else:
-#   SharedChatEvent will be fired on other servers to handle as desired
-SharedChatChannels:
-  Global: True
-  Secret: False
-
 ###############################################################################
 
 # Name of the server where players should be sent when jailed.

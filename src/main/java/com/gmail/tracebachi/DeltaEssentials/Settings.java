@@ -40,7 +40,6 @@ public class Settings
     private static String jailServer;
     private static GameMode defaultGameMode;
     private static Set<GameMode> disabledGameModes;
-    private static Map<String, Boolean> sharedChatChannels;
     private static List<String> validJails;
     private static CaseInsensitiveHashSet blockedServers;
     private static List<String> preSaveCommands;
@@ -60,7 +59,6 @@ public class Settings
         defaultGameMode = getGameMode(config.getString("DefaultGameMode"));
         validJails = config.getStringList("ValidJails");
         disabledGameModes = new HashSet<>();
-        sharedChatChannels = new HashMap<>();
         blockedServers = new CaseInsensitiveHashSet();
         preSaveCommands = new ArrayList<>();
         formatMap = new HashMap<>();
@@ -71,16 +69,6 @@ public class Settings
         for(String modeName : config.getStringList("DisabledGameModes"))
         {
             disabledGameModes.add(getGameMode(modeName));
-        }
-
-        section = config.getConfigurationSection("SharedChatChannels");
-
-        if(section != null)
-        {
-            for(String channel : section.getKeys(false))
-            {
-                sharedChatChannels.put(channel, section.getBoolean(channel, true));
-            }
         }
 
         section = config.getConfigurationSection("Formats");
@@ -164,11 +152,6 @@ public class Settings
     public static boolean isGameModeDisabled(GameMode gameMode)
     {
         return disabledGameModes.contains(gameMode);
-    }
-
-    public static Boolean useHeroChatForSharedChatChannel(String channel)
-    {
-        return sharedChatChannels.get(channel);
     }
 
     public static boolean isServerBlocked(String serverName)

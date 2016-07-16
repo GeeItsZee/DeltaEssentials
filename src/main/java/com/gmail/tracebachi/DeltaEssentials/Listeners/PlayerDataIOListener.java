@@ -17,10 +17,7 @@
 package com.gmail.tracebachi.DeltaEssentials.Listeners;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
-import com.gmail.tracebachi.DeltaEssentials.Events.PlayerLoadedEvent;
-import com.gmail.tracebachi.DeltaEssentials.Events.PlayerPreLoadEvent;
-import com.gmail.tracebachi.DeltaEssentials.Events.PlayerPreSaveEvent;
-import com.gmail.tracebachi.DeltaEssentials.Events.PlayerSavedEvent;
+import com.gmail.tracebachi.DeltaEssentials.Events.*;
 import com.gmail.tracebachi.DeltaEssentials.Runnables.PlayerLoad;
 import com.gmail.tracebachi.DeltaEssentials.Runnables.PlayerSave;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
@@ -28,15 +25,10 @@ import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerEntry;
 import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerStats;
 import com.gmail.tracebachi.DeltaEssentials.Storage.SavedInventory;
-import com.gmail.tracebachi.DeltaEssentials.Utils.xAuthUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Prefixes;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
-import de.luricos.bukkit.xAuth.event.command.player.xAuthCommandLoginEvent;
-import de.luricos.bukkit.xAuth.event.command.player.xAuthCommandRegisterEvent;
-import de.luricos.bukkit.xAuth.event.player.xAuthPlayerJoinEvent;
-import de.luricos.bukkit.xAuth.xAuthPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.configuration.ConfigurationSection;
@@ -68,48 +60,11 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
      * Login Events
      *************************************************************************/
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
-    public void onCommandLoginEvent(xAuthCommandLoginEvent event)
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onPlayerLoadRequest(PlayerLoadRequestEvent event)
     {
-        if(event.getStatus() != xAuthPlayer.Status.AUTHENTICATED) return;
-
-        String name = event.getPlayerName();
-        Player player = Bukkit.getPlayer(name);
-
-        if(player == null) return;
-
-        if(plugin.getPlayerMap().containsKey(name)) return;
-
-        loadPlayer(player);
-    }
-
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
-    public void onPlayerJoinEvent(xAuthPlayerJoinEvent event)
-    {
-        if(event.getStatus() != xAuthPlayer.Status.AUTHENTICATED) return;
-
-        String name = event.getPlayerName();
-        Player player = Bukkit.getPlayer(name);
-
-        if(player == null) return;
-
-        if(plugin.getPlayerMap().containsKey(name)) return;
-
-        loadPlayer(player);
-    }
-
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
-    public void onPlayerRegisterEvent(xAuthCommandRegisterEvent event)
-    {
-        String name = xAuthUtil.getPlayerNameFromRegisterEvent(event);
-
-        if(name == null) return;
-
-        if(event.getAction() != xAuthCommandRegisterEvent.Action.PLAYER_REGISTERED) return;
-
-        Player player = Bukkit.getPlayer(name);
-
-        if(player == null) return;
+        Player player = event.getPlayer();
+        String name = player.getName();
 
         if(plugin.getPlayerMap().containsKey(name)) return;
 

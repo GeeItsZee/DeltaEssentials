@@ -16,16 +16,16 @@
  */
 package com.gmail.tracebachi.DeltaEssentials.Listeners;
 
-import com.dthielke.herochat.Channel;
-import com.dthielke.herochat.ChatCompleteEvent;
-import com.dthielke.herochat.Herochat;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
-import com.gmail.tracebachi.DeltaEssentials.Settings;
+import com.gmail.tracebachi.DeltaEssentials.Events.SharedChatIncomingEvent;
+import com.gmail.tracebachi.DeltaEssentials.Events.SharedChatOutgoingEvent;
 import com.gmail.tracebachi.DeltaRedis.Shared.Servers;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 
 import static com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent.DELTA_PATTERN;
 
@@ -49,46 +49,33 @@ public class SharedChatListener extends DeltaEssentialsListener
         super.shutdown();
     }
 
-    // TODO Get rid of HeroChat dependency. Make a plugin and an event that plugin can fire to trigger this
-    @EventHandler
-    public void onChatComplete(ChatCompleteEvent event)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    void onSharedChatOutgoing(SharedChatOutgoingEvent event)
     {
-        String channel = event.getChannel().getName();
-        Boolean useHeroChat = Settings.useHeroChatForSharedChatChannel(channel);
-
-        if(useHeroChat == null || !useHeroChat) return;
-
-        String message =  event.getMsg();
+        String channel = event.getChannel();
+        String permission = event.getPermission();
+        String message = event.getMessage();
 
         deltaRedisApi.publish(Servers.SPIGOT, DeltaEssentialsChannels.SHARED_CHAT,
-            channel, useHeroChat.toString(), message);
+            channel, permission, message);
     }
 
     @EventHandler
-    public void onDeltaRedisMessage(DeltaRedisMessageEvent event)
+    public void onSharedChatIncoming(DeltaRedisMessageEvent event)
     {
-        if(event.getChannel().equals(DeltaEssentialsChannels.SHARED_CHAT))
-        {
-            String[] splitMessage = DELTA_PATTERN.split(event.getMessage(), 3);
-            String channelName = splitMessage[0];
-            String permission = splitMessage[1];
-            String message = splitMessage[2];
-            Channel channel = Herochat.getChannelManager().getChannel(channelName);
+        if(!event.getChannel().equals(DeltaEssentialsChannels.SHARED_CHAT)) return;
 
-            if(channel == null)
-            {
-                plugin.severe("HeroChat channel (" + channelName + ") not found!");
-                return;
-            }
+        String[] splitMessage = DELTA_PATTERN.split(event.getMessage(), 3);
+        String channelName = splitMessage[0];
+        String permission = splitMessage[1];
+        String message = splitMessage[2];
+        SharedChatIncomingEvent chatEvent = new SharedChatIncomingEvent(channelName, permission, message);
 
-            if(permission.equalsIgnoreCase("true"))
-            {
-                channel.sendRawMessage(message);
-                return;
-            }
+        Bukkit.getPluginManager().callEvent(chatEvent);
 
-            // TODO SharedChatEvent
-            plugin.getServer().broadcast(message, permission);
-        }
+        // If the message is not handled by anyone else, return
+        if(chatEvent.isCancelled()) return;
+
+        plugin.getServer().broadcast(message, permission);
     }
 }
