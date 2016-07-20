@@ -19,10 +19,6 @@ package com.gmail.tracebachi.DeltaEssentials.Storage;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffect;
-
-import java.util.Collection;
-import java.util.Collections;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 3/21/16.
@@ -34,19 +30,15 @@ public class PlayerStats
     private int xpLevel;
     private float xpProgress;
     private GameMode gameMode;
-    private Collection<PotionEffect> potionEffects;
     private ItemStack[] enderChest;
 
     public PlayerStats(Player player)
     {
-        this();
-
         this.health = player.getHealth();
         this.foodLevel = player.getFoodLevel();
         this.xpLevel = player.getLevel();
         this.xpProgress = player.getExp();
         this.gameMode = player.getGameMode();
-        this.potionEffects = player.getActivePotionEffects();
         this.enderChest = player.getEnderChest().getContents();
     }
 
@@ -103,16 +95,6 @@ public class PlayerStats
     public void setGameMode(GameMode gameMode)
     {
         this.gameMode = gameMode;
-    }
-
-    public Collection<PotionEffect> getPotionEffects()
-    {
-        return (potionEffects == null) ? Collections.emptyList() : potionEffects;
-    }
-
-    public void setPotionEffects(Collection<PotionEffect> potionEffects)
-    {
-        this.potionEffects = potionEffects;
     }
 
     public ItemStack[] getEnderChest()

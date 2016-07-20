@@ -1,8 +1,8 @@
 name: DeltaEssentials
 main: com.gmail.tracebachi.DeltaEssentials.DeltaEssentials
-version: 2.4
+version: 2.5
 author: Trace Bachi (tracebachi@gmail.com, BigBossZee)
-depend: [DeltaRedis, DeltaExecutor, Essentials]
+depend: [DeltaRedis, DeltaExecutor]
 commands:
   moveto:
     description: Sends players to different servers.
@@ -88,5 +88,5 @@ permissions:
     description: Ignores if a player is denying teleports.
   DeltaEss.ForcedGameModeBypass:
     description: Ignores if a game mode is being forced.
-  DeltaEss.SingleInventory:
+  DeltaEss.SharedGameModeInv:
     description: Inventory is shared between gamemodes.

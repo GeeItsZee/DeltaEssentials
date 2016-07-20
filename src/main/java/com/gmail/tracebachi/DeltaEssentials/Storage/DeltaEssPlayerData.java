@@ -16,26 +16,45 @@
  */
 package com.gmail.tracebachi.DeltaEssentials.Storage;
 
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.potion.PotionEffect;
+
+import java.util.Collection;
+import java.util.Collections;
+
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 1/19/16.
  */
 public class DeltaEssPlayerData
 {
-    private boolean socialSpyEnabled;
     private boolean teleportDenyEnabled;
     private boolean vanishEnabled;
+    private String socialSpyLevel;
     private String replyTo;
+    private Collection<PotionEffect> potionEffects;
+    private ConfigurationSection metaData;
     private SavedInventory survival;
     private SavedInventory creative;
 
-    public boolean isSocialSpyEnabled()
+    public String getSocialSpyLevel()
     {
-        return socialSpyEnabled;
+        return socialSpyLevel;
     }
 
-    public void setSocialSpyEnabled(boolean socialSpyEnabled)
+    public void setSocialSpyLevel(String socialSpyLevel)
     {
-        this.socialSpyEnabled = socialSpyEnabled;
+        String uppercased = socialSpyLevel.toUpperCase();
+
+        if(!uppercased.equals("ALL") &&
+            !uppercased.equals("WORLD") &&
+            !uppercased.equals("OFF"))
+        {
+            throw new IllegalArgumentException(
+                "SocialSpyLevel can only be ALL, WORLD, or OFF.");
+        }
+
+        this.socialSpyLevel = uppercased;
     }
 
     public boolean isTeleportDenyEnabled()
@@ -66,6 +85,26 @@ public class DeltaEssPlayerData
     public void setReplyTo(String replyTo)
     {
         this.replyTo = replyTo;
+    }
+
+    public Collection<PotionEffect> getPotionEffects()
+    {
+        return (potionEffects == null) ? Collections.emptyList() : potionEffects;
+    }
+
+    public void setPotionEffects(Collection<PotionEffect> potionEffects)
+    {
+        this.potionEffects = potionEffects;
+    }
+
+    public ConfigurationSection getMetaData()
+    {
+        return (metaData == null) ? new YamlConfiguration() : metaData;
+    }
+
+    public void setMetaData(ConfigurationSection metaData)
+    {
+        this.metaData = metaData;
     }
 
     public SavedInventory getSurvival()

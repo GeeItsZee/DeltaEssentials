@@ -43,8 +43,9 @@ public class PlayerSave implements Runnable
 
     public PlayerSave(PlayerEntry entry, String destServer, PlayerDataIOListener listener, DeltaEssentials plugin)
     {
-        Preconditions.checkNotNull(entry, "Entry cannot be null.");
-        Preconditions.checkNotNull(plugin, "Plugin cannot be null.");
+        Preconditions.checkNotNull(entry, "Entry was null.");
+        Preconditions.checkNotNull(listener, "Listener was null.");
+        Preconditions.checkNotNull(plugin, "Plugin was null.");
 
         this.entry = entry;
         this.destServer = destServer;
@@ -105,12 +106,12 @@ public class PlayerSave implements Runnable
         config.set("XpLevel", playerStats.getXpLevel());
         config.set("XpProgress", playerStats.getXpProgress());
         config.set("Gamemode", playerStats.getGameMode().toString());
-        config.set("Effects", PotionEffectUtils.toStringList(playerStats.getPotionEffects()));
-        config.set("SocialSpyEnabled", playerData.isSocialSpyEnabled());
+        config.set("Effects", PotionEffectUtils.toStringList(playerData.getPotionEffects()));
+        config.set("SocialSpyLevel", playerData.getSocialSpyLevel());
         config.set("TeleportDenyEnabled", playerData.isTeleportDenyEnabled());
         config.set("VanishEnabled", playerData.isVanishEnabled());
         config.set("ReplyTo", playerData.getReplyTo());
-        config.set("MetaData", entry.getMetaData());
+        config.set("MetaData", playerData.getMetaData());
 
         serialized = InventoryUtils.toYamlSection(playerData.getSurvival().getArmor());
         config.set("Survival.Armor", serialized);

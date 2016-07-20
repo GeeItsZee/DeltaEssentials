@@ -18,6 +18,7 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
+import com.gmail.tracebachi.DeltaEssentials.Listeners.TeleportListener;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
@@ -37,12 +38,12 @@ import java.util.List;
  */
 public class CommandTpAccept implements TabExecutor, Registerable, Shutdownable
 {
-    private DeltaRedisApi deltaRedisApi;
+    private TeleportListener teleportListener;
     private DeltaEssentials plugin;
 
-    public CommandTpAccept(DeltaRedisApi deltaRedisApi, DeltaEssentials plugin)
+    public CommandTpAccept(TeleportListener teleportListener, DeltaEssentials plugin)
     {
-        this.deltaRedisApi = deltaRedisApi;
+        this.teleportListener = teleportListener;
         this.plugin = plugin;
     }
 
@@ -64,7 +65,7 @@ public class CommandTpAccept implements TabExecutor, Registerable, Shutdownable
     public void shutdown()
     {
         unregister();
-        deltaRedisApi = null;
+        teleportListener = null;
         plugin = null;
     }
 
@@ -72,7 +73,7 @@ public class CommandTpAccept implements TabExecutor, Registerable, Shutdownable
     public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args)
     {
         String lastArg = args[args.length - 1];
-        return deltaRedisApi.matchStartOfPlayerName(lastArg);
+        return DeltaRedisApi.instance().matchStartOfPlayerName(lastArg);
     }
 
     @Override
@@ -98,7 +99,7 @@ public class CommandTpAccept implements TabExecutor, Registerable, Shutdownable
             return true;
         }
 
-        TeleportRequest request = plugin.getTeleportListener()
+        TeleportRequest request = teleportListener
             .getRequestMap().get(sender.getName());
 
         if(request == null)
@@ -108,7 +109,7 @@ public class CommandTpAccept implements TabExecutor, Registerable, Shutdownable
         }
 
         Player player = (Player) sender;
-        String currentServerName = deltaRedisApi.getServerName();
+        String currentServerName = DeltaRedisApi.instance().getServerName();
         String destServerName = request.getDestServer();
 
         if(!destServerName.equals(currentServerName))
@@ -117,7 +118,7 @@ public class CommandTpAccept implements TabExecutor, Registerable, Shutdownable
             return true;
         }
 
-        Player destPlayer = Bukkit.getPlayer(request.getSender());
+        Player destPlayer = Bukkit.getPlayerExact(request.getSender());
 
         if(destPlayer == null)
         {
@@ -125,7 +126,11 @@ public class CommandTpAccept implements TabExecutor, Registerable, Shutdownable
             return true;
         }
 
-        plugin.getTeleportListener().teleport(player, destPlayer, PlayerTpEvent.TeleportType.TPA_HERE);
+        teleportListener.teleport(
+            player,
+            destPlayer,
+            PlayerTpEvent.TeleportType.TPA_HERE);
+
         return true;
     }
 }

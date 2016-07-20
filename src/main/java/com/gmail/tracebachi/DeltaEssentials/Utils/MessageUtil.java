@@ -32,7 +32,7 @@ public interface MessageUtil
         }
         else
         {
-            Player player = Bukkit.getPlayer(playerName);
+            Player player = Bukkit.getPlayerExact(playerName);
 
             if(player != null)
             {

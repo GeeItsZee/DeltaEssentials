@@ -22,12 +22,9 @@ import com.gmail.tracebachi.DeltaEssentials.Listeners.*;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaExecutor.DeltaExecutor;
 import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashMap;
-import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedis;
-import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.google.common.base.Preconditions;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.messaging.Messenger;
 
@@ -41,14 +38,13 @@ public class DeltaEssentials extends JavaPlugin
     private CaseInsensitiveHashMap<DeltaEssPlayerData> playerMap = new CaseInsensitiveHashMap<>();
 
     private SharedChatListener sharedChatListener;
-    private PlayerLockListener playerLockListener;
+    private PlayerLockManager playerLockManager;
     private PlayerDataIOListener playerDataIOListener;
+    private PlayerGameModeListener playerGameModeListener;
     private TeleportListener teleportListener;
-    private TellChatListener tellChatListener;
 
     private CommandDisposal commandDisposal;
     private CommandDVanish commandDVanish;
-    private CommandJail commandJail;
     private CommandLockdown commandLockdown;
     private CommandMoveTo commandMoveTo;
     private CommandMoveAll commandMoveAll;
@@ -73,12 +69,23 @@ public class DeltaEssentials extends JavaPlugin
         Settings.read(getConfig());
         Settings.setSyncTaskSchedulingAllowed(true);
 
-        PluginManager pluginManager = getServer().getPluginManager();
-        DeltaRedis deltaRedisPlugin = (DeltaRedis) pluginManager.getPlugin("DeltaRedis");
-        DeltaRedisApi deltaRedisApi = deltaRedisPlugin.getDeltaRedisApi();
-
         // Add a player for the console so the console's reply targets are stored
         playerMap.put("console", new DeltaEssPlayerData());
+
+        playerLockManager = new PlayerLockManager(this);
+        playerLockManager.register();
+
+        teleportListener = new TeleportListener(this);
+        teleportListener.register();
+
+        playerGameModeListener = new PlayerGameModeListener(this);
+        playerGameModeListener.register();
+
+        sharedChatListener = new SharedChatListener(this);
+        sharedChatListener.register();
+
+        playerDataIOListener = new PlayerDataIOListener(this);
+        playerDataIOListener.register();
 
         commandDisposal = new CommandDisposal(this);
         commandDisposal.register();
@@ -86,53 +93,35 @@ public class DeltaEssentials extends JavaPlugin
         commandDVanish = new CommandDVanish(this);
         commandDVanish.register();
 
-        commandJail = new CommandJail(deltaRedisApi, this);
-        commandJail.register();
-
         commandLockdown = new CommandLockdown(this);
         commandLockdown.register();
 
-        commandMoveTo = new CommandMoveTo(deltaRedisApi, this);
+        commandMoveTo = new CommandMoveTo(this);
         commandMoveTo.register();
 
-        commandMoveAll = new CommandMoveAll(deltaRedisApi, this);
+        commandMoveAll = new CommandMoveAll(this);
         commandMoveAll.register();
 
         commandSocialSpy = new CommandSocialSpy(this);
         commandSocialSpy.register();
 
-        commandTell = new CommandTell(deltaRedisApi, this);
+        commandTell = new CommandTell(this);
         commandTell.register();
 
-        commandTp = new CommandTp(deltaRedisApi, this);
+        commandTp = new CommandTp(teleportListener, this);
         commandTp.register();
 
-        commandTpAccept = new CommandTpAccept(deltaRedisApi, this);
+        commandTpAccept = new CommandTpAccept(teleportListener, this);
         commandTpAccept.register();
 
-        commandTpaHere = new CommandTpaHere(deltaRedisApi, this);
+        commandTpaHere = new CommandTpaHere(teleportListener, this);
         commandTpaHere.register();
 
-        commandTpHere = new CommandTpHere(deltaRedisApi, this);
+        commandTpHere = new CommandTpHere(teleportListener, this);
         commandTpHere.register();
 
         commandTpDeny = new CommandTpDeny(this);
         commandTpDeny.register();
-
-        sharedChatListener = new SharedChatListener(deltaRedisApi, this);
-        sharedChatListener.register();
-
-        teleportListener = new TeleportListener(deltaRedisApi, this);
-        teleportListener.register();
-
-        tellChatListener = new TellChatListener(deltaRedisApi, this);
-        tellChatListener.register();
-
-        playerLockListener = new PlayerLockListener(this);
-        playerLockListener.register();
-
-        playerDataIOListener = new PlayerDataIOListener(this);
-        playerDataIOListener.register();
 
         Messenger messenger = getServer().getMessenger();
         messenger.registerOutgoingPluginChannel(this, "BungeeCord");
@@ -148,7 +137,7 @@ public class DeltaEssentials extends JavaPlugin
         {
             try
             {
-                playerDataIOListener.savePlayer(player, null);
+                playerDataIOListener.savePlayer(player);
             }
             catch(Exception ex)
             {
@@ -165,11 +154,11 @@ public class DeltaEssentials extends JavaPlugin
         playerDataIOListener.shutdown();
         playerDataIOListener = null;
 
-        playerLockListener.shutdown();
-        playerLockListener = null;
+        playerGameModeListener.shutdown();
+        playerGameModeListener = null;
 
-        tellChatListener.shutdown();
-        tellChatListener = null;
+        playerLockManager.shutdown();
+        playerLockManager = null;
 
         teleportListener.shutdown();
         teleportListener = null;
@@ -182,9 +171,6 @@ public class DeltaEssentials extends JavaPlugin
 
         commandDVanish.shutdown();
         commandDVanish = null;
-
-        commandJail.shutdown();
-        commandJail = null;
 
         commandLockdown.shutdown();
         commandLockdown = null;
@@ -243,19 +229,9 @@ public class DeltaEssentials extends JavaPlugin
         return playerMap;
     }
 
-    public PlayerLockListener getPlayerLockListener()
+    public PlayerLockManager getPlayerLockManager()
     {
-        return playerLockListener;
-    }
-
-    public TeleportListener getTeleportListener()
-    {
-        return teleportListener;
-    }
-
-    public TellChatListener getTellChatListener()
-    {
-        return tellChatListener;
+        return playerLockManager;
     }
 
     public void scheduleTaskSync(Runnable runnable)
@@ -272,6 +248,16 @@ public class DeltaEssentials extends JavaPlugin
 
     public void scheduleTaskAsync(Runnable runnable)
     {
+        scheduleTaskAsync(runnable, null);
+    }
+
+    public void scheduleTaskAsync(Runnable runnable, String description)
+    {
+        if(description != null)
+        {
+            debug(description);
+        }
+
         DeltaExecutor.instance().execute(runnable);
     }
 
@@ -285,6 +271,8 @@ public class DeltaEssentials extends JavaPlugin
         Preconditions.checkNotNull(player, "Player cannot be null.");
         Preconditions.checkNotNull(destination, "Destination server cannot be null.");
 
+        if(!playerMap.containsKey(player.getName())) return false;
+
         if(callEvent)
         {
             PlayerServerSwitchEvent event = new PlayerServerSwitchEvent(player, destination);
@@ -296,7 +284,7 @@ public class DeltaEssentials extends JavaPlugin
             }
         }
 
-        playerDataIOListener.savePlayer(player, destination);
+        playerDataIOListener.saveAndMovePlayer(player, destination);
         return true;
     }
 }

@@ -17,14 +17,13 @@
 package com.gmail.tracebachi.DeltaEssentials.Events;
 
 import org.bukkit.command.CommandSender;
-import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
  */
-public class PlayerTellEvent extends Event implements Cancellable
+public class PlayerTellEvent extends Event
 {
     private static final HandlerList handlers = new HandlerList();
 
@@ -32,8 +31,7 @@ public class PlayerTellEvent extends Event implements Cancellable
     private final CommandSender sender;
     private final String receiverName;
     private final CommandSender receiver;
-    private final String message;
-    private boolean cancelled;
+    private String message;
 
     public PlayerTellEvent(String senderName, CommandSender sender,
         String receiverName, CommandSender receiver, String message)
@@ -70,21 +68,14 @@ public class PlayerTellEvent extends Event implements Cancellable
         return message;
     }
 
+    public void setMessage(String message)
+    {
+        this.message = message;
+    }
+
     public HandlerList getHandlers()
     {
         return handlers;
-    }
-
-    @Override
-    public boolean isCancelled()
-    {
-        return cancelled;
-    }
-
-    @Override
-    public void setCancelled(boolean cancelled)
-    {
-        this.cancelled = cancelled;
     }
 
     public static HandlerList getHandlerList()

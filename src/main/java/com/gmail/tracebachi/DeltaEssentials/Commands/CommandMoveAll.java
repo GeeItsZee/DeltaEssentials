@@ -39,12 +39,10 @@ import java.util.Set;
  */
 public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, Listener
 {
-    private DeltaRedisApi deltaRedisApi;
     private DeltaEssentials plugin;
 
-    public CommandMoveAll(DeltaRedisApi deltaRedisApi, DeltaEssentials plugin)
+    public CommandMoveAll(DeltaEssentials plugin)
     {
-        this.deltaRedisApi = deltaRedisApi;
         this.plugin = plugin;
     }
 
@@ -70,7 +68,6 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
     public void shutdown()
     {
         unregister();
-        deltaRedisApi = null;
         plugin = null;
     }
 
@@ -78,14 +75,15 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
     public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args)
     {
         String lastArg = args[args.length - 1].toLowerCase();
-        return deltaRedisApi.matchStartOfServerName(lastArg);
+        return DeltaRedisApi.instance().matchStartOfServerName(lastArg);
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String s, String[] args)
     {
-        Set<String> servers = deltaRedisApi.getCachedServers();
-        String currentServer = deltaRedisApi.getServerName();
+        DeltaRedisApi api = DeltaRedisApi.instance();
+        Set<String> servers = api.getCachedServers();
+        String currentServer = api.getServerName();
 
         if(args.length < 1)
         {
@@ -125,7 +123,16 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
 
     private String getFormattedServerList(Set<String> servers)
     {
-        List<String> serverList = new ArrayList<>(servers);
+        List<String> serverList = new ArrayList<>(servers.size());
+
+        for(String server : servers)
+        {
+            if(!Settings.isServerBlocked(server))
+            {
+                serverList.add(server);
+            }
+        }
+
         Collections.sort(serverList);
         return String.join(", ", serverList);
     }

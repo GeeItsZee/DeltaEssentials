@@ -17,6 +17,7 @@
 package com.gmail.tracebachi.DeltaEssentials;
 
 import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashSet;
+import com.google.common.base.Preconditions;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.configuration.ConfigurationSection;
@@ -36,11 +37,10 @@ public class Settings
     private static volatile boolean syncTaskSchedulingAllowed;
     private static boolean inLockdown;
     private static boolean defaultGameModeForced;
-    private static boolean loadAndSavePotionEffects;
-    private static String jailServer;
+    private static boolean ignorePotionEffects;
+    private static boolean loadPlayerDataOnLogin;
     private static GameMode defaultGameMode;
     private static Set<GameMode> disabledGameModes;
-    private static List<String> validJails;
     private static CaseInsensitiveHashSet blockedServers;
     private static List<String> preSaveCommands;
     private static HashMap<String, MessageFormat> formatMap;
@@ -49,29 +49,26 @@ public class Settings
 
     public static void read(FileConfiguration config)
     {
-        ConfigurationSection section;
-
-        debugEnabled = config.getBoolean("Debug");
-        inLockdown = config.getBoolean("StartWithLockdown");
-        defaultGameModeForced = config.getBoolean("ForceDefaultGameMode");
-        loadAndSavePotionEffects = config.getBoolean("LoadAndSavePotionEffects");
-        jailServer = config.getString("JailServer");
-        defaultGameMode = getGameMode(config.getString("DefaultGameMode"));
-        validJails = config.getStringList("ValidJails");
         disabledGameModes = new HashSet<>();
         blockedServers = new CaseInsensitiveHashSet();
         preSaveCommands = new ArrayList<>();
         formatMap = new HashMap<>();
 
+        debugEnabled = config.getBoolean("Debug");
+        inLockdown = config.getBoolean("StartWithLockdown", false);
+        loadPlayerDataOnLogin = config.getBoolean("LoadPlayerDataOnLogin", true);
+        defaultGameMode = getGameMode(config.getString("GameModes.Default", "SURVIVAL"));
+        defaultGameModeForced = config.getBoolean("GameModes.ForceDefault", false);
+        ignorePotionEffects = config.getBoolean("IgnorePotionEffects", false);
         blockedServers.addAll(config.getStringList("BlockedServers"));
         preSaveCommands.addAll(config.getStringList("PreSaveCommands"));
 
-        for(String modeName : config.getStringList("DisabledGameModes"))
+        for(String modeName : config.getStringList("GameModes.DisabledModes"))
         {
             disabledGameModes.add(getGameMode(modeName));
         }
 
-        section = config.getConfigurationSection("Formats");
+        ConfigurationSection section = config.getConfigurationSection("Formats");
 
         if(section != null)
         {
@@ -129,14 +126,14 @@ public class Settings
         Settings.inLockdown = inLockdown;
     }
 
-    public static boolean canLoadAndSavePotionEffects()
+    public static boolean shouldIgnorePotionEffects()
     {
-        return loadAndSavePotionEffects;
+        return ignorePotionEffects;
     }
 
-    public static String getJailServer()
+    public static boolean shouldLoadPlayerDataOnLogin()
     {
-        return jailServer;
+        return loadPlayerDataOnLogin;
     }
 
     public static GameMode getDefaultGameMode()
@@ -159,14 +156,20 @@ public class Settings
         return blockedServers.contains(serverName);
     }
 
-    public static void runPreSaveCommands(Player player)
+    public static boolean isGameModeBlocked(GameMode mode)
     {
-        preSaveCommands.forEach(player::performCommand);
+        if(disabledGameModes.contains(mode)) return true;
+
+        if(defaultGameModeForced && mode != defaultGameMode) return true;
+
+        return false;
     }
 
-    public static boolean isValidJail(String jail)
+    public static void runPreSaveCommands(Player player)
     {
-        return validJails.contains(jail);
+        Preconditions.checkNotNull(player);
+
+        preSaveCommands.forEach(player::performCommand);
     }
 
     public static String format(String key, String... args)

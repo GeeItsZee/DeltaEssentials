@@ -94,13 +94,13 @@ public class CommandLockdown implements TabExecutor, Registerable, Shutdownable,
         {
             Settings.setInLockdown(true);
 
-            sender.sendMessage(Settings.format("LockdownChange", "enabled"));
+            sender.sendMessage(Settings.format("LockdownChange", "ON"));
         }
         else if(args[0].equalsIgnoreCase("off"))
         {
             Settings.setInLockdown(false);
 
-            sender.sendMessage(Settings.format("LockdownChange", "disabled"));
+            sender.sendMessage(Settings.format("LockdownChange", "OFF"));
         }
         else
         {

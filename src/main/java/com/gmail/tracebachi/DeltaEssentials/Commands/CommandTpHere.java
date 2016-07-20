@@ -19,6 +19,7 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
+import com.gmail.tracebachi.DeltaEssentials.Listeners.TeleportListener;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
@@ -38,12 +39,12 @@ import java.util.List;
  */
 public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
 {
-    private DeltaRedisApi deltaRedisApi;
+    private TeleportListener teleportListener;
     private DeltaEssentials plugin;
 
-    public CommandTpHere(DeltaRedisApi deltaRedisApi, DeltaEssentials plugin)
+    public CommandTpHere(TeleportListener teleportListener, DeltaEssentials plugin)
     {
-        this.deltaRedisApi = deltaRedisApi;
+        this.teleportListener = teleportListener;
         this.plugin = plugin;
     }
 
@@ -65,7 +66,7 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
     public void shutdown()
     {
         unregister();
-        deltaRedisApi = null;
+        teleportListener = null;
         plugin = null;
     }
 
@@ -73,7 +74,7 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
     public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args)
     {
         String lastArg = args[args.length - 1];
-        return deltaRedisApi.matchStartOfPlayerName(lastArg);
+        return DeltaRedisApi.instance().matchStartOfPlayerName(lastArg);
     }
 
     @Override
@@ -107,19 +108,20 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
 
         String senderName = sender.getName();
         String toTpName = args[0];
-        Player toTp = Bukkit.getPlayer(toTpName);
+        Player toTp = Bukkit.getPlayerExact(toTpName);
 
         if(toTp != null)
         {
-            plugin.getTeleportListener().teleport(toTp, (Player) sender,
+            teleportListener.teleport(
+                toTp,
+                (Player) sender,
                 PlayerTpEvent.TeleportType.TP_HERE);
-
             return true;
         }
 
-        deltaRedisApi.findPlayer(toTpName, cachedPlayer ->
+        DeltaRedisApi.instance().findPlayer(toTpName, cachedPlayer ->
         {
-            Player sendingPlayer = Bukkit.getPlayer(senderName);
+            Player sendingPlayer = Bukkit.getPlayerExact(senderName);
 
             if(sendingPlayer == null) return;
 
@@ -129,16 +131,23 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
                 return;
             }
 
+            DeltaRedisApi deltaRedisApi = DeltaRedisApi.instance();
             String destServer = cachedPlayer.getServer();
             String currentServer = deltaRedisApi.getServerName();
-            TeleportRequest request = new TeleportRequest(senderName, currentServer,
+            TeleportRequest request = new TeleportRequest(
+                senderName,
+                currentServer,
                 PlayerTpEvent.TeleportType.TP_HERE);
 
             // Format: Receiver/\Sender/\CurrentServer
-            deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TP_HERE,
-                toTpName, senderName, currentServer);
+            deltaRedisApi.publish(
+                destServer,
+                DeltaEssentialsChannels.TP_HERE,
+                toTpName,
+                senderName,
+                currentServer);
 
-            plugin.getTeleportListener().getRequestMap().put(toTpName, request);
+            teleportListener.getRequestMap().put(toTpName, request);
         });
 
         return true;

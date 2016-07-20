@@ -65,7 +65,7 @@ public class CommandSocialSpy implements TabExecutor, Registerable, Shutdownable
     @Override
     public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args)
     {
-        return Arrays.asList("on", "off");
+        return Arrays.asList("all", "world", "off");
     }
 
     @Override
@@ -97,17 +97,23 @@ public class CommandSocialSpy implements TabExecutor, Registerable, Shutdownable
             return true;
         }
 
-        if(args[0].equalsIgnoreCase("on"))
+        if(args[0].equalsIgnoreCase("all"))
         {
-            playerData.setSocialSpyEnabled(true);
+            playerData.setSocialSpyLevel("all");
 
-            sender.sendMessage(Settings.format("SocialSpyChange", "enabled"));
+            sender.sendMessage(Settings.format("SocialSpyChange", "ALL"));
+        }
+        else if(args[0].equalsIgnoreCase("world"))
+        {
+            playerData.setSocialSpyLevel("world");
+
+            sender.sendMessage(Settings.format("SocialSpyChange", "WORLD"));
         }
         else if(args[0].equalsIgnoreCase("off"))
         {
-            playerData.setSocialSpyEnabled(false);
+            playerData.setSocialSpyLevel("off");
 
-            sender.sendMessage(Settings.format("SocialSpyChange", "disabled"));
+            sender.sendMessage(Settings.format("SocialSpyChange", "OFF"));
         }
         else
         {

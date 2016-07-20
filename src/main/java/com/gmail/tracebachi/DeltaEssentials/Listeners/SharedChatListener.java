@@ -21,43 +21,42 @@ import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Events.SharedChatIncomingEvent;
 import com.gmail.tracebachi.DeltaEssentials.Events.SharedChatOutgoingEvent;
 import com.gmail.tracebachi.DeltaRedis.Shared.Servers;
+import com.gmail.tracebachi.DeltaRedis.Shared.SplitPatterns;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 
-import static com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent.DELTA_PATTERN;
-
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
  */
 public class SharedChatListener extends DeltaEssentialsListener
 {
-    private DeltaRedisApi deltaRedisApi;
-
-    public SharedChatListener(DeltaRedisApi deltaRedisApi, DeltaEssentials plugin)
+    public SharedChatListener(DeltaEssentials plugin)
     {
         super(plugin);
-        this.deltaRedisApi = deltaRedisApi;
     }
 
     @Override
     public void shutdown()
     {
-        this.deltaRedisApi = null;
         super.shutdown();
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    void onSharedChatOutgoing(SharedChatOutgoingEvent event)
+    public void onSharedChatOutgoing(SharedChatOutgoingEvent event)
     {
         String channel = event.getChannel();
         String permission = event.getPermission();
         String message = event.getMessage();
 
-        deltaRedisApi.publish(Servers.SPIGOT, DeltaEssentialsChannels.SHARED_CHAT,
-            channel, permission, message);
+        DeltaRedisApi.instance().publish(
+            Servers.SPIGOT,
+            DeltaEssentialsChannels.SHARED_CHAT,
+            channel,
+            permission,
+            message);
     }
 
     @EventHandler
@@ -65,15 +64,18 @@ public class SharedChatListener extends DeltaEssentialsListener
     {
         if(!event.getChannel().equals(DeltaEssentialsChannels.SHARED_CHAT)) return;
 
-        String[] splitMessage = DELTA_PATTERN.split(event.getMessage(), 3);
+        String[] splitMessage = SplitPatterns.DELTA.split(event.getMessage(), 3);
         String channelName = splitMessage[0];
         String permission = splitMessage[1];
         String message = splitMessage[2];
-        SharedChatIncomingEvent chatEvent = new SharedChatIncomingEvent(channelName, permission, message);
+        SharedChatIncomingEvent chatEvent = new SharedChatIncomingEvent(
+            channelName,
+            permission,
+            message);
 
         Bukkit.getPluginManager().callEvent(chatEvent);
 
-        // If the message is not handled by anyone else, return
+        // If the message is handled by anyone else, return
         if(chatEvent.isCancelled()) return;
 
         plugin.getServer().broadcast(message, permission);

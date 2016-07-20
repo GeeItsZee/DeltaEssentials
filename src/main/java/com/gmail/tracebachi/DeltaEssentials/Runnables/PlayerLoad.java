@@ -47,9 +47,9 @@ public class PlayerLoad implements Runnable
 
     public PlayerLoad(String name, PlayerDataIOListener listener, DeltaEssentials plugin)
     {
-        Preconditions.checkNotNull(name, "Name cannot be null.");
-        Preconditions.checkNotNull(listener, "PlayerDataIOListener cannot be null.");
-        Preconditions.checkNotNull(plugin, "Plugin cannot be null.");
+        Preconditions.checkNotNull(name, "Name was null.");
+        Preconditions.checkNotNull(listener, "Listener was null.");
+        Preconditions.checkNotNull(plugin, "Plugin was null.");
 
         this.name = name.toLowerCase();
         this.listener = listener;
@@ -118,16 +118,13 @@ public class PlayerLoad implements Runnable
         playerStats.setXpLevel(config.getInt("XpLevel", 0));
         playerStats.setXpProgress((float) config.getDouble("XpProgress", 0.0));
         playerStats.setGameMode(GameMode.valueOf(config.getString("Gamemode", "SURVIVAL")));
-        playerStats.setPotionEffects(PotionEffectUtils.toEffectList(config.getStringList("Effects")));
 
-        section = config.getConfigurationSection("EnderChest");
-        itemStacks = InventoryUtils.toItemStacks(section, 27);
-        playerStats.setEnderChest(itemStacks);
-
-        playerData.setSocialSpyEnabled(config.getBoolean("SocialSpyEnabled", false));
+        playerData.setPotionEffects(PotionEffectUtils.toEffectList(config.getStringList("Effects")));
+        playerData.setSocialSpyLevel(config.getString("SocialSpyLevel", "OFF"));
         playerData.setTeleportDenyEnabled(config.getBoolean("TeleportDenyEnabled", false));
         playerData.setVanishEnabled(config.getBoolean("VanishEnabled", false));
         playerData.setReplyTo(config.getString("ReplyTo", ""));
+        playerData.setMetaData(config.getConfigurationSection("MetaData"));
 
         section = config.getConfigurationSection("Survival");
         savedInventory = InventoryUtils.toSavedInventory(section);
@@ -137,9 +134,12 @@ public class PlayerLoad implements Runnable
         savedInventory = InventoryUtils.toSavedInventory(section);
         playerData.setCreative(savedInventory);
 
+        section = config.getConfigurationSection("EnderChest");
+        itemStacks = InventoryUtils.toItemStacks(section, 27);
+        playerStats.setEnderChest(itemStacks);
+
         entry.setPlayerStats(playerStats);
         entry.setDeltaEssPlayerData(playerData);
-        entry.setMetaData(config.getConfigurationSection("MetaData"));
 
         return entry;
     }

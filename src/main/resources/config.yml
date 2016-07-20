@@ -5,23 +5,31 @@
 # Should lockdown be enabled on start
 StartWithLockdown: False
 
-# Default game mode for players who do not have player data
-DefaultGameMode: SURVIVAL
-
-# Should the game mode be forced for players on login
-ForceDefaultGameMode: False
-
-# Should potion effects be loaded from and saved to player data
-LoadAndSavePotionEffects: True
-
-# Game modes that players cannot access without the proper bypass permissions
-DisabledGameModes:
-  - ADVENTURE
-  - SPECTATOR
+# Should player data be loaded when player joins
+# Set to false if the server will have an authentication plugin that will
+# tell DeltaEssentials when to load player data
+LoadPlayerDataOnLogin: True
 
 # Names of servers that players cannot access without the bypass permission
 BlockedServers:
   - SecretServer
+
+# Settings related to game modes
+GameModes:
+
+  # Default game mode for players who do not have player data
+  Default: SURVIVAL
+
+  # Should the game mode be forced for players on login
+  ForceDefault: False
+
+  # Game modes that players cannot access without the proper bypass permissions
+  DisabledModes:
+    - ADVENTURE
+    - SPECTATOR
+
+# Should potion effects be ignored when loading and saving to player data
+IgnorePotionEffects: False
 
 # Commands run by the player before switching servers or disconnecting from
 # the network (used to remove players from minigames or other activites that
@@ -29,16 +37,6 @@ BlockedServers:
 # before it is saved by DeltaEssentials)
 PreSaveCommands:
   - leave-minigame
-
-###############################################################################
-
-# Name of the server where players should be sent when jailed.
-JailServer: world
-
-# Names of the jails that exist on the jail server.
-ValidJails:
-  - Alcatraz
-  - Leavenworth
 
 ###############################################################################
 
@@ -54,7 +52,7 @@ Formats:
 
   LockdownUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /lockdown <on|off>'
   LockdownMessage: 'Server is locked down ... for reasons!'
-  LockdownChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Lockdown has been {0}.'
+  LockdownChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Lockdown is {0}.'
 
   MovingToMessage: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Moving to {0} ...'
   MovingOtherToMessage: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Moving {0} to {1} ...'
@@ -66,10 +64,10 @@ Formats:
   BlockedServer: '&8[&c!&8] &cFailure &8[&c!&8]&7 {0} is blocked for you.'
 
   SocialSpyUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /socialspy <on|off>'
-  SocialSpyChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 SocialSpy has been {0}.'
+  SocialSpyChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 SocialSpy has been set to {0}.'
 
   DVanishUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /dvanish <on|off>'
-  DVanishChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 DeltaVanish has been {0}.'
+  DVanishChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 DeltaVanish is {0}.'
 
   TellUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tell <name> <message>'
   ReplyUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /reply <message>'
@@ -88,14 +86,12 @@ Formats:
   ReceivedTeleportRequest: '&8[&a!&8] &aSuccess &8[&a!&8]&7 {0} sent you a teleport request. Type /tpaccept to accept within 30 seconds.'
 
   TeleportDenyUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tpdeny <on|off>'
-  TeleportDenyChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 TeleportDeny has been {0}.'
+  TeleportDenyChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 TeleportDeny is {0}.'
   TeleportingMessage: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Teleporting to {0} ...'
   TeleportedToYou: '&8[&9!&8] &9Info &8[&9!&8]&7 {0} teleported to you.'
   DeniedTeleport: '&8[&9!&8] &9Info &8[&9!&8]&7 {0} was denied a teleport to you.'
   OtherDenyingTeleport: '&8[&c!&8] &cFailure &8[&c!&8]&7 {0} is denying teleports.'
   UnsafeLocation: '&8[&c!&8] &cFailure &8[&c!&8]&7 {0} is not in a safe location.'
-
-  GameModeBeingForced: '&8[&c!&8] &cFailure &8[&c!&8]&7 {0} is being forced on this server.'
 
 ###############################################################################
 

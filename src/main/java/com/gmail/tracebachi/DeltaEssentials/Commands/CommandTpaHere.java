@@ -19,6 +19,7 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
+import com.gmail.tracebachi.DeltaEssentials.Listeners.TeleportListener;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
@@ -38,12 +39,12 @@ import java.util.List;
  */
 public class CommandTpaHere implements TabExecutor, Registerable, Shutdownable
 {
-    private DeltaRedisApi deltaRedisApi;
+    private TeleportListener teleportListener;
     private DeltaEssentials plugin;
 
-    public CommandTpaHere(DeltaRedisApi deltaRedisApi, DeltaEssentials plugin)
+    public CommandTpaHere(TeleportListener teleportListener, DeltaEssentials plugin)
     {
-        this.deltaRedisApi = deltaRedisApi;
+        this.teleportListener = teleportListener;
         this.plugin = plugin;
     }
 
@@ -65,7 +66,7 @@ public class CommandTpaHere implements TabExecutor, Registerable, Shutdownable
     public void shutdown()
     {
         unregister();
-        deltaRedisApi = null;
+        teleportListener = null;
         plugin = null;
     }
 
@@ -73,7 +74,7 @@ public class CommandTpaHere implements TabExecutor, Registerable, Shutdownable
     public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args)
     {
         String lastArg = args[args.length - 1];
-        return deltaRedisApi.matchStartOfPlayerName(lastArg);
+        return DeltaRedisApi.instance().matchStartOfPlayerName(lastArg);
     }
 
     @Override
@@ -105,27 +106,30 @@ public class CommandTpaHere implements TabExecutor, Registerable, Shutdownable
             return true;
         }
 
+        DeltaRedisApi deltaRedisApi = DeltaRedisApi.instance();
         String senderName = sender.getName();
         String receiverName = args[0];
-        Player receiver = Bukkit.getPlayer(receiverName);
+        Player receiver = Bukkit.getPlayerExact(receiverName);
 
         if(receiver != null)
         {
             String currentServer = deltaRedisApi.getServerName();
-            TeleportRequest request = new TeleportRequest(senderName, currentServer,
+            TeleportRequest request = new TeleportRequest(
+                senderName,
+                currentServer,
                 PlayerTpEvent.TeleportType.TPA_HERE);
 
-            plugin.getTeleportListener().getRequestMap().put(receiverName, request);
+            teleportListener.getRequestMap().put(receiverName, request);
 
-            receiver.sendMessage(Settings.format("ReceivedTeleportRequest", senderName));
             sender.sendMessage(Settings.format("SentTeleportRequest", receiverName));
+            receiver.sendMessage(Settings.format("ReceivedTeleportRequest", senderName));
 
             return true;
         }
 
         deltaRedisApi.findPlayer(receiverName, cachedPlayer ->
         {
-            Player senderPlayer = Bukkit.getPlayer(senderName);
+            Player senderPlayer = Bukkit.getPlayerExact(senderName);
 
             if(senderPlayer == null) return;
 
@@ -135,16 +139,23 @@ public class CommandTpaHere implements TabExecutor, Registerable, Shutdownable
                 return;
             }
 
+            DeltaRedisApi api = DeltaRedisApi.instance();
             String destServer = cachedPlayer.getServer();
-            String currentServer = deltaRedisApi.getServerName();
-            TeleportRequest request = new TeleportRequest(senderName, currentServer,
+            String currentServer = api.getServerName();
+            TeleportRequest request = new TeleportRequest(
+                senderName,
+                currentServer,
                 PlayerTpEvent.TeleportType.TPA_HERE);
 
             // Format: Receiver/\Sender/\CurrentServer
-            deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TPA_HERE,
-                receiverName, senderName, currentServer);
+            api.publish(
+                destServer,
+                DeltaEssentialsChannels.TPA_HERE,
+                receiverName,
+                senderName,
+                currentServer);
 
-            plugin.getTeleportListener().getRequestMap().put(receiverName, request);
+            teleportListener.getRequestMap().put(receiverName, request);
 
             senderPlayer.sendMessage(Settings.format("SentTeleportRequest", receiverName));
         });

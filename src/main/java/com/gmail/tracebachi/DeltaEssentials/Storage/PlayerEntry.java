@@ -17,8 +17,6 @@
 package com.gmail.tracebachi.DeltaEssentials.Storage;
 
 import com.google.common.base.Preconditions;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/12/15.
@@ -27,7 +25,6 @@ public class PlayerEntry
 {
     private final String name;
     private PlayerStats playerStats;
-    private ConfigurationSection metaData;
     private DeltaEssPlayerData deltaEssPlayerData;
 
     public PlayerEntry(String name)
@@ -49,16 +46,6 @@ public class PlayerEntry
     public void setPlayerStats(PlayerStats playerStats)
     {
         this.playerStats = playerStats;
-    }
-
-    public ConfigurationSection getMetaData()
-    {
-        return (metaData == null) ? new YamlConfiguration() : metaData;
-    }
-
-    public void setMetaData(ConfigurationSection metaData)
-    {
-        this.metaData = metaData;
     }
 
     public DeltaEssPlayerData getDeltaEssPlayerData()

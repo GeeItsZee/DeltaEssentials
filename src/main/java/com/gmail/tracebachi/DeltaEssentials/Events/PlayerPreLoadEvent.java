@@ -16,6 +16,7 @@
  */
 package com.gmail.tracebachi.DeltaEssentials.Events;
 
+import com.google.common.base.Preconditions;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -31,7 +32,7 @@ public class PlayerPreLoadEvent extends Event
 
     public PlayerPreLoadEvent(Player player)
     {
-        this.player = player;
+        this.player = Preconditions.checkNotNull(player);
     }
 
     public Player getPlayer()

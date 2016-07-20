@@ -19,6 +19,7 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
+import com.gmail.tracebachi.DeltaEssentials.Listeners.TeleportListener;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Utils.MessageUtil;
@@ -38,12 +39,12 @@ import java.util.List;
  */
 public class CommandTp implements TabExecutor, Registerable, Shutdownable
 {
-    private DeltaRedisApi deltaRedisApi;
+    private TeleportListener teleportListener;
     private DeltaEssentials plugin;
 
-    public CommandTp(DeltaRedisApi deltaRedisApi, DeltaEssentials plugin)
+    public CommandTp(TeleportListener teleportListener, DeltaEssentials plugin)
     {
-        this.deltaRedisApi = deltaRedisApi;
+        this.teleportListener = teleportListener;
         this.plugin = plugin;
     }
 
@@ -65,7 +66,7 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
     public void shutdown()
     {
         unregister();
-        deltaRedisApi = null;
+        teleportListener = null;
         plugin = null;
     }
 
@@ -73,7 +74,7 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
     public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args)
     {
         String lastArg = args[args.length - 1];
-        return deltaRedisApi.matchStartOfPlayerName(lastArg);
+        return DeltaRedisApi.instance().matchStartOfPlayerName(lastArg);
     }
 
     @Override
@@ -113,7 +114,7 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
         {
             String firstName = args[0];
             String secondName = args[1];
-            Player firstPlayer = Bukkit.getPlayer(firstName);
+            Player firstPlayer = Bukkit.getPlayerExact(firstName);
 
             if(firstPlayer == null)
             {
@@ -144,46 +145,56 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
     private void handleTeleport(Player toTp, String destName)
     {
         String toTpName = toTp.getName();
-        String autoCompletedDestName = attemptAutoComplete(toTp, destName);
+        String autoCompletedDestName = attemptAutoComplete(destName);
 
-        if(autoCompletedDestName == null) return;
-
-        Player destination = Bukkit.getPlayer(autoCompletedDestName);
-
-        if(destination != null)
+        if(autoCompletedDestName == null)
         {
-            plugin.getTeleportListener().teleport(toTp, destination,
-                PlayerTpEvent.TeleportType.NORMAL_TP);
-
+            toTp.sendMessage(Settings.format("TooManyAutoCompleteMatches", destName));
             return;
         }
 
-        deltaRedisApi.findPlayer(destName, cachedPlayer ->
+        Player destination = Bukkit.getPlayerExact(autoCompletedDestName);
+
+        if(destination != null)
         {
-            Player player = Bukkit.getPlayer(toTpName);
+            teleportListener.teleport(
+                toTp,
+                destination,
+                PlayerTpEvent.TeleportType.NORMAL_TP);
+            return;
+        }
+
+        DeltaRedisApi.instance().findPlayer(destName, cachedPlayer ->
+        {
+            Player player = Bukkit.getPlayerExact(toTpName);
 
             if(player == null) return;
 
             if(cachedPlayer == null)
             {
-                MessageUtil.sendMessage(toTpName,
+                MessageUtil.sendMessage(
+                    toTpName,
                     Settings.format("PlayerOffline", destName));
                 return;
             }
 
             String destServer = cachedPlayer.getServer();
 
-            // Format: TpSender/\CurrentServer
-            deltaRedisApi.publish(destServer, DeltaEssentialsChannels.TP,
-                toTpName, destName);
+            // Format: Sender/\Destination
+            DeltaRedisApi.instance().publish(
+                destServer,
+                DeltaEssentialsChannels.TP,
+                toTpName,
+                destName);
 
             plugin.sendToServer(player, destServer);
         });
     }
 
-    private String attemptAutoComplete(CommandSender sender, String partial)
+    private String attemptAutoComplete(String partial)
     {
-        List<String> partialMatches = deltaRedisApi.matchStartOfPlayerName(partial);
+        List<String> partialMatches = DeltaRedisApi.instance()
+            .matchStartOfPlayerName(partial);
 
         if(partialMatches.contains(partial.toLowerCase()))
         {
@@ -200,7 +211,6 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
             return partialMatches.get(0);
         }
 
-        sender.sendMessage(Settings.format("TooManyAutoCompleteMatches", partial));
         return null;
     }
 }

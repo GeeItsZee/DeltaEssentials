@@ -38,16 +38,20 @@ import java.util.Map;
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 1/20/16.
  */
-public class PlayerLockListener extends DeltaEssentialsListener
+public class PlayerLockManager extends DeltaEssentialsListener
 {
     private CaseInsensitiveHashMap<Long> locked = new CaseInsensitiveHashMap<>();
     private BukkitTask cleanupTask;
 
-    public PlayerLockListener(DeltaEssentials plugin)
+    public PlayerLockManager(DeltaEssentials plugin)
     {
         super(plugin);
 
-        cleanupTask = Bukkit.getScheduler().runTaskTimer(plugin, this::cleanup, 20, 20);
+        this.cleanupTask = Bukkit.getScheduler().runTaskTimer(
+            plugin,
+            this::cleanup,
+            20,
+            20);
     }
 
     @Override
@@ -55,7 +59,6 @@ public class PlayerLockListener extends DeltaEssentialsListener
     {
         cleanupTask.cancel();
         cleanupTask = null;
-
         locked.clear();
         locked = null;
         super.shutdown();

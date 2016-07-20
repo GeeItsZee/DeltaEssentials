@@ -16,6 +16,7 @@
  */
 package com.gmail.tracebachi.DeltaEssentials.Events;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -23,26 +24,33 @@ import org.bukkit.event.HandlerList;
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/12/15.
  */
-public class PlayerSavedEvent extends Event
+public class PlayerPostLoadEvent extends Event
 {
     private static final HandlerList handlers = new HandlerList();
-    private final String name;
+    private final boolean firstJoin;
     private final Player player;
+    private final ConfigurationSection metaData;
 
-    public PlayerSavedEvent(String name, Player player)
+    public PlayerPostLoadEvent(Player player, ConfigurationSection metaData, boolean firstJoin)
     {
-        this.name = name;
         this.player = player;
-    }
-
-    public String getName()
-    {
-        return name;
+        this.metaData = metaData;
+        this.firstJoin = firstJoin;
     }
 
     public Player getPlayer()
     {
         return player;
+    }
+
+    public ConfigurationSection getMetaData()
+    {
+        return metaData;
+    }
+
+    public boolean isFirstJoin()
+    {
+        return firstJoin;
     }
 
     @Override

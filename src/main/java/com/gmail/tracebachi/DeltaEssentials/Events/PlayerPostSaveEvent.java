@@ -16,40 +16,25 @@
  */
 package com.gmail.tracebachi.DeltaEssentials.Events;
 
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/12/15.
  */
-public class PlayerLoadedEvent extends Event
+public class PlayerPostSaveEvent extends Event
 {
     private static final HandlerList handlers = new HandlerList();
-    private final Player player;
-    private final ConfigurationSection metaData;
+    private final String name;
 
-    public PlayerLoadedEvent(Player player)
+    public PlayerPostSaveEvent(String name)
     {
-        this(player, new YamlConfiguration());
+        this.name = name;
     }
 
-    public PlayerLoadedEvent(Player player, ConfigurationSection metaData)
+    public String getName()
     {
-        this.player = player;
-        this.metaData = metaData;
-    }
-
-    public Player getPlayer()
-    {
-        return player;
-    }
-
-    public ConfigurationSection getMetaData()
-    {
-        return metaData;
+        return name;
     }
 
     @Override

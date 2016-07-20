@@ -17,7 +17,6 @@
 package com.gmail.tracebachi.DeltaEssentials.Events;
 
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -32,10 +31,10 @@ public class PlayerPreSaveEvent extends Event
     private final Player player;
     private final ConfigurationSection metaData;
 
-    public PlayerPreSaveEvent(Player player)
+    public PlayerPreSaveEvent(Player player, ConfigurationSection metaData)
     {
         this.player = player;
-        this.metaData = new YamlConfiguration();
+        this.metaData = metaData;
     }
 
     public Player getPlayer()
