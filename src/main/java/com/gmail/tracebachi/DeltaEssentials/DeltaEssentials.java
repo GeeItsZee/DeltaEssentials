@@ -229,6 +229,11 @@ public class DeltaEssentials extends JavaPlugin
         return playerMap;
     }
 
+    public DeltaEssPlayerData getPlayerData(String name)
+    {
+        return playerMap.get(name);
+    }
+
     public PlayerLockManager getPlayerLockManager()
     {
         return playerLockManager;

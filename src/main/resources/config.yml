@@ -63,7 +63,7 @@ Formats:
   OtherAlreadyOnServer: '&8[&c!&8] &cFailure &8[&c!&8]&7 {0} is already on {1}.'
   BlockedServer: '&8[&c!&8] &cFailure &8[&c!&8]&7 {0} is blocked for you.'
 
-  SocialSpyUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /socialspy <on|off>'
+  SocialSpyUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /socialspy <all|world|off>'
   SocialSpyChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 SocialSpy has been set to {0}.'
 
   DVanishUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /dvanish <on|off>'

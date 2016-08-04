@@ -39,7 +39,7 @@ public class DeltaEssPlayerData
 
     public String getSocialSpyLevel()
     {
-        return socialSpyLevel;
+        return (socialSpyLevel == null) ? "OFF" : socialSpyLevel;
     }
 
     public void setSocialSpyLevel(String socialSpyLevel)
