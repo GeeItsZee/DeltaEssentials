@@ -250,7 +250,8 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
     @EventHandler(priority = EventPriority.NORMAL)
     public void onDeltaRedisMessage(DeltaRedisMessageEvent event)
     {
-        if(event.getChannel().equals(DeltaEssentialsChannels.TELL))
+        if(event.getChannel().equals(DeltaEssentialsChannels.TELL) &&
+            !event.getSendingServer().equals(DeltaRedisApi.instance().getServerName()))
         {
             String[] split = SplitPatterns.DELTA.split(event.getMessage(), 4);
             String senderName = split[0];
@@ -339,7 +340,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
             if(socialSpyLevel.equals("OFF") ||
                 (socialSpyLevel.equals("WORLD") && !participantInWorld))
             {
-                return;
+                continue;
             }
 
             Player player = Bukkit.getPlayerExact(entry.getKey());
