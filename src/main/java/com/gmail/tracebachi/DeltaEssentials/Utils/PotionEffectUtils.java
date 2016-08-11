@@ -23,7 +23,6 @@ import org.bukkit.potion.PotionEffectType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/13/15.

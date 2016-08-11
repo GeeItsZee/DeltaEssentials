@@ -95,9 +95,9 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
                 return true;
             }
 
-            if(!sender.hasPermission("DeltaEss.Tp"))
+            if(!sender.hasPermission("DeltaEss.Tp.Self"))
             {
-                sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Tp"));
+                sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Tp.Self"));
                 return true;
             }
 
@@ -123,9 +123,9 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
                 return true;
             }
 
-            if(!sender.hasPermission("DeltaEss.TpOther"))
+            if(!sender.hasPermission("DeltaEss.Tp.Other"))
             {
-                sender.sendMessage(Settings.format("NoPermission", "DeltaEss.TpOther"));
+                sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Tp.Other"));
                 return true;
             }
 

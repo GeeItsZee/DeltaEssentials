@@ -107,10 +107,10 @@ public class PlayerSave implements Runnable
         config.set("XpProgress", playerStats.getXpProgress());
         config.set("Gamemode", playerStats.getGameMode().toString());
         config.set("Effects", PotionEffectUtils.toStringList(playerData.getPotionEffects()));
-        config.set("SocialSpyLevel", playerData.getSocialSpyLevel());
         config.set("TeleportDenyEnabled", playerData.isTeleportDenyEnabled());
         config.set("VanishEnabled", playerData.isVanishEnabled());
         config.set("ReplyTo", playerData.getReplyTo());
+        config.set("SocialSpyLevel", playerData.getSocialSpyLevel().toString());
         config.set("MetaData", playerData.getMetaData());
 
         serialized = InventoryUtils.toYamlSection(playerData.getSurvival().getArmor());

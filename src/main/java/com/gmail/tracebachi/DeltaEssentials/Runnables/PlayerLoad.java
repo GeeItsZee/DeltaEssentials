@@ -19,10 +19,7 @@ package com.gmail.tracebachi.DeltaEssentials.Runnables;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.Listeners.PlayerDataIOListener;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
-import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
-import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerEntry;
-import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerStats;
-import com.gmail.tracebachi.DeltaEssentials.Storage.SavedInventory;
+import com.gmail.tracebachi.DeltaEssentials.Storage.*;
 import com.gmail.tracebachi.DeltaEssentials.Utils.InventoryUtils;
 import com.gmail.tracebachi.DeltaEssentials.Utils.LockedFileUtil;
 import com.gmail.tracebachi.DeltaEssentials.Utils.PotionEffectUtils;
@@ -116,8 +113,10 @@ public class PlayerLoad implements Runnable
         playerStats.setXpProgress((float) config.getDouble("XpProgress", 0.0));
         playerStats.setGameMode(GameMode.valueOf(config.getString("Gamemode", "SURVIVAL")));
 
-        playerData.setPotionEffects(PotionEffectUtils.toEffectList(config.getStringList("Effects")));
-        playerData.setSocialSpyLevel(config.getString("SocialSpyLevel", "OFF"));
+        playerData.setPotionEffects(PotionEffectUtils.toEffectList(
+            config.getStringList("Effects")));
+        playerData.setSocialSpyLevel(SocialSpyLevel.valueOf(
+            config.getString("SocialSpyLevel", "NONE")));
         playerData.setTeleportDenyEnabled(config.getBoolean("TeleportDenyEnabled", false));
         playerData.setVanishEnabled(config.getBoolean("VanishEnabled", false));
         playerData.setReplyTo(config.getString("ReplyTo", ""));

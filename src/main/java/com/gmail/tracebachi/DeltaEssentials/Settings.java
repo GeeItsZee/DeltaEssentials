@@ -67,12 +67,30 @@ public class Settings
             disabledGameModes.add(getGameMode(modeName));
         }
 
-        ConfigurationSection section = config.getConfigurationSection("Formats");
+        ConfigurationSection section = config.getConfigurationSection("FormatReplacements");
+        HashMap<String, String> formatReplacementMap = new HashMap<>();
+
+        if(section != null)
+        {
+            for(String key : section.getKeys(false))
+            {
+                formatReplacementMap.put(key, section.getString(key));
+            }
+        }
+
+        section = config.getConfigurationSection("Formats");
 
         if(section != null)
         {
             for(String formatKey : section.getKeys(false))
             {
+                String rawFormat = section.getString(formatKey);
+
+                for(Map.Entry<String, String> entry : formatReplacementMap.entrySet())
+                {
+                    rawFormat = rawFormat.replace(entry.getKey(), entry.getValue());
+                }
+
                 String format = ChatColor.translateAlternateColorCodes(
                     '&',
                     section.getString(formatKey));
@@ -85,8 +103,11 @@ public class Settings
     public static File getPlayerDataFileFor(String playerName)
     {
         String lowerCaseName = playerName.toLowerCase();
-        File directory = new File("plugins" + File.separator + "DeltaEssentials" + File.separator + "PlayerData" + File.separator + lowerCaseName.charAt(
-            0));
+        File directory = new File(
+            "plugins" + File.separator +
+            "DeltaEssentials" + File.separator +
+            "PlayerData" + File.separator +
+            lowerCaseName.charAt(0));
 
         directory.mkdirs();
 

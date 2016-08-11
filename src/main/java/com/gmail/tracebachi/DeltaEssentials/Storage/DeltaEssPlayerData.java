@@ -30,29 +30,12 @@ public class DeltaEssPlayerData
 {
     private boolean teleportDenyEnabled;
     private boolean vanishEnabled;
-    private String socialSpyLevel;
     private String replyTo;
+    private SocialSpyLevel socialSpyLevel;
     private Collection<PotionEffect> potionEffects;
     private ConfigurationSection metaData;
     private SavedInventory survival;
     private SavedInventory creative;
-
-    public String getSocialSpyLevel()
-    {
-        return (socialSpyLevel == null) ? "OFF" : socialSpyLevel;
-    }
-
-    public void setSocialSpyLevel(String socialSpyLevel)
-    {
-        String uppercased = socialSpyLevel.toUpperCase();
-
-        if(!uppercased.equals("ALL") && !uppercased.equals("WORLD") && !uppercased.equals("OFF"))
-        {
-            throw new IllegalArgumentException("SocialSpyLevel can only be ALL, WORLD, or OFF.");
-        }
-
-        this.socialSpyLevel = uppercased;
-    }
 
     public boolean isTeleportDenyEnabled()
     {
@@ -76,12 +59,22 @@ public class DeltaEssPlayerData
 
     public String getReplyTo()
     {
-        return (replyTo != null) ? replyTo : "";
+        return (replyTo == null) ? "" : replyTo;
     }
 
     public void setReplyTo(String replyTo)
     {
         this.replyTo = replyTo;
+    }
+
+    public SocialSpyLevel getSocialSpyLevel()
+    {
+        return (socialSpyLevel == null) ? SocialSpyLevel.NONE : socialSpyLevel;
+    }
+
+    public void setSocialSpyLevel(SocialSpyLevel level)
+    {
+        this.socialSpyLevel = level;
     }
 
     public Collection<PotionEffect> getPotionEffects()

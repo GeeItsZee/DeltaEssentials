@@ -98,10 +98,12 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         Player player = event.getPlayer();
         String name = player.getName();
 
+        plugin.debug("Received PlayerLoadRequest for {name: " + name + "}");
+
         if(plugin.getPlayerMap().containsKey(name))
         {
-            throw new IllegalArgumentException("Player {name: " +
-                name + "} has already been loaded.");
+            throw new IllegalArgumentException(
+                "Player {name: " + name + "} has already been loaded.");
         }
 
         loadPlayer(player);
@@ -119,8 +121,9 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         String name = player.getName();
         PlayerLoad runnable = new PlayerLoad(name, this, plugin);
 
+        plugin.debug("PlayerLoad for {name: " + name + "}");
         plugin.getPlayerLockManager().add(name);
-        plugin.scheduleTaskAsync(runnable, "PlayerLoad for {name: " + name + "}");
+        plugin.scheduleTaskAsync(runnable);
     }
 
     public void savePlayer(Player player)
@@ -143,8 +146,9 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         PlayerEntry entry = buildPlayerEntry(player, playerData);
         PlayerSave runnable = new PlayerSave(entry, destServer, this, plugin);
 
+        plugin.debug("PlayerSave for {name: " + name + ", dest: " + destServer + "}");
         plugin.getPlayerLockManager().add(name);
-        plugin.scheduleTaskAsync(runnable, "PlayerSave for {name: " + name + "}");
+        plugin.scheduleTaskAsync(runnable);
     }
 
     /**************************************************************************

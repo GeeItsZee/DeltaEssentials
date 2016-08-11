@@ -35,9 +35,8 @@ import java.util.Map;
  */
 public class DeltaEssentials extends JavaPlugin
 {
-    private CaseInsensitiveHashMap<DeltaEssPlayerData> playerMap = new CaseInsensitiveHashMap<>();
-
     private static volatile boolean syncTaskSchedulingAllowed;
+    private CaseInsensitiveHashMap<DeltaEssPlayerData> playerMap = new CaseInsensitiveHashMap<>();
 
     private SharedChatListener sharedChatListener;
     private PlayerLockManager playerLockManager;
@@ -45,6 +44,7 @@ public class DeltaEssentials extends JavaPlugin
     private PlayerGameModeListener playerGameModeListener;
     private TeleportListener teleportListener;
 
+    private CommandDeltaEssDebug commandDeltaEssDebug;
     private CommandDisposal commandDisposal;
     private CommandDVanish commandDVanish;
     private CommandLockdown commandLockdown;
@@ -88,6 +88,9 @@ public class DeltaEssentials extends JavaPlugin
 
         playerDataIOListener = new PlayerDataIOListener(this);
         playerDataIOListener.register();
+
+        commandDeltaEssDebug = new CommandDeltaEssDebug(this);
+        commandDeltaEssDebug.register();
 
         commandDisposal = new CommandDisposal(this);
         commandDisposal.register();
@@ -167,6 +170,9 @@ public class DeltaEssentials extends JavaPlugin
 
         sharedChatListener.shutdown();
         sharedChatListener = null;
+
+        commandDeltaEssDebug.shutdown();
+        commandDeltaEssDebug = null;
 
         commandDisposal.shutdown();
         commandDisposal = null;
@@ -255,16 +261,6 @@ public class DeltaEssentials extends JavaPlugin
 
     public void scheduleTaskAsync(Runnable runnable)
     {
-        scheduleTaskAsync(runnable, null);
-    }
-
-    public void scheduleTaskAsync(Runnable runnable, String description)
-    {
-        if(description != null)
-        {
-            debug(description);
-        }
-
         DeltaExecutor.instance().execute(runnable);
     }
 

@@ -84,9 +84,9 @@ public class CommandTpDeny implements TabExecutor, Registerable, Shutdownable
             return true;
         }
 
-        if(!sender.hasPermission("DeltaEss.TpDeny"))
+        if(!sender.hasPermission("DeltaEss.Tp.Deny"))
         {
-            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.TpDeny"));
+            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Tp.Deny"));
             return true;
         }
 

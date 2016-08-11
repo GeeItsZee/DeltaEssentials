@@ -93,9 +93,9 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
             return true;
         }
 
-        if(!sender.hasPermission("DeltaEss.TpOther"))
+        if(!sender.hasPermission("DeltaEss.Tp.Other"))
         {
-            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.TpOther"));
+            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Tp.Other"));
             return true;
         }
 

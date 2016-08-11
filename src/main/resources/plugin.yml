@@ -4,84 +4,31 @@ version: ${project.version}
 author: Trace Bachi (tracebachi@gmail.com, BigBossZee)
 depend: [DeltaRedis, DeltaExecutor]
 commands:
-  moveto:
-    description: Sends players to different servers.
-    aliases: [mt]
-  moveall:
-    description: Sends all online players to a different server.
-    aliases: [fallback]
-  tell:
-    description: Sends a message to another player.
-    aliases: [t, tell, pm, m, msg]
-  reply:
-    description: Sends a message to another player as a reply.
-    aliases: [r]
-  socialspy:
-    description: Shows a copy of all private messages on the server when enabled.
-    aliases: [spy]
-  dvanish:
-    description: Hides the player from personal messages and teleports.
-    aliases: [dv]
-  tp:
-    description: Teleports players.
-    aliases: [detp]
-  tphere:
-    description: Teleports other to self.
-    aliases: [detphere]
-  tpahere:
-    description: Sends teleport request.
-    aliases: [detpahere]
-  tpaccept:
-    description: Accepts teleport request.
-    aliases: [detpaccept]
-  tpdeny:
-    description: Controls if players can teleport to the player.
-    aliases: [detpdeny]
-  lockdown:
-    description: Stops all players from joining the server when enabled.
-    aliases: [ld]
+  deltaessentialsdebug:
+    aliases: [deltaessdebug]
   disposal:
-    description: Opens an inventory where players can get rid of items permanently.
     aliases: [trash]
-
-permissions:
-  DeltaEss.Tell.Use:
-    description: Permission for /tell and /reply
-  DeltaEss.Tell.Color:
-    description: Permission for using color in chat
-  DeltaEss.MoveTo.Self:
-    description: Permission for /moveto <server>
-  DeltaEss.MoveTo.Other:
-    description: Permission for /moveto <server> <name>
-  DeltaEss.MoveAll:
-    description: Permission for /moveall <server>
-  DeltaEss.Tp.Self:
-    description: Permission for /tp
-  DeltaEss.Tp.Other:
-    description: Permission for /tphere and /tp <a> <b>
-  DeltaEss.Tpa.Send:
-    description: Permission for /tpahere
-  DeltaEss.Tpa.Accept:
-    description: Permission for /tpaccept
-  DeltaEss.TpDeny:
-    description: Permission for /tpdeny
-  DeltaEss.SocialSpy:
-    description: Permission for /socialspy
-  DeltaEss.DVanish:
-    description: Permission for /dvanish
-  DeltaEss.Lockdown:
-    description: Permission for /lockdown
-  DeltaEss.Disposal:
-    description: Permission for /disposal
-  DeltaEss.BlockedServerBypass:
-    description: Ignores if a server is blocked.
-  DeltaEss.SilentTp:
-    description: Does not inform the player when you teleport to them.
-  DeltaEss.TpVanishBypass:
-    description: Ignores if a player is vanished.
-  DeltaEss.TpDenyBypass:
-    description: Ignores if a player is denying teleports.
-  DeltaEss.ForcedGameModeBypass:
-    description: Ignores if a game mode is being forced.
-  DeltaEss.SharedGameModeInv:
-    description: Inventory is shared between gamemodes.
+  dvanish:
+    aliases: [dv]
+  lockdown:
+    aliases: []
+  moveall:
+    aliases: []
+  moveto:
+    aliases: [mt]
+  socialspy:
+    aliases: [spy]
+  tell:
+    aliases: [t, m, msg, pm]
+  reply:
+    aliases: [r]
+  tp:
+    aliases: [detp]
+  tpaccept:
+    aliases: [detpaccept]
+  tpahere:
+    aliases: [detpahere]
+  tpdeny:
+    aliases: [detpdeny]
+  tphere:
+    aliases: [detphere]

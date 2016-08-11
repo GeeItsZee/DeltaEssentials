@@ -109,9 +109,8 @@ public class CommandMoveTo implements TabExecutor, Registerable, Shutdownable, L
             return true;
         }
 
-        // TODO BlockedServerBypass.<server name>
         if(Settings.isServerBlocked(destServer) &&
-            !sender.hasPermission("DeltaEss.BlockedServerBypass"))
+            !sender.hasPermission("DeltaEss.MoveToBlocked." + destServer))
         {
             sender.sendMessage(Settings.format("BlockedServer", destServer));
             return true;

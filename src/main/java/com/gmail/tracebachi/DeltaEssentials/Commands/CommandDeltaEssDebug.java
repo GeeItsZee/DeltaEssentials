@@ -18,26 +18,23 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
-import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
-import com.gmail.tracebachi.DeltaEssentials.Storage.SocialSpyLevel;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
-import org.bukkit.entity.Player;
 
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/4/15.
+ * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
  */
-public class CommandSocialSpy implements TabExecutor, Registerable, Shutdownable
+public class CommandDeltaEssDebug implements TabExecutor, Registerable, Shutdownable
 {
     private DeltaEssentials plugin;
 
-    public CommandSocialSpy(DeltaEssentials plugin)
+    public CommandDeltaEssDebug(DeltaEssentials plugin)
     {
         this.plugin = plugin;
     }
@@ -45,15 +42,15 @@ public class CommandSocialSpy implements TabExecutor, Registerable, Shutdownable
     @Override
     public void register()
     {
-        plugin.getCommand("socialspy").setExecutor(this);
-        plugin.getCommand("socialspy").setTabCompleter(this);
+        plugin.getCommand("deltaessentialsdebug").setExecutor(this);
+        plugin.getCommand("deltaessentialsdebug").setTabCompleter(this);
     }
 
     @Override
     public void unregister()
     {
-        plugin.getCommand("socialspy").setExecutor(null);
-        plugin.getCommand("socialspy").setTabCompleter(null);
+        plugin.getCommand("deltaessentialsdebug").setExecutor(null);
+        plugin.getCommand("deltaessentialsdebug").setTabCompleter(null);
     }
 
     @Override
@@ -67,7 +64,7 @@ public class CommandSocialSpy implements TabExecutor, Registerable, Shutdownable
     public List<String> onTabComplete(CommandSender commandSender, Command command,
                                       String s, String[] args)
     {
-        return Arrays.asList("all", "world", "off");
+        return Arrays.asList("on", "off");
     }
 
     @Override
@@ -75,48 +72,29 @@ public class CommandSocialSpy implements TabExecutor, Registerable, Shutdownable
     {
         if(args.length < 1)
         {
-            sender.sendMessage(Settings.format("SocialSpyUsage"));
+            sender.sendMessage(Settings.format("DeltaEssentialsDebugUsage"));
             return true;
         }
 
-        if(!(sender instanceof Player))
+        if(!sender.hasPermission("DeltaEss.Debug"))
         {
-            sender.sendMessage(Settings.format("PlayersOnly", "/socialspy"));
+            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Debug"));
             return true;
         }
 
-        if(!sender.hasPermission("DeltaEss.SocialSpy"))
+        if(args[0].equalsIgnoreCase("on"))
         {
-            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.SocialSpy"));
-            return true;
+            Settings.setDebugEnabled(true);
+            sender.sendMessage(Settings.format("DeltaEssentialsDebugChange", "ON"));
         }
-
-        DeltaEssPlayerData playerData = plugin.getPlayerMap().get(sender.getName());
-
-        if(playerData == null)
+        else if(args[0].equalsIgnoreCase("off"))
         {
-            sender.sendMessage(Settings.format("PlayerDataNotLoaded"));
-            return true;
-        }
-
-        if(args[0].equalsIgnoreCase("all"))
-        {
-            playerData.setSocialSpyLevel(SocialSpyLevel.ALL);
-            sender.sendMessage(Settings.format("SocialSpyChange", "ALL"));
-        }
-        else if(args[0].equalsIgnoreCase("world"))
-        {
-            playerData.setSocialSpyLevel(SocialSpyLevel.WORLD);
-            sender.sendMessage(Settings.format("SocialSpyChange", "WORLD"));
-        }
-        else if(args[0].equalsIgnoreCase("none"))
-        {
-            playerData.setSocialSpyLevel(SocialSpyLevel.NONE);
-            sender.sendMessage(Settings.format("SocialSpyChange", "NONE"));
+            Settings.setDebugEnabled(false);
+            sender.sendMessage(Settings.format("DeltaEssentialsDebugChange", "OFF"));
         }
         else
         {
-            sender.sendMessage(Settings.format("SocialSpyUsage"));
+            sender.sendMessage(Settings.format("DeltaEssentialsDebugUsage"));
         }
 
         return true;

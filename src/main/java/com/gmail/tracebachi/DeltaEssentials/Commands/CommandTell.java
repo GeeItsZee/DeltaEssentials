@@ -21,6 +21,7 @@ import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTellEvent;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
+import com.gmail.tracebachi.DeltaEssentials.Storage.SocialSpyLevel;
 import com.gmail.tracebachi.DeltaEssentials.Utils.MessageUtil;
 import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Servers;
@@ -347,10 +348,10 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
 
         for(Map.Entry<String, DeltaEssPlayerData> entry : plugin.getPlayerMap().entrySet())
         {
-            String socialSpyLevel = entry.getValue().getSocialSpyLevel();
+            SocialSpyLevel socialSpyLevel = entry.getValue().getSocialSpyLevel();
 
-            if(socialSpyLevel.equals("ALL") ||
-                (socialSpyLevel.equals("WORLD") && participantInWorld))
+            if(socialSpyLevel == SocialSpyLevel.ALL ||
+                (socialSpyLevel == SocialSpyLevel.WORLD && participantInWorld))
             {
                 Player player = Bukkit.getPlayerExact(entry.getKey());
 
