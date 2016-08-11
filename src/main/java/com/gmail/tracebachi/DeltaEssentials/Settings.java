@@ -34,8 +34,7 @@ import java.util.*;
 public class Settings
 {
     private static volatile boolean debugEnabled;
-    private static volatile boolean syncTaskSchedulingAllowed;
-    private static boolean inLockdown;
+    private static boolean startInLockdown;
     private static boolean defaultGameModeForced;
     private static boolean ignorePotionEffects;
     private static boolean loadPlayerDataOnLogin;
@@ -55,7 +54,7 @@ public class Settings
         formatMap = new HashMap<>();
 
         debugEnabled = config.getBoolean("Debug");
-        inLockdown = config.getBoolean("StartWithLockdown", false);
+        startInLockdown = config.getBoolean("StartInLockdown", false);
         loadPlayerDataOnLogin = config.getBoolean("LoadPlayerDataOnLogin", true);
         defaultGameMode = getGameMode(config.getString("GameModes.Default", "SURVIVAL"));
         defaultGameModeForced = config.getBoolean("GameModes.ForceDefault", false);
@@ -75,7 +74,8 @@ public class Settings
             for(String formatKey : section.getKeys(false))
             {
                 String format = ChatColor.translateAlternateColorCodes(
-                    '&', section.getString(formatKey));
+                    '&',
+                    section.getString(formatKey));
 
                 formatMap.put(formatKey, new MessageFormat(format));
             }
@@ -85,11 +85,8 @@ public class Settings
     public static File getPlayerDataFileFor(String playerName)
     {
         String lowerCaseName = playerName.toLowerCase();
-        File directory = new File(
-            "plugins" + File.separator +
-            "DeltaEssentials" + File.separator +
-            "PlayerData" + File.separator +
-            lowerCaseName.charAt(0));
+        File directory = new File("plugins" + File.separator + "DeltaEssentials" + File.separator + "PlayerData" + File.separator + lowerCaseName.charAt(
+            0));
 
         directory.mkdirs();
 
@@ -106,24 +103,9 @@ public class Settings
         Settings.debugEnabled = debugEnabled;
     }
 
-    public static boolean isSyncTaskSchedulingAllowed()
+    public static boolean shouldStartInLockdown()
     {
-        return syncTaskSchedulingAllowed;
-    }
-
-    public static void setSyncTaskSchedulingAllowed(boolean syncTaskSchedulingAllowed)
-    {
-        Settings.syncTaskSchedulingAllowed = syncTaskSchedulingAllowed;
-    }
-
-    public static boolean isInLockdown()
-    {
-        return inLockdown;
-    }
-
-    public static void setInLockdown(boolean inLockdown)
-    {
-        Settings.inLockdown = inLockdown;
+        return startInLockdown;
     }
 
     public static boolean shouldIgnorePotionEffects()
@@ -158,9 +140,9 @@ public class Settings
 
     public static boolean isGameModeBlocked(GameMode mode)
     {
-        if(disabledGameModes.contains(mode)) return true;
+        if(disabledGameModes.contains(mode)) { return true; }
 
-        if(defaultGameModeForced && mode != defaultGameMode) return true;
+        if(defaultGameModeForced && mode != defaultGameMode) { return true; }
 
         return false;
     }

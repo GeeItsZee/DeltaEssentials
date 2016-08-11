@@ -83,8 +83,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         Map<String, DeltaEssPlayerData> playerMap = plugin.getPlayerMap();
         PlayerLockManager lockManager = plugin.getPlayerLockManager();
 
-        if(playerMap.containsKey(name) &&
-            !lockManager.isLocked(name))
+        if(playerMap.containsKey(name) && !lockManager.isLocked(name))
         {
             savePlayer(player);
         }
@@ -101,8 +100,8 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
 
         if(plugin.getPlayerMap().containsKey(name))
         {
-            throw new IllegalArgumentException(
-                "Player {name: " + name + "} has already been loaded.");
+            throw new IllegalArgumentException("Player {name: " +
+                name + "} has already been loaded.");
         }
 
         loadPlayer(player);
@@ -121,9 +120,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         PlayerLoad runnable = new PlayerLoad(name, this, plugin);
 
         plugin.getPlayerLockManager().add(name);
-        plugin.scheduleTaskAsync(
-            runnable,
-            "PlayerLoad for {name: " + name + "}");
+        plugin.scheduleTaskAsync(runnable, "PlayerLoad for {name: " + name + "}");
     }
 
     public void savePlayer(Player player)
@@ -147,9 +144,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         PlayerSave runnable = new PlayerSave(entry, destServer, this, plugin);
 
         plugin.getPlayerLockManager().add(name);
-        plugin.scheduleTaskAsync(
-            runnable,
-            "PlayerSave for {name: " + name + "}");
+        plugin.scheduleTaskAsync(runnable, "PlayerSave for {name: " + name + "}");
     }
 
     /**************************************************************************
@@ -162,7 +157,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         PlayerStats playerStats = entry.getPlayerStats();
         DeltaEssPlayerData playerData = entry.getDeltaEssPlayerData();
 
-        if(player == null) return;
+        if(player == null) { return; }
 
         plugin.getPlayerLockManager().remove(name);
         plugin.getPlayerMap().put(name, playerData);
@@ -182,7 +177,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         DeltaEssPlayerData playerData = new DeltaEssPlayerData();
         GameMode defaultGameMode = Settings.getDefaultGameMode();
 
-        if(player == null) return;
+        if(player == null) { return; }
 
         plugin.getPlayerLockManager().remove(name);
         plugin.getPlayerMap().put(name, playerData);
@@ -203,7 +198,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
     {
         Player player = Bukkit.getPlayerExact(name);
 
-        if(player == null) return;
+        if(player == null) { return; }
 
         player.sendMessage(FAILURE + "Failed to load inventory. " +
             "Refer to the console for more details.");
@@ -216,23 +211,25 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
 
         Player player = Bukkit.getPlayerExact(name);
 
-        if(player == null) return;
+        if(player == null) { return; }
 
-        if(destServer == null) return;
+        if(destServer == null) { return; }
 
         ByteArrayDataOutput output = ByteStreams.newDataOutput();
         output.writeUTF("Connect");
         output.writeUTF(destServer);
         player.sendPluginMessage(plugin, "BungeeCord", output.toByteArray());
 
-        plugin.getPlayerLockManager().add(name, System.currentTimeMillis() + 15000); // TODO Make configurable time
+        plugin.getPlayerLockManager().add(
+            name,
+            System.currentTimeMillis() + 15000); // TODO Make configurable time
     }
 
     public void onPlayerSaveException(String name)
     {
         Player player = Bukkit.getPlayerExact(name);
 
-        if(player == null) return;
+        if(player == null) { return; }
 
         player.sendMessage(FAILURE + "Failed to save inventory. " +
             "Refer to the console for more details.");
@@ -242,7 +239,8 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
      * Private Methods
      *************************************************************************/
 
-    private void applyEntryToPlayer(PlayerStats playerStats, DeltaEssPlayerData playerData, Player player)
+    private void applyEntryToPlayer(PlayerStats playerStats, DeltaEssPlayerData playerData,
+                                    Player player)
     {
         Preconditions.checkNotNull(player, "Player was null.");
         Preconditions.checkNotNull(playerStats, "PlayerStats was null.");

@@ -71,7 +71,8 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args)
+    public List<String> onTabComplete(CommandSender sender, Command command,
+                                      String s, String[] args)
     {
         String lastArg = args[args.length - 1];
         return DeltaRedisApi.instance().matchStartOfPlayerName(lastArg);
@@ -112,10 +113,7 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
 
         if(toTp != null)
         {
-            teleportListener.teleport(
-                toTp,
-                (Player) sender,
-                PlayerTpEvent.TeleportType.TP_HERE);
+            teleportListener.teleport(toTp, (Player) sender, PlayerTpEvent.TeleportType.TP_HERE);
             return true;
         }
 
@@ -123,7 +121,7 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
         {
             Player sendingPlayer = Bukkit.getPlayerExact(senderName);
 
-            if(sendingPlayer == null) return;
+            if(sendingPlayer == null) { return; }
 
             if(cachedPlayer == null)
             {

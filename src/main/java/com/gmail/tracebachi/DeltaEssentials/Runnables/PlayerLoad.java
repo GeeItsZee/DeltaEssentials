@@ -86,22 +86,19 @@ public class PlayerLoad implements Runnable
     private void onSuccess(PlayerEntry entry)
     {
         plugin.debug("Loaded player data for {name:" + entry.getName() + "}");
-        plugin.scheduleTaskSync(
-            () -> listener.onPlayerLoadSuccess(name, entry));
+        plugin.scheduleTaskSync(() -> listener.onPlayerLoadSuccess(name, entry));
     }
 
     private void onNotFoundFailure()
     {
         plugin.debug("Player data not found for {name:" + name + "}");
-        plugin.scheduleTaskSync(
-            () -> listener.onPlayerNotFound(name));
+        plugin.scheduleTaskSync(() -> listener.onPlayerNotFound(name));
     }
 
     private void onExceptionFailure()
     {
         plugin.debug("Failed to load player data for {name:" + name + "} due to an exception");
-        plugin.scheduleTaskSync(
-            () -> listener.onPlayerLoadException(name));
+        plugin.scheduleTaskSync(() -> listener.onPlayerLoadException(name));
     }
 
     private PlayerEntry readPlayerDataYaml(YamlConfiguration config)

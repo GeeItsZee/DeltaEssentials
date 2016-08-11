@@ -41,7 +41,8 @@ public class PlayerSave implements Runnable
     private final PlayerDataIOListener listener;
     private final DeltaEssentials plugin;
 
-    public PlayerSave(PlayerEntry entry, String destServer, PlayerDataIOListener listener, DeltaEssentials plugin)
+    public PlayerSave(PlayerEntry entry, String destServer, PlayerDataIOListener listener,
+                      DeltaEssentials plugin)
     {
         Preconditions.checkNotNull(entry, "Entry was null.");
         Preconditions.checkNotNull(listener, "Listener was null.");
@@ -82,15 +83,14 @@ public class PlayerSave implements Runnable
     private void onSuccess()
     {
         plugin.debug("Saved inventory for {name:" + entry.getName() + "}");
-        plugin.scheduleTaskSync(
-            () -> listener.onPlayerSaveSuccess(entry.getName(), destServer));
+        plugin.scheduleTaskSync(() -> listener.onPlayerSaveSuccess(entry.getName(), destServer));
     }
 
     private void onFailure()
     {
-        plugin.debug("Failed to save inventory for {name:" + entry.getName() + "} due to an exception");
-        plugin.scheduleTaskSync(
-            () -> listener.onPlayerSaveException(entry.getName()));
+        plugin.debug("Failed to save inventory for {name:" +
+            entry.getName() + "} due to an exception");
+        plugin.scheduleTaskSync(() -> listener.onPlayerSaveException(entry.getName()));
     }
 
     private YamlConfiguration writePlayerDataYaml()

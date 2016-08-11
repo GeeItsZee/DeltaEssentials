@@ -30,12 +30,14 @@ public class TeleportRequest implements Cacheable
     private final PlayerTpEvent.TeleportType teleportType;
     private final long timeCreatedAt;
 
-    public TeleportRequest(String sender, String destServer, PlayerTpEvent.TeleportType teleportType)
+    public TeleportRequest(String sender, String destServer,
+                           PlayerTpEvent.TeleportType teleportType)
     {
         this(sender, destServer, teleportType, System.currentTimeMillis());
     }
 
-    public TeleportRequest(String sender, String destServer, PlayerTpEvent.TeleportType teleportType, long timeCreatedAt)
+    public TeleportRequest(String sender, String destServer,
+                           PlayerTpEvent.TeleportType teleportType, long timeCreatedAt)
     {
         Preconditions.checkNotNull(sender);
         Preconditions.checkNotNull(destServer);

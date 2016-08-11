@@ -3,7 +3,7 @@
 ###############################################################################
 
 # Should lockdown be enabled on start
-StartWithLockdown: False
+StartInLockdown: False
 
 # Should player data be loaded when player joins
 # Set to false if the server will have an authentication plugin that will

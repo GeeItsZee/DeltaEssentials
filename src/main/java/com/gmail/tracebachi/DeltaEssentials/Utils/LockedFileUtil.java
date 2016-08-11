@@ -42,8 +42,10 @@ public interface LockedFileUtil
 
         try
         {
-            fileChannel = FileChannel.open(file.toPath(),
-                StandardOpenOption.READ, StandardOpenOption.WRITE);
+            fileChannel = FileChannel.open(
+                file.toPath(),
+                StandardOpenOption.READ,
+                StandardOpenOption.WRITE);
 
             // Lock the file
             lock = fileChannel.lock();
@@ -102,8 +104,10 @@ public interface LockedFileUtil
                 return false;
             }
 
-            fileChannel = FileChannel.open(file.toPath(),
-                StandardOpenOption.READ, StandardOpenOption.WRITE);
+            fileChannel = FileChannel.open(
+                file.toPath(),
+                StandardOpenOption.READ,
+                StandardOpenOption.WRITE);
             ByteBuffer buffer = ByteBuffer.wrap(toWrite.getBytes(charset));
 
             // Lock the file

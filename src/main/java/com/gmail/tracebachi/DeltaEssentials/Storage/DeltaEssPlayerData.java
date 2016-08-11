@@ -46,12 +46,9 @@ public class DeltaEssPlayerData
     {
         String uppercased = socialSpyLevel.toUpperCase();
 
-        if(!uppercased.equals("ALL") &&
-            !uppercased.equals("WORLD") &&
-            !uppercased.equals("OFF"))
+        if(!uppercased.equals("ALL") && !uppercased.equals("WORLD") && !uppercased.equals("OFF"))
         {
-            throw new IllegalArgumentException(
-                "SocialSpyLevel can only be ALL, WORLD, or OFF.");
+            throw new IllegalArgumentException("SocialSpyLevel can only be ALL, WORLD, or OFF.");
         }
 
         this.socialSpyLevel = uppercased;

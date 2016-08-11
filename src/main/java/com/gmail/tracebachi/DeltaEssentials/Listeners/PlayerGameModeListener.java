@@ -32,10 +32,10 @@ public class PlayerGameModeListener extends DeltaEssentialsListener
         String gameModePerm = "DeltaEss.GameMode." + newMode.name();
 
         // Ignore game mode changes to the same mode
-        if(currentMode == event.getNewGameMode()) return;
+        if(currentMode == event.getNewGameMode()) { return; }
 
         // Ignore if DeltaEssPlayer does not exist
-        if(playerData == null) return;
+        if(playerData == null) { return; }
 
         // Prevent game mode change during loading or saving
         if(plugin.getPlayerLockManager().isLocked(name))
@@ -54,7 +54,7 @@ public class PlayerGameModeListener extends DeltaEssentialsListener
         }
 
         // Ignore players that have the single inventory permission
-        if(player.hasPermission("DeltaEss.SharedGameModeInv")) return;
+        if(player.hasPermission("DeltaEss.SharedGameModeInv")) { return; }
 
         // Save the inventory associated with the old game mode
         if(currentMode == GameMode.SURVIVAL)

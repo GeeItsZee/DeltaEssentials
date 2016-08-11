@@ -25,7 +25,9 @@ import org.bukkit.inventory.ItemStack;
  */
 public class SavedInventory
 {
-    public static final SavedInventory EMPTY = new SavedInventory(new ItemStack[4], new ItemStack[36]);
+    public static final SavedInventory EMPTY = new SavedInventory(
+        new ItemStack[4],
+        new ItemStack[36]);
 
     private ItemStack[] armor;
     private ItemStack[] contents;

@@ -78,7 +78,8 @@ public class CommandMoveTo implements TabExecutor, Registerable, Shutdownable, L
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args)
+    public List<String> onTabComplete(CommandSender commandSender, Command command,
+                                      String s, String[] args)
     {
         String lastArg = args[args.length - 1].toLowerCase();
         return DeltaRedisApi.instance().matchStartOfServerName(lastArg);
@@ -93,8 +94,10 @@ public class CommandMoveTo implements TabExecutor, Registerable, Shutdownable, L
 
         if(args.length < 1)
         {
+            String formattedList = getFormattedServerList(servers);
+
             sender.sendMessage(Settings.format("CurrentServer", currentServer));
-            sender.sendMessage(Settings.format("OnlineServerList", getFormattedServerList(servers)));
+            sender.sendMessage(Settings.format("OnlineServerList", formattedList));
             return true;
         }
 
@@ -106,6 +109,7 @@ public class CommandMoveTo implements TabExecutor, Registerable, Shutdownable, L
             return true;
         }
 
+        // TODO BlockedServerBypass.<server name>
         if(Settings.isServerBlocked(destServer) &&
             !sender.hasPermission("DeltaEss.BlockedServerBypass"))
         {
@@ -115,11 +119,11 @@ public class CommandMoveTo implements TabExecutor, Registerable, Shutdownable, L
 
         if(args.length == 1)
         {
-            handleSelfMoveTo(sender, currentServer, destServer);
+            handleMoveSelfTo(sender, currentServer, destServer);
         }
         else
         {
-            handleOtherMoveTo(sender, currentServer, destServer, args[1]);
+            handleMoveOtherTo(sender, currentServer, destServer, args[1]);
         }
 
         return true;
@@ -150,7 +154,7 @@ public class CommandMoveTo implements TabExecutor, Registerable, Shutdownable, L
         }
     }
 
-    private void handleSelfMoveTo(CommandSender sender, String currentServer, String destServer)
+    private void handleMoveSelfTo(CommandSender sender, String currentServer, String destServer)
     {
         if(!(sender instanceof Player))
         {
@@ -173,8 +177,8 @@ public class CommandMoveTo implements TabExecutor, Registerable, Shutdownable, L
         handlePlayerInSameServer(((Player) sender), destServer);
     }
 
-    private void handleOtherMoveTo(CommandSender sender, String currentServer, String destServer,
-        String targetName)
+    private void handleMoveOtherTo(CommandSender sender, String currentServer, String destServer,
+                                   String targetName)
     {
         if(!sender.hasPermission("DeltaEss.MoveTo.Other"))
         {

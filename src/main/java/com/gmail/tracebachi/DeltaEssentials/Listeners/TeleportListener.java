@@ -109,7 +109,7 @@ public class TeleportListener extends DeltaEssentialsListener
 
         TeleportRequest request = requestMap.remove(playerName);
 
-        if(request == null) return;
+        if(request == null) { return; }
 
         String destName = request.getSender();
         Player destination = Bukkit.getPlayerExact(destName);
@@ -130,7 +130,8 @@ public class TeleportListener extends DeltaEssentialsListener
         requestMap.remove(player.getName());
     }
 
-    public boolean teleport(Player toTp, Player destination, PlayerTpEvent.TeleportType teleportType)
+    public boolean teleport(Player toTp, Player destination,
+                            PlayerTpEvent.TeleportType teleportType)
     {
         String senderName = toTp.getName();
         String destName = destination.getName();
@@ -246,7 +247,7 @@ public class TeleportListener extends DeltaEssentialsListener
 
     private Location getSafeDestination(Location start)
     {
-        if(start == null || start.getWorld() == null) return null;
+        if(start == null || start.getWorld() == null) { return null; }
 
         World world = start.getWorld();
         int startX = start.getBlockX();
@@ -281,8 +282,7 @@ public class TeleportListener extends DeltaEssentialsListener
     private void cleanup()
     {
         long oldestTime = System.currentTimeMillis() - 30000;
-        Iterator<Map.Entry<String, TeleportRequest>> iterator =
-            requestMap.entrySet().iterator();
+        Iterator<Map.Entry<String, TeleportRequest>> iterator = requestMap.entrySet().iterator();
 
         while(iterator.hasNext())
         {

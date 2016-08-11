@@ -71,7 +71,8 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args)
+    public List<String> onTabComplete(CommandSender sender, Command command,
+                                      String s, String[] args)
     {
         String lastArg = args[args.length - 1];
         return DeltaRedisApi.instance().matchStartOfPlayerName(lastArg);
@@ -168,7 +169,7 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
         {
             Player player = Bukkit.getPlayerExact(toTpName);
 
-            if(player == null) return;
+            if(player == null) { return; }
 
             if(cachedPlayer == null)
             {
@@ -193,8 +194,7 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
 
     private String attemptAutoComplete(String partial)
     {
-        List<String> partialMatches = DeltaRedisApi.instance()
-            .matchStartOfPlayerName(partial);
+        List<String> partialMatches = DeltaRedisApi.instance().matchStartOfPlayerName(partial);
 
         if(partialMatches.contains(partial.toLowerCase()))
         {

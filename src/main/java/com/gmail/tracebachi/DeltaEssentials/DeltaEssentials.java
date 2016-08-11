@@ -37,6 +37,8 @@ public class DeltaEssentials extends JavaPlugin
 {
     private CaseInsensitiveHashMap<DeltaEssPlayerData> playerMap = new CaseInsensitiveHashMap<>();
 
+    private static volatile boolean syncTaskSchedulingAllowed;
+
     private SharedChatListener sharedChatListener;
     private PlayerLockManager playerLockManager;
     private PlayerDataIOListener playerDataIOListener;
@@ -67,7 +69,7 @@ public class DeltaEssentials extends JavaPlugin
     {
         reloadConfig();
         Settings.read(getConfig());
-        Settings.setSyncTaskSchedulingAllowed(true);
+        syncTaskSchedulingAllowed = true;
 
         // Add a player for the console so the console's reply targets are stored
         playerMap.put("console", new DeltaEssPlayerData());
@@ -130,7 +132,7 @@ public class DeltaEssentials extends JavaPlugin
     @Override
     public void onDisable()
     {
-        Settings.setSyncTaskSchedulingAllowed(false);
+        syncTaskSchedulingAllowed = false;
 
         // Save player data for all players
         for(Player player : Bukkit.getOnlinePlayers())
@@ -241,7 +243,7 @@ public class DeltaEssentials extends JavaPlugin
 
     public void scheduleTaskSync(Runnable runnable)
     {
-        if(Settings.isSyncTaskSchedulingAllowed())
+        if(syncTaskSchedulingAllowed)
         {
             getServer().getScheduler().runTask(this, runnable);
         }

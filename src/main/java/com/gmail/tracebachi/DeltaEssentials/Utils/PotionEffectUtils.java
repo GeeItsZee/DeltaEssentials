@@ -16,6 +16,7 @@
  */
 package com.gmail.tracebachi.DeltaEssentials.Utils;
 
+import com.gmail.tracebachi.DeltaRedis.Shared.SplitPatterns;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -29,8 +30,6 @@ import java.util.regex.Pattern;
  */
 public interface PotionEffectUtils
 {
-    Pattern COMMA_PATTERN = Pattern.compile(",");
-
     static List<String> toStringList(Collection<PotionEffect> effects)
     {
         List<String> result = new ArrayList<>(effects.size());
@@ -67,7 +66,7 @@ public interface PotionEffectUtils
 
     static PotionEffect deserialize(String source)
     {
-        String split[] = COMMA_PATTERN.split(source, 3);
+        String split[] = SplitPatterns.COMMA.split(source, 3);
         int amplifier = Integer.parseInt(split[1]);
         int duration = Integer.parseInt(split[2]);
 

@@ -63,7 +63,8 @@ public class CommandDVanish implements TabExecutor, Registerable, Shutdownable
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args)
+    public List<String> onTabComplete(CommandSender commandSender, Command command,
+                                      String s, String[] args)
     {
         return Arrays.asList("on", "off");
     }
@@ -100,13 +101,11 @@ public class CommandDVanish implements TabExecutor, Registerable, Shutdownable
         if(args[0].equalsIgnoreCase("on"))
         {
             playerData.setVanishEnabled(true);
-
             sender.sendMessage(Settings.format("DVanishChange", "ON"));
         }
         else if(args[0].equalsIgnoreCase("off"))
         {
             playerData.setVanishEnabled(false);
-
             sender.sendMessage(Settings.format("DVanishChange", "OFF"));
         }
         else

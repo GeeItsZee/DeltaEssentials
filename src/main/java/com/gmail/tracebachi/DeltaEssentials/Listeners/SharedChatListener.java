@@ -53,7 +53,7 @@ public class SharedChatListener extends DeltaEssentialsListener
 
         DeltaRedisApi.instance().publish(
             Servers.SPIGOT,
-            DeltaEssentialsChannels.SHARED_CHAT,
+            DeltaEssentialsChannels.CHAT,
             channel,
             permission,
             message);
@@ -62,7 +62,7 @@ public class SharedChatListener extends DeltaEssentialsListener
     @EventHandler
     public void onSharedChatIncoming(DeltaRedisMessageEvent event)
     {
-        if(!event.getChannel().equals(DeltaEssentialsChannels.SHARED_CHAT)) return;
+        if(!event.getChannel().equals(DeltaEssentialsChannels.CHAT)) return;
 
         String[] splitMessage = SplitPatterns.DELTA.split(event.getMessage(), 3);
         String channelName = splitMessage[0];

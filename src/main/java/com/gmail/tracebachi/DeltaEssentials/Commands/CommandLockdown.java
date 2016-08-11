@@ -32,16 +32,20 @@ import org.bukkit.event.player.PlayerLoginEvent;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.bukkit.event.player.PlayerLoginEvent.Result.KICK_OTHER;
+
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/4/15.
  */
 public class CommandLockdown implements TabExecutor, Registerable, Shutdownable, Listener
 {
     private DeltaEssentials plugin;
+    private boolean isInLockdown;
 
     public CommandLockdown(DeltaEssentials plugin)
     {
         this.plugin = plugin;
+        this.isInLockdown = Settings.shouldStartInLockdown();
     }
 
     @Override
@@ -70,7 +74,8 @@ public class CommandLockdown implements TabExecutor, Registerable, Shutdownable,
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args)
+    public List<String> onTabComplete(CommandSender commandSender, Command command,
+                                      String s, String[] args)
     {
         return Arrays.asList("on", "off");
     }
@@ -92,14 +97,12 @@ public class CommandLockdown implements TabExecutor, Registerable, Shutdownable,
 
         if(args[0].equalsIgnoreCase("on"))
         {
-            Settings.setInLockdown(true);
-
+            isInLockdown = true;
             sender.sendMessage(Settings.format("LockdownChange", "ON"));
         }
         else if(args[0].equalsIgnoreCase("off"))
         {
-            Settings.setInLockdown(false);
-
+            isInLockdown = false;
             sender.sendMessage(Settings.format("LockdownChange", "OFF"));
         }
         else
@@ -113,10 +116,9 @@ public class CommandLockdown implements TabExecutor, Registerable, Shutdownable,
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onPlayerLoginEvent(PlayerLoginEvent event)
     {
-        if(Settings.isInLockdown())
+        if(isInLockdown)
         {
-            event.disallow(PlayerLoginEvent.Result.KICK_OTHER,
-                Settings.format("LockdownMessage"));
+            event.disallow(KICK_OTHER, Settings.format("LockdownMessage"));
         }
     }
 }

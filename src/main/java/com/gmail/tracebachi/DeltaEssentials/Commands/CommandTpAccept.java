@@ -70,7 +70,8 @@ public class CommandTpAccept implements TabExecutor, Registerable, Shutdownable
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args)
+    public List<String> onTabComplete(CommandSender sender, Command command,
+                                      String s, String[] args)
     {
         String lastArg = args[args.length - 1];
         return DeltaRedisApi.instance().matchStartOfPlayerName(lastArg);
@@ -99,8 +100,7 @@ public class CommandTpAccept implements TabExecutor, Registerable, Shutdownable
             return true;
         }
 
-        TeleportRequest request = teleportListener
-            .getRequestMap().get(sender.getName());
+        TeleportRequest request = teleportListener.getRequestMap().get(sender.getName());
 
         if(request == null)
         {
@@ -126,10 +126,7 @@ public class CommandTpAccept implements TabExecutor, Registerable, Shutdownable
             return true;
         }
 
-        teleportListener.teleport(
-            player,
-            destPlayer,
-            PlayerTpEvent.TeleportType.TPA_HERE);
+        teleportListener.teleport(player, destPlayer, PlayerTpEvent.TeleportType.TPA_HERE);
 
         return true;
     }

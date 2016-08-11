@@ -87,7 +87,8 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args)
+    public List<String> onTabComplete(CommandSender commandSender, Command command,
+                                      String s, String[] args)
     {
         String lastArg = args[args.length - 1];
         return DeltaRedisApi.instance().matchStartOfPlayerName(lastArg);
@@ -137,7 +138,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
                 return true;
             }
 
-            message = String.join(" ", (CharSequence[]) Arrays.copyOfRange(args, 0, args.length));
+            message = String.join(" ", Arrays.copyOfRange(args, 0, args.length));
         }
         else
         {
@@ -149,7 +150,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
                 return true;
             }
 
-            message = String.join(" ", (CharSequence[]) Arrays.copyOfRange(args, 1, args.length));
+            message = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
         }
 
         if(sender.hasPermission("DeltaEss.Tell.Color"))
@@ -164,9 +165,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
         {
             DeltaEssPlayerData receiverData = playerMap.get(receiverName);
 
-            if(receiverData != null &&
-                receiverData.isVanishEnabled() &&
-                !senderIgnoresVanish)
+            if(receiverData != null && receiverData.isVanishEnabled() && !senderIgnoresVanish)
             {
                 sender.sendMessage(Settings.format("PlayerOffline", receiverName));
                 return true;
@@ -182,16 +181,23 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
             Bukkit.getPluginManager().callEvent(event);
             String finalMessage = event.getMessage();
 
+            if(event.isCancelled()) { return true; }
+
             Bukkit.getLogger().info(Settings.format(
                 "TellLog",
                 senderName,
                 receiverName,
                 finalMessage));
+            sender.sendMessage(Settings.format(
+                "TellSender",
+                receiverName,
+                finalMessage));
+            receiver.sendMessage(Settings.format(
+                "TellReceiver",
+                senderName,
+                finalMessage));
 
-            sender.sendMessage(Settings.format("TellSender", receiverName, finalMessage));
             senderData.setReplyTo(receiverName);
-
-            receiver.sendMessage(Settings.format("TellReceiver", senderName, finalMessage));
 
             if(receiverData != null)
             {
@@ -206,19 +212,24 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
                 senderName,
                 sender,
                 receiverName,
-                receiver,
+                null,
                 message);
 
             Bukkit.getPluginManager().callEvent(event);
             String finalMessage = event.getMessage();
+
+            if(event.isCancelled()) { return true; }
 
             Bukkit.getLogger().info(Settings.format(
                 "TellLog",
                 senderName,
                 receiverName,
                 finalMessage));
+            sender.sendMessage(Settings.format(
+                "TellSender",
+                receiverName,
+                finalMessage));
 
-            sender.sendMessage(Settings.format("TellSender", receiverName, finalMessage));
             senderData.setReplyTo(receiverName);
 
             DeltaRedisApi.instance().findPlayer(receiverName, cachedPlayer ->
@@ -250,8 +261,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
     @EventHandler(priority = EventPriority.NORMAL)
     public void onDeltaRedisMessage(DeltaRedisMessageEvent event)
     {
-        if(event.getChannel().equals(DeltaEssentialsChannels.TELL) &&
-            !event.getSendingServer().equals(DeltaRedisApi.instance().getServerName()))
+        if(event.getChannel().equals(DeltaEssentialsChannels.TELL) && !event.isSendingServerSelf())
         {
             String[] split = SplitPatterns.DELTA.split(event.getMessage(), 4);
             String senderName = split[0];
@@ -269,9 +279,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
 
             DeltaEssPlayerData receiverData = plugin.getPlayerMap().get(receiverName);
 
-            if(receiverData != null &&
-                receiverData.isVanishEnabled() &&
-                !senderIgnoresVanish)
+            if(receiverData != null && receiverData.isVanishEnabled() && !senderIgnoresVanish)
             {
                 DeltaRedisApi.instance().sendMessageToPlayer(
                     senderName,
@@ -289,13 +297,17 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
             Bukkit.getPluginManager().callEvent(tellEvent);
             String finalMessage = tellEvent.getMessage();
 
+            if(tellEvent.isCancelled()) { return; }
+
             Bukkit.getLogger().info(Settings.format(
                 "TellLog",
                 senderName,
                 receiverName,
                 finalMessage));
-
-            receiver.sendMessage(Settings.format("TellReceiver", senderName, finalMessage));
+            receiver.sendMessage(Settings.format(
+                "TellReceiver",
+                senderName,
+                finalMessage));
 
             if(receiverData != null)
             {
@@ -329,7 +341,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
     }
 
     private void sendToSocialSpies(String senderName, String receiverName, String message,
-        boolean participantInWorld)
+                                   boolean participantInWorld)
     {
         String spyFormat = Settings.format("TellSpy", senderName, receiverName, message);
 
@@ -337,17 +349,15 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
         {
             String socialSpyLevel = entry.getValue().getSocialSpyLevel();
 
-            if(socialSpyLevel.equals("OFF") ||
-                (socialSpyLevel.equals("WORLD") && !participantInWorld))
+            if(socialSpyLevel.equals("ALL") ||
+                (socialSpyLevel.equals("WORLD") && participantInWorld))
             {
-                continue;
-            }
+                Player player = Bukkit.getPlayerExact(entry.getKey());
 
-            Player player = Bukkit.getPlayerExact(entry.getKey());
-
-            if(player != null)
-            {
-                player.sendMessage(spyFormat);
+                if(player != null)
+                {
+                    player.sendMessage(spyFormat);
+                }
             }
         }
     }

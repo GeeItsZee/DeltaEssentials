@@ -72,7 +72,8 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args)
+    public List<String> onTabComplete(CommandSender commandSender, Command command,
+                                      String s, String[] args)
     {
         String lastArg = args[args.length - 1].toLowerCase();
         return DeltaRedisApi.instance().matchStartOfServerName(lastArg);
@@ -87,8 +88,10 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
 
         if(args.length < 1)
         {
+            String formattedList = getFormattedServerList(servers);
+
             sender.sendMessage(Settings.format("CurrentServer", currentServer));
-            sender.sendMessage(Settings.format("OnlineServerList", getFormattedServerList(servers)));
+            sender.sendMessage(Settings.format("OnlineServerList", formattedList));
             return true;
         }
 

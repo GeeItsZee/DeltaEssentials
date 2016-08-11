@@ -63,7 +63,8 @@ public class CommandTpDeny implements TabExecutor, Registerable, Shutdownable
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args)
+    public List<String> onTabComplete(CommandSender commandSender, Command command,
+                                      String s, String[] args)
     {
         return Arrays.asList("on", "off");
     }
@@ -100,13 +101,11 @@ public class CommandTpDeny implements TabExecutor, Registerable, Shutdownable
         if(args[0].equalsIgnoreCase("on"))
         {
             playerData.setTeleportDenyEnabled(true);
-
             sender.sendMessage(Settings.format("TeleportDenyChange", "ON"));
         }
         else if(args[0].equalsIgnoreCase("off"))
         {
             playerData.setTeleportDenyEnabled(false);
-
             sender.sendMessage(Settings.format("TeleportDenyChange", "OFF"));
         }
         else

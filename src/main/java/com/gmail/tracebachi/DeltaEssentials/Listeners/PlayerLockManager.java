@@ -147,7 +147,7 @@ public class PlayerLockManager extends DeltaEssentialsListener
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPlayerDamagedEvent(EntityDamageEvent event)
     {
-        if(!(event.getEntity() instanceof Player)) return;
+        if(!(event.getEntity() instanceof Player)) { return; }
 
         Player player = (Player) event.getEntity();
 
