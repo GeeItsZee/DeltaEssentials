@@ -91,9 +91,7 @@ public class Settings
                     rawFormat = rawFormat.replace(entry.getKey(), entry.getValue());
                 }
 
-                String format = ChatColor.translateAlternateColorCodes(
-                    '&',
-                    section.getString(formatKey));
+                String format = ChatColor.translateAlternateColorCodes('&', rawFormat);
 
                 formatMap.put(formatKey, new MessageFormat(format));
             }

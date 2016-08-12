@@ -67,20 +67,20 @@ Formats:
   BlockedServer: 'PREFIX_FAILURE Server &f{0}&7 is blocked for you.'
 
   SocialSpyUsage: 'PREFIX_INFO /socialspy <all|world|none>'
-  SocialSpyChange: 'PREFIX_SUCCESS SocialSpy: &f{0}&7'
+  SocialSpyChange: 'PREFIX_SUCCESS SocialSpy set to &f{0}&7'
 
   DVanishUsage: 'PREFIX_INFO /dvanish <on|off>'
-  DVanishChange: 'PREFIX_SUCCESS DeltaVanish: &f{0}&7'
+  DVanishChange: 'PREFIX_SUCCESS DeltaVanish set to &f{0}&7'
 
   TeleportDenyUsage: 'PREFIX_INFO /tpdeny <on|off>'
-  TeleportDenyChange: 'PREFIX_SUCCESS TeleportDeny: &f{0}&7'
+  TeleportDenyChange: 'PREFIX_SUCCESS TeleportDeny set to &f{0}&7'
 
   LockdownUsage: 'PREFIX_INFO /lockdown <on|off>'
   LockdownMessage: 'Server is locked down ... for reasons!'
-  LockdownChange: 'PREFIX_SUCCESS Lockdown: &f{0}&7'
+  LockdownChange: 'PREFIX_SUCCESS Lockdown set to &f{0}&7'
 
   DeltaEssentialsDebugUsage: 'PREFIX_INFO /deltaessentialsdebug <on|off>'
-  DeltaEssentialsDebugChange: 'PREFIX_SUCCESS DeltaEssentialsDebug: &f{0}&7'
+  DeltaEssentialsDebugChange: 'PREFIX_SUCCESS DeltaEssentialsDebug set to &f{0}&7'
 
   TellUsage: 'PREFIX_INFO /tell <name> <message>'
   ReplyUsage: 'PREFIX_INFO /reply <message>'
@@ -106,5 +106,5 @@ Formats:
 
 ###############################################################################
 
-# Debug Mode (for developers)
-DebugMode: True
+# Debug Mode
+DebugMode: False
