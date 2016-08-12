@@ -44,7 +44,7 @@ public class DeltaEssentials extends JavaPlugin
     private PlayerGameModeListener playerGameModeListener;
     private TeleportListener teleportListener;
 
-    private CommandDeltaEssDebug commandDeltaEssDebug;
+    private CommandDeltaEss commandDeltaEss;
     private CommandDisposal commandDisposal;
     private CommandDVanish commandDVanish;
     private CommandLockdown commandLockdown;
@@ -89,8 +89,8 @@ public class DeltaEssentials extends JavaPlugin
         playerDataIOListener = new PlayerDataIOListener(this);
         playerDataIOListener.register();
 
-        commandDeltaEssDebug = new CommandDeltaEssDebug(this);
-        commandDeltaEssDebug.register();
+        commandDeltaEss = new CommandDeltaEss(this);
+        commandDeltaEss.register();
 
         commandDisposal = new CommandDisposal(this);
         commandDisposal.register();
@@ -171,8 +171,8 @@ public class DeltaEssentials extends JavaPlugin
         sharedChatListener.shutdown();
         sharedChatListener = null;
 
-        commandDeltaEssDebug.shutdown();
-        commandDeltaEssDebug = null;
+        commandDeltaEss.shutdown();
+        commandDeltaEss = null;
 
         commandDisposal.shutdown();
         commandDisposal = null;

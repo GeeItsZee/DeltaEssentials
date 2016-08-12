@@ -4,8 +4,8 @@ version: ${project.version}
 author: Trace Bachi (tracebachi@gmail.com, BigBossZee)
 depend: [DeltaRedis, DeltaExecutor]
 commands:
-  deltaessentialsdebug:
-    aliases: [deltaessdebug]
+  deltaessentials:
+    aliases: [deltaess, de]
   disposal:
     aliases: [trash]
   dvanish:

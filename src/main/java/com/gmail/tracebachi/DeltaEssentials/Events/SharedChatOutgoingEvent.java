@@ -16,6 +16,7 @@
  */
 package com.gmail.tracebachi.DeltaEssentials.Events;
 
+import com.google.common.base.Preconditions;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -29,13 +30,20 @@ public class SharedChatOutgoingEvent extends Event implements Cancellable
     private final String channel;
     private final String permission;
     private final String message;
+    private final String extraInfo;
     private boolean cancelled;
 
     public SharedChatOutgoingEvent(String channel, String permission, String message)
     {
-        this.channel = channel;
-        this.permission = permission;
-        this.message = message;
+        this(channel, permission, message, "");
+    }
+
+    public SharedChatOutgoingEvent(String channel, String permission, String message, String extraInfo)
+    {
+        this.channel = Preconditions.checkNotNull(channel, "Channel was null.");
+        this.permission = Preconditions.checkNotNull(permission, "Permission was null.");
+        this.message = Preconditions.checkNotNull(message, "Message was null.");
+        this.extraInfo = Preconditions.checkNotNull(extraInfo, "ExtraInfo was null.");
     }
 
     public String getChannel()
@@ -51,6 +59,11 @@ public class SharedChatOutgoingEvent extends Event implements Cancellable
     public String getMessage()
     {
         return message;
+    }
+
+    public String getExtraInfo()
+    {
+        return extraInfo;
     }
 
     @Override

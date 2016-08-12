@@ -79,8 +79,10 @@ Formats:
   LockdownMessage: 'Server is locked down ... for reasons!'
   LockdownChange: 'PREFIX_SUCCESS Lockdown set to &f{0}&7'
 
-  DeltaEssentialsDebugUsage: 'PREFIX_INFO /deltaessentialsdebug <on|off>'
-  DeltaEssentialsDebugChange: 'PREFIX_SUCCESS DeltaEssentialsDebug set to &f{0}&7'
+  DeltaEssentialsUsage: 'PREFIX_INFO /deltaessentials <debug|reload>'
+  DeltaEssentialsDebugUsage: 'PREFIX_INFO /deltaessentials debug <on|off>'
+  DeltaEssentialsDebugChange: 'PREFIX_SUCCESS DeltaEssentials debug set to &f{0}&7'
+  DeltaEssentialsReloaded: 'PREFIX_SUCCESS DeltaEssentials configuration reloaded.'
 
   TellUsage: 'PREFIX_INFO /tell <name> <message>'
   ReplyUsage: 'PREFIX_INFO /reply <message>'

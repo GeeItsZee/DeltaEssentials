@@ -30,11 +30,11 @@ import java.util.List;
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
  */
-public class CommandDeltaEssDebug implements TabExecutor, Registerable, Shutdownable
+public class CommandDeltaEss implements TabExecutor, Registerable, Shutdownable
 {
     private DeltaEssentials plugin;
 
-    public CommandDeltaEssDebug(DeltaEssentials plugin)
+    public CommandDeltaEss(DeltaEssentials plugin)
     {
         this.plugin = plugin;
     }
@@ -42,15 +42,15 @@ public class CommandDeltaEssDebug implements TabExecutor, Registerable, Shutdown
     @Override
     public void register()
     {
-        plugin.getCommand("deltaessentialsdebug").setExecutor(this);
-        plugin.getCommand("deltaessentialsdebug").setTabCompleter(this);
+        plugin.getCommand("deltaessentials").setExecutor(this);
+        plugin.getCommand("deltaessentials").setTabCompleter(this);
     }
 
     @Override
     public void unregister()
     {
-        plugin.getCommand("deltaessentialsdebug").setExecutor(null);
-        plugin.getCommand("deltaessentialsdebug").setTabCompleter(null);
+        plugin.getCommand("deltaessentials").setExecutor(null);
+        plugin.getCommand("deltaessentials").setTabCompleter(null);
     }
 
     @Override
@@ -72,29 +72,56 @@ public class CommandDeltaEssDebug implements TabExecutor, Registerable, Shutdown
     {
         if(args.length < 1)
         {
-            sender.sendMessage(Settings.format("DeltaEssentialsDebugUsage"));
+            sender.sendMessage(Settings.format("DeltaEssentialsUsage"));
             return true;
         }
 
-        if(!sender.hasPermission("DeltaEss.Debug"))
+        if(args[0].equalsIgnoreCase("debug"))
         {
-            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Debug"));
-            return true;
-        }
+            if(!sender.hasPermission("DeltaEss.Debug"))
+            {
+                sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Debug"));
+                return true;
+            }
 
-        if(args[0].equalsIgnoreCase("on"))
-        {
-            Settings.setDebugEnabled(true);
-            sender.sendMessage(Settings.format("DeltaEssentialsDebugChange", "ON"));
+            if(args.length < 2)
+            {
+                sender.sendMessage(Settings.format("DeltaEssentialsDebugUsage"));
+                return true;
+            }
+
+            if(args[0].equalsIgnoreCase("on"))
+            {
+                Settings.setDebugEnabled(true);
+                sender.sendMessage(Settings.format("DeltaEssentialsDebugChange", "ON"));
+            }
+            else if(args[0].equalsIgnoreCase("off"))
+            {
+                Settings.setDebugEnabled(false);
+                sender.sendMessage(Settings.format("DeltaEssentialsDebugChange", "OFF"));
+            }
+            else
+            {
+                sender.sendMessage(Settings.format("DeltaEssentialsDebugUsage"));
+            }
         }
-        else if(args[0].equalsIgnoreCase("off"))
+        else if(args[0].equalsIgnoreCase("reload"))
         {
-            Settings.setDebugEnabled(false);
-            sender.sendMessage(Settings.format("DeltaEssentialsDebugChange", "OFF"));
+            if(!sender.hasPermission("DeltaEss.Reload"))
+            {
+                sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Reload"));
+                return true;
+            }
+
+            plugin.reloadConfig();
+            Settings.read(plugin.getConfig());
+
+            sender.sendMessage(Settings.format("DeltaEssentialsReloaded"));
         }
         else
         {
-            sender.sendMessage(Settings.format("DeltaEssentialsDebugUsage"));
+            sender.sendMessage(Settings.format("DeltaEssentialsUsage"));
+            return true;
         }
 
         return true;

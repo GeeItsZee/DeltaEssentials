@@ -50,34 +50,35 @@ public class SharedChatListener extends DeltaEssentialsListener
         String channel = event.getChannel();
         String permission = event.getPermission();
         String message = event.getMessage();
+        String extraInfo = event.getExtraInfo();
 
         DeltaRedisApi.instance().publish(
             Servers.SPIGOT,
             DeltaEssentialsChannels.CHAT,
             channel,
             permission,
-            message);
+            message,
+            extraInfo);
     }
 
     @EventHandler
     public void onSharedChatIncoming(DeltaRedisMessageEvent event)
     {
-        if(!event.getChannel().equals(DeltaEssentialsChannels.CHAT)) return;
+        if(!event.getChannel().equals(DeltaEssentialsChannels.CHAT)) { return; }
 
-        String[] splitMessage = SplitPatterns.DELTA.split(event.getMessage(), 3);
+        if(!event.isSendingServerSelf()) { return; }
+
+        String[] splitMessage = SplitPatterns.DELTA.split(event.getMessage(), 4);
         String channelName = splitMessage[0];
         String permission = splitMessage[1];
         String message = splitMessage[2];
+        String extraInfo = splitMessage[3];
         SharedChatIncomingEvent chatEvent = new SharedChatIncomingEvent(
             channelName,
             permission,
-            message);
+            message,
+            extraInfo);
 
         Bukkit.getPluginManager().callEvent(chatEvent);
-
-        // If the message is handled by anyone else, return
-        if(chatEvent.isCancelled()) return;
-
-        plugin.getServer().broadcast(message, permission);
     }
 }
