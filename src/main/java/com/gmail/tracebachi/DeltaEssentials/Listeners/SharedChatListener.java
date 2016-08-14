@@ -66,7 +66,7 @@ public class SharedChatListener extends DeltaEssentialsListener
     {
         if(!event.getChannel().equals(DeltaEssentialsChannels.CHAT)) { return; }
 
-        if(!event.isSendingServerSelf()) { return; }
+        if(event.isSendingServerSelf()) { return; }
 
         String[] splitMessage = SplitPatterns.DELTA.split(event.getMessage(), 4);
         String channelName = splitMessage[0];
