@@ -205,6 +205,15 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
                 receiverData.setReplyTo(senderName);
             }
 
+            // Format: SenderName/\ReceiverName/\Message/\IgnoreVanish
+            DeltaRedisApi.instance().publish(
+                Servers.SPIGOT,
+                DeltaEssentialsChannels.TELL,
+                senderName,
+                receiverName,
+                finalMessage,
+                senderIgnoresVanish ? "1" : "0");
+
             sendToSocialSpies(senderName, receiverName, finalMessage, true);
         }
         else
