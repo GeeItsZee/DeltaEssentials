@@ -70,8 +70,9 @@ public interface InventoryUtils
         if(section != null)
         {
             ItemStack[] armor = toItemStacks(section.getConfigurationSection("Armor"), 4);
-            ItemStack[] inventory = toItemStacks(section.getConfigurationSection("Contents"), 36);
-            return new SavedInventory(armor, inventory);
+            ItemStack[] contents = toItemStacks(section.getConfigurationSection("Contents"), 36);
+            ItemStack[] extraSlots = toItemStacks(section.getConfigurationSection("ExtraSlots"), 1);
+            return new SavedInventory(armor, contents, extraSlots);
         }
         return SavedInventory.EMPTY;
     }

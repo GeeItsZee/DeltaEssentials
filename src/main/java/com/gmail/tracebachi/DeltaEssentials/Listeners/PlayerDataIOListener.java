@@ -37,6 +37,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
 
 import java.util.Map;
@@ -271,12 +272,14 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
             }
         }
 
+        PlayerInventory playerInventory = player.getInventory();
         if(player.hasPermission("DeltaEss.SharedGameModeInv"))
         {
             SavedInventory survival = playerData.getSurvival();
 
-            player.getInventory().setContents(survival.getContents());
-            player.getInventory().setArmorContents(survival.getArmor());
+            playerInventory.setStorageContents(survival.getStorage());
+            playerInventory.setArmorContents(survival.getArmor());
+            playerInventory.setExtraContents(survival.getExtraSlots());
             playerData.setSurvival(null);
             playerData.setCreative(null);
         }
@@ -284,22 +287,25 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         {
             SavedInventory survival = playerData.getSurvival();
 
-            player.getInventory().setContents(survival.getContents());
-            player.getInventory().setArmorContents(survival.getArmor());
+            playerInventory.setStorageContents(survival.getStorage());
+            playerInventory.setArmorContents(survival.getArmor());
+            playerInventory.setExtraContents(survival.getExtraSlots());
             playerData.setSurvival(null);
         }
         else if(player.getGameMode() == GameMode.CREATIVE)
         {
             SavedInventory creative = playerData.getCreative();
 
-            player.getInventory().setContents(creative.getContents());
-            player.getInventory().setArmorContents(creative.getArmor());
+            playerInventory.setStorageContents(creative.getStorage());
+            playerInventory.setArmorContents(creative.getArmor());
+            playerInventory.setExtraContents(creative.getExtraSlots());
             playerData.setCreative(null);
         }
         else
         {
-            player.getInventory().clear();
-            player.getInventory().setArmorContents(new ItemStack[4]);
+            playerInventory.clear();
+            playerInventory.setArmorContents(new ItemStack[4]);
+            playerInventory.setExtraContents(new ItemStack[1]);
         }
 
         if(!Settings.isDefaultGameModeForced() ||

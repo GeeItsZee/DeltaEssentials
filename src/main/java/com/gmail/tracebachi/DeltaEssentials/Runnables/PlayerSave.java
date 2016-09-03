@@ -115,13 +115,17 @@ public class PlayerSave implements Runnable
 
         serialized = InventoryUtils.toYamlSection(playerData.getSurvival().getArmor());
         config.set("Survival.Armor", serialized);
-        serialized = InventoryUtils.toYamlSection(playerData.getSurvival().getContents());
+        serialized = InventoryUtils.toYamlSection(playerData.getSurvival().getStorage());
         config.set("Survival.Contents", serialized);
+        serialized = InventoryUtils.toYamlSection(playerData.getSurvival().getExtraSlots());
+        config.set("Survival.ExtraSlots", serialized);
 
         serialized = InventoryUtils.toYamlSection(playerData.getCreative().getArmor());
         config.set("Creative.Armor", serialized);
-        serialized = InventoryUtils.toYamlSection(playerData.getCreative().getContents());
+        serialized = InventoryUtils.toYamlSection(playerData.getCreative().getStorage());
         config.set("Creative.Contents", serialized);
+        serialized = InventoryUtils.toYamlSection(playerData.getCreative().getExtraSlots());
+        config.set("Creative.ExtraSlots", serialized);
 
         serialized = InventoryUtils.toYamlSection(playerStats.getEnderChest());
         config.set("EnderChest", serialized);

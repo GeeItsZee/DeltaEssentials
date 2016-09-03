@@ -17,6 +17,7 @@
 package com.gmail.tracebachi.DeltaEssentials.Storage;
 
 import com.google.common.base.Preconditions;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -27,29 +28,36 @@ public class SavedInventory
 {
     public static final SavedInventory EMPTY = new SavedInventory(
         new ItemStack[4],
-        new ItemStack[36]);
+        new ItemStack[36],
+        new ItemStack[1]);
 
     private ItemStack[] armor;
-    private ItemStack[] contents;
+    private ItemStack[] storage;
+    private ItemStack[] extraSlots;
 
     public SavedInventory(Player player)
     {
         ItemStack[] armor = player.getInventory().getArmorContents();
-        ItemStack[] contents = player.getInventory().getContents();
+        ItemStack[] storage = player.getInventory().getStorageContents();
+        ItemStack[] extraSlots = player.getInventory().getExtraContents();
 
         this.armor = (armor != null) ? armor : new ItemStack[4];
-        this.contents = (contents != null) ? contents : new ItemStack[36];
+        this.storage = (storage != null) ? storage : new ItemStack[36];
+        this.extraSlots = (extraSlots != null) ? extraSlots : new ItemStack[1];
     }
 
-    public SavedInventory(ItemStack[] armor, ItemStack[] contents)
+    public SavedInventory(ItemStack[] armor, ItemStack[] storage, ItemStack[] extraSlots)
     {
         Preconditions.checkNotNull(armor, "Armor cannot be null.");
-        Preconditions.checkNotNull(contents, "Contents cannot be null.");
+        Preconditions.checkNotNull(storage, "Contents cannot be null.");
+        Preconditions.checkNotNull(extraSlots, "ExtraSlots cannot be null.");
         Preconditions.checkArgument(armor.length == 4, "Armor size must be 4.");
-        Preconditions.checkArgument(contents.length == 36, "Content size must be 36.");
+        Preconditions.checkArgument(storage.length == 36, "Content size must be 36.");
+        Preconditions.checkArgument(extraSlots.length == 1, "ExtraSlots size must be 1.");
 
         this.armor = armor;
-        this.contents = contents;
+        this.storage = storage;
+        this.extraSlots = extraSlots;
     }
 
     public ItemStack[] getArmor()
@@ -57,8 +65,13 @@ public class SavedInventory
         return armor;
     }
 
-    public ItemStack[] getContents()
+    public ItemStack[] getStorage()
     {
-        return contents;
+        return storage;
+    }
+
+    public ItemStack[] getExtraSlots()
+    {
+        return extraSlots;
     }
 }

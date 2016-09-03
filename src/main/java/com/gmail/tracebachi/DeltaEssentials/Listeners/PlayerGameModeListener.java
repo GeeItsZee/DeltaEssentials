@@ -10,6 +10,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 7/21/16.
@@ -67,26 +68,30 @@ public class PlayerGameModeListener extends DeltaEssentialsListener
         }
 
         // Apply the inventory associated with the new game mode
+        PlayerInventory playerInventory = player.getInventory();
         if(newMode == GameMode.SURVIVAL)
         {
             SavedInventory savedSurvival = playerData.getSurvival();
 
-            player.getInventory().setContents(savedSurvival.getContents());
-            player.getInventory().setArmorContents(savedSurvival.getArmor());
+            playerInventory.setStorageContents(savedSurvival.getStorage());
+            playerInventory.setArmorContents(savedSurvival.getArmor());
+            playerInventory.setExtraContents(savedSurvival.getExtraSlots());
             playerData.setSurvival(null);
         }
         else if(newMode == GameMode.CREATIVE)
         {
             SavedInventory savedCreative = playerData.getCreative();
 
-            player.getInventory().setContents(savedCreative.getContents());
-            player.getInventory().setArmorContents(savedCreative.getArmor());
+            playerInventory.setStorageContents(savedCreative.getStorage());
+            playerInventory.setArmorContents(savedCreative.getArmor());
+            playerInventory.setExtraContents(savedCreative.getExtraSlots());
             playerData.setCreative(null);
         }
         else
         {
-            player.getInventory().clear();
-            player.getInventory().setArmorContents(new ItemStack[4]);
+            playerInventory.clear();
+            playerInventory.setArmorContents(new ItemStack[4]);
+            playerInventory.setExtraContents(new ItemStack[1]);
         }
     }
 }
