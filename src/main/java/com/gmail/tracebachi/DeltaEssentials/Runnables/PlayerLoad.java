@@ -115,7 +115,7 @@ public class PlayerLoad implements Runnable
 
         playerData.setPotionEffects(PotionEffectUtils.toEffectList(
             config.getStringList("Effects")));
-        playerData.setSocialSpyLevel(SocialSpyLevel.valueOf(
+        playerData.setSocialSpyLevel(parseSocialSpyLevel(
             config.getString("SocialSpyLevel", "NONE")));
         playerData.setTeleportDenyEnabled(config.getBoolean("TeleportDenyEnabled", false));
         playerData.setVanishEnabled(config.getBoolean("VanishEnabled", false));
@@ -138,5 +138,17 @@ public class PlayerLoad implements Runnable
         entry.setDeltaEssPlayerData(playerData);
 
         return entry;
+    }
+
+    private SocialSpyLevel parseSocialSpyLevel(String input)
+    {
+        try
+        {
+            return (input != null) ? SocialSpyLevel.valueOf(input) : SocialSpyLevel.NONE;
+        }
+        catch(IllegalArgumentException e)
+        {
+            return SocialSpyLevel.NONE;
+        }
     }
 }
