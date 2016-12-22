@@ -100,12 +100,12 @@ public class CommandTpDeny implements TabExecutor, Registerable, Shutdownable
 
         if(args[0].equalsIgnoreCase("on"))
         {
-            playerData.setTeleportDenyEnabled(true);
+            playerData.setDenyingTeleports(true);
             sender.sendMessage(Settings.format("TeleportDenyChange", "ON"));
         }
         else if(args[0].equalsIgnoreCase("off"))
         {
-            playerData.setTeleportDenyEnabled(false);
+            playerData.setDenyingTeleports(false);
             sender.sendMessage(Settings.format("TeleportDenyChange", "OFF"));
         }
         else

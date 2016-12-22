@@ -16,7 +16,7 @@
  */
 package com.gmail.tracebachi.DeltaEssentials.Utils;
 
-import com.gmail.tracebachi.DeltaEssentials.Storage.SavedInventory;
+import com.gmail.tracebachi.DeltaEssentials.Storage.SavedPlayerInventory;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -65,15 +65,15 @@ public interface InventoryUtils
         return destination;
     }
 
-    static SavedInventory toSavedInventory(ConfigurationSection section)
+    static SavedPlayerInventory toSavedInventory(ConfigurationSection section)
     {
         if(section != null)
         {
             ItemStack[] armor = toItemStacks(section.getConfigurationSection("Armor"), 4);
             ItemStack[] contents = toItemStacks(section.getConfigurationSection("Contents"), 36);
             ItemStack[] extraSlots = toItemStacks(section.getConfigurationSection("ExtraSlots"), 1);
-            return new SavedInventory(armor, contents, extraSlots);
+            return new SavedPlayerInventory(armor, contents, extraSlots);
         }
-        return SavedInventory.EMPTY;
+        return SavedPlayerInventory.EMPTY;
     }
 }

@@ -19,7 +19,9 @@ package com.gmail.tracebachi.DeltaEssentials.Runnables;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.Listeners.PlayerDataIOListener;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
-import com.gmail.tracebachi.DeltaEssentials.Storage.*;
+import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
+import com.gmail.tracebachi.DeltaEssentials.Storage.SavedPlayerInventory;
+import com.gmail.tracebachi.DeltaEssentials.Storage.SocialSpyLevel;
 import com.gmail.tracebachi.DeltaEssentials.Utils.InventoryUtils;
 import com.gmail.tracebachi.DeltaEssentials.Utils.LockedFileUtil;
 import com.gmail.tracebachi.DeltaEssentials.Utils.PotionEffectUtils;
@@ -102,7 +104,7 @@ public class PlayerLoad implements Runnable
     {
         ItemStack[] itemStacks;
         ConfigurationSection section;
-        SavedInventory savedInventory;
+        SavedPlayerInventory savedPlayerInventory;
         PlayerEntry entry = new PlayerEntry(name);
         PlayerStats playerStats = new PlayerStats();
         DeltaEssPlayerData playerData = new DeltaEssPlayerData();
@@ -117,18 +119,18 @@ public class PlayerLoad implements Runnable
             config.getStringList("Effects")));
         playerData.setSocialSpyLevel(parseSocialSpyLevel(
             config.getString("SocialSpyLevel", "NONE")));
-        playerData.setTeleportDenyEnabled(config.getBoolean("TeleportDenyEnabled", false));
-        playerData.setVanishEnabled(config.getBoolean("VanishEnabled", false));
-        playerData.setReplyTo(config.getString("ReplyTo", ""));
+        playerData.setDenyingTeleports(config.getBoolean("TeleportDenyEnabled", false));
+        playerData.setVanished(config.getBoolean("VanishEnabled", false));
+        playerData.setReplyingTo(config.getString("ReplyTo", ""));
         playerData.setMetaData(config.getConfigurationSection("MetaData"));
 
         section = config.getConfigurationSection("Survival");
-        savedInventory = InventoryUtils.toSavedInventory(section);
-        playerData.setSurvival(savedInventory);
+        savedPlayerInventory = InventoryUtils.toSavedInventory(section);
+        playerData.setSurvival(savedPlayerInventory);
 
         section = config.getConfigurationSection("Creative");
-        savedInventory = InventoryUtils.toSavedInventory(section);
-        playerData.setCreative(savedInventory);
+        savedPlayerInventory = InventoryUtils.toSavedInventory(section);
+        playerData.setCreative(savedPlayerInventory);
 
         section = config.getConfigurationSection("EnderChest");
         itemStacks = InventoryUtils.toItemStacks(section, 27);

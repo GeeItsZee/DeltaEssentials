@@ -2,111 +2,99 @@
 # DeltaEssentials Configuration File
 ###############################################################################
 
-# Should lockdown be enabled on start
-StartInLockdown: False
-
-# Should player data be loaded when player joins
-# Set to false if the server will have an authentication plugin that will
-# tell DeltaEssentials when to load player data
+# Should player data be loaded when player joins?
+# Some servers may want to set this to false if an authentication plugin
+# will tell DeltaEssentials when it is "safe" to load the player data.
 LoadPlayerDataOnLogin: True
 
-# Names of servers that players cannot access without the bypass permission
+# Names of servers that a player cannot access without the permission
+# that gives them access to this server. By default, all servers not in this
+# list are "public" in that players do not need a special permission to join
 BlockedServers:
   - SecretServer
+  - SuperSecretServer
 
-# Settings related to game modes
-GameModes:
+# Default game mode for players who do not have player data
+DefaultGameMode: SURVIVAL
 
-  # Default game mode for players who do not have player data
-  Default: SURVIVAL
+# Should the default game mode be set for all players that don't have
+# the bypass permission to ignore this setting?
+ForceDefaultGameModeOnJoin: False
 
-  # Should the game mode be forced for players on login
-  ForceDefault: False
+# Game modes that players cannot access without the bypass permission
+DisabledGameModes:
+  - ADVENTURE
+  - SPECTATOR
 
-  # Game modes that players cannot access without the proper bypass permissions
-  DisabledModes:
-    - ADVENTURE
-    - SPECTATOR
+# Should potion effects be ignored when loading and saving to player data?
+# Servers may want to set this to false if they do not want potion effects
+# to be shared with other servers.
+LoadAndSavePotionEffects: True
 
-# Should potion effects be ignored when loading and saving to player data
-IgnorePotionEffects: False
-
-# Commands run by the player before switching servers or disconnecting from
-# the network (used to remove players from minigames or other activites that
-# alter player inventory so that they can restore the actual inventories
-# before it is saved by DeltaEssentials)
+# Commands run as the player before the player data is saved
+# The most common use for this is to remove players from minigames
+# that modify player inventories, so that the correct inventories get saved.
 PreSaveCommands:
   - leave-minigame
-
-###############################################################################
-
-# Format Replacements
-FormatReplacements:
-
-  PREFIX_INFO: '&8[&9!&8] &9Info &8[&9!&8]&7'
-  PREFIX_SUCCESS: '&8[&a!&8] &aSuccess &8[&a!&8]&7'
-  PREFIX_FAILURE: '&8[&c!&8] &cFailure &8[&c!&8]&7'
 
 # Formatting strings
 Formats:
 
-  NoPermission: 'PREFIX_FAILURE You do not have the &f{0}&7 permission.'
-  PlayersOnly: 'PREFIX_FAILURE Only players can use &f{0}&7'
-  PlayerDataNotLoaded: 'PREFIX_FAILURE Player data has not been loaded yet.'
-  PlayerOffline: 'PREFIX_FAILURE Player &f{0}&7 is offline.'
-  TooManyAutoCompleteMatches: 'PREFIX_FAILURE Multiple online players match &f{0}&7.'
-  PlayerLocked: 'PREFIX_FAILURE You are locked. Please wait until your data is loaded or saved.'
+  NoPermission: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not have the &f{0}&7 permission.'
+  PlayersOnly: '&8[&c!&8] &cFailure &8[&c!&8]&7 Only players can use &f{0}&7'
+  PlayerDataNotLoaded: '&8[&c!&8] &cFailure &8[&c!&8]&7 Player data has not been loaded yet.'
+  PlayerOffline: '&8[&c!&8] &cFailure &8[&c!&8]&7 Player &f{0}&7 is offline.'
+  TooManyAutoCompleteMatches: '&8[&c!&8] &cFailure &8[&c!&8]&7 Multiple online players match &f{0}&7.'
+  PlayerLocked: '&8[&c!&8] &cFailure &8[&c!&8]&7 You are locked. Please wait until your data is loaded or saved.'
 
-  MovingToMessage: 'PREFIX_SUCCESS Moving to &f{0}&7 ...'
-  MovingOtherToMessage: 'PREFIX_SUCCESS Moving &f{0}&7 to {1} ...'
-  CurrentServer: 'PREFIX_INFO Current server: &f{0}&7'
-  OnlineServerList: 'PREFIX_INFO Online Servers: &f{0}&7'
-  ServerOffline: 'PREFIX_FAILURE Server &f{0}&7 is offline.'
-  InputIsCurrentServer: 'PREFIX_FAILURE &f{0}&7 is the current server.'
-  OtherAlreadyOnServer: 'PREFIX_FAILURE &f{0}&7 is already on {1}.'
-  BlockedServer: 'PREFIX_FAILURE Server &f{0}&7 is blocked for you.'
+  MovingToMessage: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Moving to &f{0}&7 ...'
+  MovingOtherToMessage: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Moving &f{0}&7 to {1} ...'
+  CurrentServer: '&8[&9!&8] &9Info &8[&9!&8]&7 Current server: &f{0}&7'
+  OnlineServerList: '&8[&9!&8] &9Info &8[&9!&8]&7 Online Servers: &f{0}&7'
+  ServerOffline: '&8[&c!&8] &cFailure &8[&c!&8]&7 Server &f{0}&7 is offline.'
+  InputIsCurrentServer: '&8[&c!&8] &cFailure &8[&c!&8]&7 &f{0}&7 is the current server.'
+  OtherAlreadyOnServer: '&8[&c!&8] &cFailure &8[&c!&8]&7 &f{0}&7 is already on {1}.'
+  BlockedServer: '&8[&c!&8] &cFailure &8[&c!&8]&7 Server &f{0}&7 is blocked for you.'
 
-  SocialSpyUsage: 'PREFIX_INFO /socialspy <all|world|none>'
-  SocialSpyChange: 'PREFIX_SUCCESS SocialSpy set to &f{0}&7'
+  SocialSpyUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /socialspy <all|world|none>'
+  SocialSpyChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 SocialSpy set to &f{0}&7'
 
-  DVanishUsage: 'PREFIX_INFO /dvanish <on|off>'
-  DVanishChange: 'PREFIX_SUCCESS DeltaVanish set to &f{0}&7'
+  DVanishUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /dvanish <on|off>'
+  DVanishChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 DeltaVanish set to &f{0}&7'
 
-  TeleportDenyUsage: 'PREFIX_INFO /tpdeny <on|off>'
-  TeleportDenyChange: 'PREFIX_SUCCESS TeleportDeny set to &f{0}&7'
+  TeleportDenyUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tpdeny <on|off>'
+  TeleportDenyChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 TeleportDeny set to &f{0}&7'
 
-  LockdownUsage: 'PREFIX_INFO /lockdown <on|off>'
+  LockdownUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /lockdown <on|off>'
   LockdownMessage: 'Server is locked down ... for reasons!'
-  LockdownChange: 'PREFIX_SUCCESS Lockdown set to &f{0}&7'
+  LockdownChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Lockdown set to &f{0}&7'
 
-  DeltaEssentialsUsage: 'PREFIX_INFO /deltaessentials <debug|reload>'
-  DeltaEssentialsDebugUsage: 'PREFIX_INFO /deltaessentials debug <on|off>'
-  DeltaEssentialsDebugChange: 'PREFIX_SUCCESS DeltaEssentials debug set to &f{0}&7'
-  DeltaEssentialsReloaded: 'PREFIX_SUCCESS DeltaEssentials configuration reloaded.'
+  DeltaEssentialsUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /deltaessentials <debug|reload>'
+  DeltaEssentialsDebugUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /deltaessentials debug <on|off>'
+  DeltaEssentialsDebugChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 DeltaEssentials debug set to &f{0}&7'
+  DeltaEssentialsReloaded: '&8[&a!&8] &aSuccess &8[&a!&8]&7 DeltaEssentials configuration reloaded.'
 
-  TellUsage: 'PREFIX_INFO /tell <name> <message>'
-  ReplyUsage: 'PREFIX_INFO /reply <message>'
-  NoReplyTarget: 'PREFIX_FAILURE You do not have anyone to reply to.'
+  TellUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tell <ownerName> <message>'
+  ReplyUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /reply <message>'
+  NoReplyTarget: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not have anyone to reply to.'
 
   TellLog: '[{0} -> {1}] {2}'
   TellSpy: '&8[&7Spy&8]&7=&8[&7{0} &8-> &7{1}&8] &7{2}'
   TellSender: '&8[&dPM&8]&7=&8[&eMe -> {0}&8] &d{1}'
   TellReceiver: '&8[&dPM&8]&7=&8[&e{0} -> Me&8] &d{1}'
 
-  TeleportUsage: 'PREFIX_INFO /tp <name>'
-  TeleportRequestUsage: 'PREFIX_INFO /tpahere <name>'
-  TeleportHereUsage: 'PREFIX_INFO /tphere <name>'
-  NoPendingTeleportRequest: 'PREFIX_FAILURE You do not having a pending teleport request.'
-  SentTeleportRequest: 'PREFIX_SUCCESS You sent &f{0}&7 a teleport request.'
-  ReceivedTeleportRequest: 'PREFIX_SUCCESS &f{0}&7 sent you a teleport request. Type /tpaccept to accept within 30 seconds.'
+  TeleportUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tp <ownerName>'
+  TeleportRequestUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tpahere <ownerName>'
+  TeleportHereUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tphere <ownerName>'
+  NoPendingTeleportRequest: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not having a pending teleport request.'
+  SentTeleportRequest: '&8[&a!&8] &aSuccess &8[&a!&8]&7 You sent &f{0}&7 a teleport request.'
+  ReceivedTeleportRequest: '&8[&a!&8] &aSuccess &8[&a!&8]&7 &f{0}&7 sent you a teleport request. Type /tpaccept to accept within 30 seconds.'
 
-  TeleportingMessage: 'PREFIX_SUCCESS Teleporting to &f{0}&7 ...'
-  TeleportedToYou: 'PREFIX_INFO &f{0}&7 teleported to you.'
-  DeniedTeleport: 'PREFIX_INFO &f{0}&7 was denied a teleport to you.'
-  OtherDenyingTeleport: 'PREFIX_FAILURE &f{0}&7 is denying teleports.'
-  UnsafeLocation: 'PREFIX_FAILURE &f{0}&7 is not in a safe location.'
-
-###############################################################################
+  TeleportingMessage: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Teleporting to &f{0}&7 ...'
+  TeleportedToYou: '&8[&9!&8] &9Info &8[&9!&8]&7 &f{0}&7 teleported to you.'
+  DeniedTeleport: '&8[&9!&8] &9Info &8[&9!&8]&7 &f{0}&7 was denied a teleport to you.'
+  OtherDenyingTeleport: '&8[&c!&8] &cFailure &8[&c!&8]&7 &f{0}&7 is denying teleports.'
+  UnsafeLocation: '&8[&c!&8] &cFailure &8[&c!&8]&7 &f{0}&7 is not in a safe location.'
 
 # Debug Mode
-DebugMode: False
+Debug: False

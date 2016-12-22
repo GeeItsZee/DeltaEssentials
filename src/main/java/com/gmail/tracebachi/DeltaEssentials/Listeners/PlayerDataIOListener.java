@@ -24,7 +24,7 @@ import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerEntry;
 import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerStats;
-import com.gmail.tracebachi.DeltaEssentials.Storage.SavedInventory;
+import com.gmail.tracebachi.DeltaEssentials.Storage.SavedPlayerInventory;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
@@ -275,7 +275,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         PlayerInventory playerInventory = player.getInventory();
         if(player.hasPermission("DeltaEss.SharedGameModeInv"))
         {
-            SavedInventory survival = playerData.getSurvival();
+            SavedPlayerInventory survival = playerData.getSurvival();
 
             playerInventory.setStorageContents(survival.getStorage());
             playerInventory.setArmorContents(survival.getArmor());
@@ -285,7 +285,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         }
         else if(player.getGameMode() == GameMode.SURVIVAL)
         {
-            SavedInventory survival = playerData.getSurvival();
+            SavedPlayerInventory survival = playerData.getSurvival();
 
             playerInventory.setStorageContents(survival.getStorage());
             playerInventory.setArmorContents(survival.getArmor());
@@ -294,7 +294,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         }
         else if(player.getGameMode() == GameMode.CREATIVE)
         {
-            SavedInventory creative = playerData.getCreative();
+            SavedPlayerInventory creative = playerData.getCreative();
 
             playerInventory.setStorageContents(creative.getStorage());
             playerInventory.setArmorContents(creative.getArmor());
@@ -329,7 +329,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
 
         PlayerStats playerStats = new PlayerStats(player);
         PlayerEntry entry = new PlayerEntry(player.getName());
-        SavedInventory inventory = new SavedInventory(player);
+        SavedPlayerInventory inventory = new SavedPlayerInventory(player);
 
         if(!Settings.shouldIgnorePotionEffects())
         {
@@ -339,7 +339,7 @@ public class PlayerDataIOListener extends DeltaEssentialsListener
         if(player.hasPermission("DeltaEss.SharedGameModeInv"))
         {
             playerData.setSurvival(inventory);
-            playerData.setCreative(SavedInventory.EMPTY);
+            playerData.setCreative(SavedPlayerInventory.EMPTY);
         }
         else if(player.getGameMode() == GameMode.SURVIVAL)
         {

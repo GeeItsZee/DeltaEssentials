@@ -16,8 +16,11 @@
  */
 package com.gmail.tracebachi.DeltaEssentials.Storage;
 
+import com.google.common.base.Preconditions;
+import org.bukkit.GameMode;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 
 import java.util.Collection;
@@ -28,92 +31,185 @@ import java.util.Collections;
  */
 public class DeltaEssPlayerData
 {
-    private boolean teleportDenyEnabled;
-    private boolean vanishEnabled;
-    private String replyTo;
-    private SocialSpyLevel socialSpyLevel;
-    private Collection<PotionEffect> potionEffects;
-    private ConfigurationSection metaData;
-    private SavedInventory survival;
-    private SavedInventory creative;
+    private static final int ENDER_CHEST_SIZE = 27;
 
-    public boolean isTeleportDenyEnabled()
+    private final String ownerName;
+    private double health = 20.00D;
+    private int foodLevel = 0;
+    private int xpLevel = 0;
+    private float xpProgress = 0.00F;
+    private GameMode gameMode = GameMode.SURVIVAL;
+    private Collection<PotionEffect> potionEffects = Collections.emptyList();
+    private ItemStack[] enderChest = new ItemStack[ENDER_CHEST_SIZE];
+    private SavedPlayerInventory survival = SavedPlayerInventory.EMPTY;
+    private SavedPlayerInventory creative = SavedPlayerInventory.EMPTY;
+    private boolean denyingTeleports = false;
+    private boolean vanished = false;
+    private String replyingTo = "";
+    private SocialSpyLevel socialSpyLevel = SocialSpyLevel.NONE;
+    private ConfigurationSection metaData = new YamlConfiguration();
+
+    public DeltaEssPlayerData(String ownerName)
     {
-        return teleportDenyEnabled;
+        Preconditions.checkNotNull(ownerName, "ownerName");
+        Preconditions.checkArgument(!ownerName.isEmpty(), "Empty ownerName");
+        this.ownerName = ownerName;
     }
 
-    public void setTeleportDenyEnabled(boolean teleportDenyEnabled)
+    public String getOwnerName()
     {
-        this.teleportDenyEnabled = teleportDenyEnabled;
+        return ownerName;
     }
 
-    public boolean isVanishEnabled()
+    public double getHealth()
     {
-        return vanishEnabled;
+        return health;
     }
 
-    public void setVanishEnabled(boolean vanishEnabled)
+    public void setHealth(double health)
     {
-        this.vanishEnabled = vanishEnabled;
+        this.health = health;
     }
 
-    public String getReplyTo()
+    public int getFoodLevel()
     {
-        return (replyTo == null) ? "" : replyTo;
+        return foodLevel;
     }
 
-    public void setReplyTo(String replyTo)
+    public void setFoodLevel(int foodLevel)
     {
-        this.replyTo = replyTo;
+        this.foodLevel = foodLevel;
     }
 
-    public SocialSpyLevel getSocialSpyLevel()
+    public int getXpLevel()
     {
-        return (socialSpyLevel == null) ? SocialSpyLevel.NONE : socialSpyLevel;
+        return xpLevel;
     }
 
-    public void setSocialSpyLevel(SocialSpyLevel level)
+    public void setXpLevel(int xpLevel)
     {
-        this.socialSpyLevel = level;
+        this.xpLevel = xpLevel;
+    }
+
+    public float getXpProgress()
+    {
+        return xpProgress;
+    }
+
+    public void setXpProgress(float xpProgress)
+    {
+        this.xpProgress = xpProgress;
+    }
+
+    public GameMode getGameMode()
+    {
+        return gameMode;
+    }
+
+    public void setGameMode(GameMode gameMode)
+    {
+        Preconditions.checkNotNull(gameMode, "gameMode");
+        this.gameMode = gameMode;
     }
 
     public Collection<PotionEffect> getPotionEffects()
     {
-        return (potionEffects == null) ? Collections.emptyList() : potionEffects;
+        return potionEffects;
     }
 
     public void setPotionEffects(Collection<PotionEffect> potionEffects)
     {
+        Preconditions.checkNotNull(potionEffects, "potionEffects");
         this.potionEffects = potionEffects;
+    }
+
+    public ItemStack[] getEnderChest()
+    {
+        return enderChest;
+    }
+
+    public void setEnderChest(ItemStack[] enderChest)
+    {
+        Preconditions.checkNotNull(enderChest, "enderChest");
+        Preconditions.checkArgument(
+            enderChest.length > ENDER_CHEST_SIZE,
+            "Too many items in enderChest");
+        Preconditions.checkArgument(
+            enderChest.length < ENDER_CHEST_SIZE,
+            "Too few items in enderChest");
+
+        this.enderChest = enderChest;
+    }
+
+    public SavedPlayerInventory getSurvival()
+    {
+        return survival;
+    }
+
+    public void setSurvival(SavedPlayerInventory survival)
+    {
+        this.survival = (survival == null) ? SavedPlayerInventory.EMPTY : survival;
+    }
+
+    public SavedPlayerInventory getCreative()
+    {
+        return creative;
+    }
+
+    public void setCreative(SavedPlayerInventory creative)
+    {
+        this.creative = (creative == null) ? SavedPlayerInventory.EMPTY : creative;
+    }
+
+    public boolean isDenyingTeleports()
+    {
+        return denyingTeleports;
+    }
+
+    public void setDenyingTeleports(boolean denyingTeleports)
+    {
+        this.denyingTeleports = denyingTeleports;
+    }
+
+    public boolean isVanished()
+    {
+        return vanished;
+    }
+
+    public void setVanished(boolean vanished)
+    {
+        this.vanished = vanished;
+    }
+
+    public String getReplyingTo()
+    {
+        return replyingTo;
+    }
+
+    public void setReplyingTo(String replyingTo)
+    {
+        this.replyingTo = (replyingTo == null) ? "" : replyingTo;
+    }
+
+    public SocialSpyLevel getSocialSpyLevel()
+    {
+        return socialSpyLevel;
+    }
+
+    public void setSocialSpyLevel(SocialSpyLevel socialSpyLevel)
+    {
+        Preconditions.checkNotNull(socialSpyLevel, "socialSpyLevel");
+        this.socialSpyLevel = socialSpyLevel;
     }
 
     public ConfigurationSection getMetaData()
     {
-        return (metaData == null) ? new YamlConfiguration() : metaData;
+        return metaData;
     }
 
     public void setMetaData(ConfigurationSection metaData)
     {
+        Preconditions.checkNotNull(metaData, "metaData");
         this.metaData = metaData;
-    }
-
-    public SavedInventory getSurvival()
-    {
-        return (survival != null) ? survival : SavedInventory.EMPTY;
-    }
-
-    public void setSurvival(SavedInventory survival)
-    {
-        this.survival = survival;
-    }
-
-    public SavedInventory getCreative()
-    {
-        return (creative != null) ? creative : SavedInventory.EMPTY;
-    }
-
-    public void setCreative(SavedInventory creative)
-    {
-        this.creative = creative;
     }
 }

@@ -100,12 +100,12 @@ public class CommandDVanish implements TabExecutor, Registerable, Shutdownable
 
         if(args[0].equalsIgnoreCase("on"))
         {
-            playerData.setVanishEnabled(true);
+            playerData.setVanished(true);
             sender.sendMessage(Settings.format("DVanishChange", "ON"));
         }
         else if(args[0].equalsIgnoreCase("off"))
         {
-            playerData.setVanishEnabled(false);
+            playerData.setVanished(false);
             sender.sendMessage(Settings.format("DVanishChange", "OFF"));
         }
         else

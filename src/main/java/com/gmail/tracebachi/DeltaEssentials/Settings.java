@@ -34,7 +34,6 @@ import java.util.*;
 public class Settings
 {
     private static volatile boolean debugEnabled;
-    private static boolean startInLockdown;
     private static boolean defaultGameModeForced;
     private static boolean ignorePotionEffects;
     private static boolean loadPlayerDataOnLogin;
@@ -54,7 +53,6 @@ public class Settings
         formatMap = new HashMap<>();
 
         debugEnabled = config.getBoolean("Debug");
-        startInLockdown = config.getBoolean("StartInLockdown", false);
         loadPlayerDataOnLogin = config.getBoolean("LoadPlayerDataOnLogin", true);
         defaultGameMode = getGameMode(config.getString("GameModes.Default", "SURVIVAL"));
         defaultGameModeForced = config.getBoolean("GameModes.ForceDefault", false);

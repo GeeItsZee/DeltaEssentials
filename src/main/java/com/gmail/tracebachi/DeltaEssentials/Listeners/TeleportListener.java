@@ -139,14 +139,14 @@ public class TeleportListener extends DeltaEssentialsListener
 
         if(teleportType == PlayerTpEvent.TeleportType.NORMAL_TP)
         {
-            if((destPlayerData == null || destPlayerData.isVanishEnabled()) &&
+            if((destPlayerData == null || destPlayerData.isVanished()) &&
                 !toTp.hasPermission("DeltaEss.Tp.IgnoreVanish"))
             {
                 toTp.sendMessage(Settings.format("PlayerOffline", destName));
                 return false;
             }
 
-            if((destPlayerData == null || destPlayerData.isTeleportDenyEnabled()) &&
+            if((destPlayerData == null || destPlayerData.isDenyingTeleports()) &&
                 !toTp.hasPermission("DeltaEss.Tp.IgnoreDeny"))
             {
                 toTp.sendMessage(Settings.format("OtherDenyingTeleport", destName));

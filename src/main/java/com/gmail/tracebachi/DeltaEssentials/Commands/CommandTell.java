@@ -131,7 +131,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
 
         if(commandName.equalsIgnoreCase("reply"))
         {
-            receiverName = senderData.getReplyTo();
+            receiverName = senderData.getReplyingTo();
 
             if(receiverName.equals(""))
             {
@@ -166,7 +166,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
         {
             DeltaEssPlayerData receiverData = playerMap.get(receiverName);
 
-            if(receiverData != null && receiverData.isVanishEnabled() && !senderIgnoresVanish)
+            if(receiverData != null && receiverData.isVanished() && !senderIgnoresVanish)
             {
                 sender.sendMessage(Settings.format("PlayerOffline", receiverName));
                 return true;
@@ -198,11 +198,11 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
                 senderName,
                 finalMessage));
 
-            senderData.setReplyTo(receiverName);
+            senderData.setReplyingTo(receiverName);
 
             if(receiverData != null)
             {
-                receiverData.setReplyTo(senderName);
+                receiverData.setReplyingTo(senderName);
             }
 
             // Format: SenderName/\ReceiverName/\Message/\IgnoreVanish
@@ -240,7 +240,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
                 receiverName,
                 finalMessage));
 
-            senderData.setReplyTo(receiverName);
+            senderData.setReplyingTo(receiverName);
 
             DeltaRedisApi.instance().findPlayer(receiverName, cachedPlayer ->
             {
@@ -289,7 +289,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
 
             DeltaEssPlayerData receiverData = plugin.getPlayerMap().get(receiverName);
 
-            if(receiverData != null && receiverData.isVanishEnabled() && !senderIgnoresVanish)
+            if(receiverData != null && receiverData.isVanished() && !senderIgnoresVanish)
             {
                 DeltaRedisApi.instance().sendMessageToPlayer(
                     senderName,
@@ -321,7 +321,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
 
             if(receiverData != null)
             {
-                receiverData.setReplyTo(senderName);
+                receiverData.setReplyingTo(senderName);
             }
 
             sendToSocialSpies(senderName, receiverName, finalMessage, true);

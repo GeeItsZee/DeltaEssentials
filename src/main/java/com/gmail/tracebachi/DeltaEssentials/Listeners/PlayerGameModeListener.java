@@ -3,7 +3,7 @@ package com.gmail.tracebachi.DeltaEssentials.Listeners;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
-import com.gmail.tracebachi.DeltaEssentials.Storage.SavedInventory;
+import com.gmail.tracebachi.DeltaEssentials.Storage.SavedPlayerInventory;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -60,18 +60,18 @@ public class PlayerGameModeListener extends DeltaEssentialsListener
         // Save the inventory associated with the old game mode
         if(currentMode == GameMode.SURVIVAL)
         {
-            playerData.setSurvival(new SavedInventory(player));
+            playerData.setSurvival(new SavedPlayerInventory(player));
         }
         else if(currentMode == GameMode.CREATIVE)
         {
-            playerData.setCreative(new SavedInventory(player));
+            playerData.setCreative(new SavedPlayerInventory(player));
         }
 
         // Apply the inventory associated with the new game mode
         PlayerInventory playerInventory = player.getInventory();
         if(newMode == GameMode.SURVIVAL)
         {
-            SavedInventory savedSurvival = playerData.getSurvival();
+            SavedPlayerInventory savedSurvival = playerData.getSurvival();
 
             playerInventory.setStorageContents(savedSurvival.getStorage());
             playerInventory.setArmorContents(savedSurvival.getArmor());
@@ -80,7 +80,7 @@ public class PlayerGameModeListener extends DeltaEssentialsListener
         }
         else if(newMode == GameMode.CREATIVE)
         {
-            SavedInventory savedCreative = playerData.getCreative();
+            SavedPlayerInventory savedCreative = playerData.getCreative();
 
             playerInventory.setStorageContents(savedCreative.getStorage());
             playerInventory.setArmorContents(savedCreative.getArmor());

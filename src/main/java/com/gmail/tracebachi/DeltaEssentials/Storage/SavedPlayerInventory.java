@@ -17,16 +17,15 @@
 package com.gmail.tracebachi.DeltaEssentials.Storage;
 
 import com.google.common.base.Preconditions;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/12/15.
  */
-public class SavedInventory
+public class SavedPlayerInventory
 {
-    public static final SavedInventory EMPTY = new SavedInventory(
+    public static final SavedPlayerInventory EMPTY = new SavedPlayerInventory(
         new ItemStack[4],
         new ItemStack[36],
         new ItemStack[1]);
@@ -35,7 +34,7 @@ public class SavedInventory
     private ItemStack[] storage;
     private ItemStack[] extraSlots;
 
-    public SavedInventory(Player player)
+    public SavedPlayerInventory(Player player)
     {
         ItemStack[] armor = player.getInventory().getArmorContents();
         ItemStack[] storage = player.getInventory().getStorageContents();
@@ -46,14 +45,14 @@ public class SavedInventory
         this.extraSlots = (extraSlots != null) ? extraSlots : new ItemStack[1];
     }
 
-    public SavedInventory(ItemStack[] armor, ItemStack[] storage, ItemStack[] extraSlots)
+    public SavedPlayerInventory(ItemStack[] armor, ItemStack[] storage, ItemStack[] extraSlots)
     {
-        Preconditions.checkNotNull(armor, "Armor cannot be null.");
-        Preconditions.checkNotNull(storage, "Contents cannot be null.");
-        Preconditions.checkNotNull(extraSlots, "ExtraSlots cannot be null.");
-        Preconditions.checkArgument(armor.length == 4, "Armor size must be 4.");
-        Preconditions.checkArgument(storage.length == 36, "Content size must be 36.");
-        Preconditions.checkArgument(extraSlots.length == 1, "ExtraSlots size must be 1.");
+        Preconditions.checkNotNull(armor, "armor");
+        Preconditions.checkNotNull(storage, "storage");
+        Preconditions.checkNotNull(extraSlots, "extraSlots");
+        Preconditions.checkArgument(armor.length == 4, "armor size must be 4");
+        Preconditions.checkArgument(storage.length == 36, "storage size must be 36");
+        Preconditions.checkArgument(extraSlots.length == 1, "extraSlots size must be 1");
 
         this.armor = armor;
         this.storage = storage;
