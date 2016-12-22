@@ -74,7 +74,7 @@ Formats:
   DeltaEssentialsDebugChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 DeltaEssentials debug set to &f{0}&7'
   DeltaEssentialsReloaded: '&8[&a!&8] &aSuccess &8[&a!&8]&7 DeltaEssentials configuration reloaded.'
 
-  TellUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tell <ownerName> <message>'
+  TellUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tell <name> <message>'
   ReplyUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /reply <message>'
   NoReplyTarget: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not have anyone to reply to.'
 
@@ -83,9 +83,9 @@ Formats:
   TellSender: '&8[&dPM&8]&7=&8[&eMe -> {0}&8] &d{1}'
   TellReceiver: '&8[&dPM&8]&7=&8[&e{0} -> Me&8] &d{1}'
 
-  TeleportUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tp <ownerName>'
-  TeleportRequestUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tpahere <ownerName>'
-  TeleportHereUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tphere <ownerName>'
+  TeleportUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tp <name>'
+  TeleportRequestUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tpahere <name>'
+  TeleportHereUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tphere <name>'
   NoPendingTeleportRequest: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not having a pending teleport request.'
   SentTeleportRequest: '&8[&a!&8] &aSuccess &8[&a!&8]&7 You sent &f{0}&7 a teleport request.'
   ReceivedTeleportRequest: '&8[&a!&8] &aSuccess &8[&a!&8]&7 &f{0}&7 sent you a teleport request. Type /tpaccept to accept within 30 seconds.'

@@ -1,4 +1,4 @@
-ownerName: DeltaEssentials
+name: DeltaEssentials
 main: com.gmail.tracebachi.DeltaEssentials.DeltaEssentials
 version: ${project.version}
 author: Trace Bachi (tracebachi@gmail.com, BigBossZee)
