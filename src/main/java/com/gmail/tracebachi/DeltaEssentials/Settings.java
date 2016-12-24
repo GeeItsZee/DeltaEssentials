@@ -16,16 +16,15 @@
  */
 package com.gmail.tracebachi.DeltaEssentials;
 
+import com.gmail.tracebachi.DeltaRedis.Shared.ChatMessageHelper;
 import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashSet;
 import com.google.common.base.Preconditions;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
 
 import java.io.File;
-import java.text.MessageFormat;
 import java.util.*;
 
 /**
@@ -33,173 +32,117 @@ import java.util.*;
  */
 public class Settings
 {
-    private static volatile boolean debugEnabled;
-    private static boolean defaultGameModeForced;
-    private static boolean ignorePotionEffects;
-    private static boolean loadPlayerDataOnLogin;
-    private static GameMode defaultGameMode;
-    private static Set<GameMode> disabledGameModes;
-    private static CaseInsensitiveHashSet blockedServers;
-    private static List<String> preSaveCommands;
-    private static HashMap<String, MessageFormat> formatMap;
+    private static final String PLAYERDATA_FOLDER_PREFIX =
+        "plugins" + File.separator +
+        "DeltaEssentials" + File.separator +
+        "PlayerData" + File.separator;
 
-    private Settings() {}
+    private boolean debugEnabled;
+    private boolean loadPlayerDataOnLogin;
+    private CaseInsensitiveHashSet privateServers;
+    private GameMode defaultGameMode;
+    private boolean forceDefaultGameModeOnJoin;
+    private Set<GameMode> disabledGameModes;
+    private boolean loadAndSavePotionEffects;
+    private List<String> preSaveCommands;
 
-    public static void read(FileConfiguration config)
+    public void read(FileConfiguration config)
     {
         disabledGameModes = new HashSet<>();
-        blockedServers = new CaseInsensitiveHashSet();
+        privateServers = new CaseInsensitiveHashSet();
         preSaveCommands = new ArrayList<>();
-        formatMap = new HashMap<>();
 
-        debugEnabled = config.getBoolean("Debug");
+        debugEnabled = config.getBoolean("Debug", false);
         loadPlayerDataOnLogin = config.getBoolean("LoadPlayerDataOnLogin", true);
-        defaultGameMode = getGameMode(config.getString("GameModes.Default", "SURVIVAL"));
-        defaultGameModeForced = config.getBoolean("GameModes.ForceDefault", false);
-        ignorePotionEffects = config.getBoolean("IgnorePotionEffects", false);
-        blockedServers.addAll(config.getStringList("BlockedServers"));
+        privateServers.addAll(config.getStringList("PrivateServers"));
+        defaultGameMode = getGameMode(config.getString("DefaultGameMode", "SURVIVAL"));
+        forceDefaultGameModeOnJoin = config.getBoolean("ForceDefaultGameModeOnJoin", false);
+        loadAndSavePotionEffects = config.getBoolean("LoadAndSavePotionEffects", false);
         preSaveCommands.addAll(config.getStringList("PreSaveCommands"));
+        preSaveCommands = Collections.unmodifiableList(preSaveCommands);
 
-        for(String modeName : config.getStringList("GameModes.DisabledModes"))
+        for(String modeName : config.getStringList("DisabledGameModes"))
         {
             disabledGameModes.add(getGameMode(modeName));
         }
 
-        ConfigurationSection section = config.getConfigurationSection("FormatReplacements");
-        HashMap<String, String> formatReplacementMap = new HashMap<>();
-
-        if(section != null)
-        {
-            for(String key : section.getKeys(false))
-            {
-                formatReplacementMap.put(key, section.getString(key));
-            }
-        }
-
-        section = config.getConfigurationSection("Formats");
-
+        ConfigurationSection section = config.getConfigurationSection("Formats");
         if(section != null)
         {
             for(String formatKey : section.getKeys(false))
             {
                 String rawFormat = section.getString(formatKey);
-
-                for(Map.Entry<String, String> entry : formatReplacementMap.entrySet())
-                {
-                    rawFormat = rawFormat.replace(entry.getKey(), entry.getValue());
-                }
-
                 String format = ChatColor.translateAlternateColorCodes('&', rawFormat);
-
-                formatMap.put(formatKey, new MessageFormat(format));
+                ChatMessageHelper.instance().updateFormat("DeltaEss." + formatKey, format);
             }
         }
     }
 
-    public static File getPlayerDataFileFor(String playerName)
-    {
-        String lowerCaseName = playerName.toLowerCase();
-        File directory = new File(
-            "plugins" + File.separator +
-            "DeltaEssentials" + File.separator +
-            "PlayerData" + File.separator +
-            lowerCaseName.charAt(0));
-
-        directory.mkdirs();
-
-        return new File(directory, lowerCaseName + ".yml");
-    }
-
-    public static boolean isDebugEnabled()
+    public boolean isDebugEnabled()
     {
         return debugEnabled;
     }
 
-    public static void setDebugEnabled(boolean debugEnabled)
+    public void setDebugEnabled(boolean debugEnabled)
     {
-        Settings.debugEnabled = debugEnabled;
+        this.debugEnabled = debugEnabled;
     }
 
-    public static boolean shouldStartInLockdown()
-    {
-        return startInLockdown;
-    }
-
-    public static boolean shouldIgnorePotionEffects()
-    {
-        return ignorePotionEffects;
-    }
-
-    public static boolean shouldLoadPlayerDataOnLogin()
+    public boolean shouldLoadPlayerDataOnLogin()
     {
         return loadPlayerDataOnLogin;
     }
 
-    public static GameMode getDefaultGameMode()
+    public CaseInsensitiveHashSet getPrivateServers()
+    {
+        return privateServers;
+    }
+
+    public GameMode getDefaultGameMode()
     {
         return defaultGameMode;
     }
 
-    public static boolean isDefaultGameModeForced()
+    public boolean shouldForceDefaultGameModeOnJoin()
     {
-        return defaultGameModeForced;
+        return forceDefaultGameModeOnJoin;
     }
 
-    public static boolean isGameModeDisabled(GameMode gameMode)
+    public Set<GameMode> getDisabledGameModes()
     {
-        return disabledGameModes.contains(gameMode);
+        return disabledGameModes;
     }
 
-    public static boolean isServerBlocked(String serverName)
+    public boolean shouldLoadAndSavePotionEffects()
     {
-        return blockedServers.contains(serverName);
+        return loadAndSavePotionEffects;
     }
 
-    public static boolean isGameModeBlocked(GameMode mode)
+    public List<String> getPreSaveCommands()
     {
-        if(disabledGameModes.contains(mode)) { return true; }
-
-        if(defaultGameModeForced && mode != defaultGameMode) { return true; }
-
-        return false;
+        return preSaveCommands;
     }
 
-    public static void runPreSaveCommands(Player player)
+    public File getPlayerDataFileFor(String name)
     {
-        Preconditions.checkNotNull(player);
+        Preconditions.checkNotNull(name, "playerName");
+        name = name.toLowerCase();
 
-        preSaveCommands.forEach(player::performCommand);
-    }
+        File directory = new File(PLAYERDATA_FOLDER_PREFIX + name.charAt(0));
+        directory.mkdirs();
 
-    public static String format(String key, String... args)
-    {
-        MessageFormat messageFormat = formatMap.get(key);
-
-        if(messageFormat != null)
-        {
-            return messageFormat.format(args);
-        }
-        else
-        {
-            return "Unspecified format: " + key;
-        }
+        return new File(directory, name + ".yml");
     }
 
     private static GameMode getGameMode(String source)
     {
-        if(source == null) { return GameMode.SURVIVAL; }
-
-        switch(source.toUpperCase())
+        try
         {
-            default:
-            case "SURVIVAL":
-                return GameMode.SURVIVAL;
-            case "CREATIVE":
-                return GameMode.CREATIVE;
-            case "ADVENTURE":
-                return GameMode.ADVENTURE;
-            case "SPECTATOR":
-                return GameMode.SPECTATOR;
+            return GameMode.valueOf(source);
+        }
+        catch(NullPointerException | IllegalArgumentException ex)
+        {
+            return GameMode.SURVIVAL;
         }
     }
 }

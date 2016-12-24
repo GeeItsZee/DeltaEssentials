@@ -16,6 +16,7 @@
  */
 package com.gmail.tracebachi.DeltaEssentials.Events;
 
+import com.google.common.base.Preconditions;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -26,39 +27,60 @@ import org.bukkit.event.HandlerList;
  */
 public class PlayerPostLoadEvent extends Event
 {
-    private static final HandlerList handlers = new HandlerList();
-    private final boolean firstJoin;
     private final Player player;
     private final ConfigurationSection metaData;
+    private final boolean firstJoin;
+
+    public PlayerPostLoadEvent(Player player, ConfigurationSection metaData)
+    {
+        this(player, metaData, false);
+    }
 
     public PlayerPostLoadEvent(Player player, ConfigurationSection metaData, boolean firstJoin)
     {
+        Preconditions.checkNotNull(player, "player");
+        Preconditions.checkNotNull(metaData, "metaData");
+
         this.player = player;
         this.metaData = metaData;
         this.firstJoin = firstJoin;
     }
 
+    /**
+     * @return Player that was loaded
+     */
     public Player getPlayer()
     {
         return player;
     }
 
+    /**
+     * @return Metadata stored in the data file for the loaded player
+     */
     public ConfigurationSection getMetaData()
     {
         return metaData;
     }
 
+    /**
+     * @return True if the player's data file did not exist or false
+     */
     public boolean isFirstJoin()
     {
         return firstJoin;
     }
 
+    /** Used by Bukkit and Spigot **/
+    private static final HandlerList handlers = new HandlerList();
+
+    /** Used by Bukkit and Spigot **/
     @Override
     public HandlerList getHandlers()
     {
         return handlers;
     }
 
+    /** Used by Bukkit and Spigot **/
     public static HandlerList getHandlerList()
     {
         return handlers;

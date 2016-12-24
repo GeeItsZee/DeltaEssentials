@@ -16,12 +16,7 @@
  */
 package com.gmail.tracebachi.DeltaEssentials.Runnables;
 
-import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
-import com.gmail.tracebachi.DeltaEssentials.Listeners.PlayerDataIOListener;
-import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
-import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerEntry;
-import com.gmail.tracebachi.DeltaEssentials.Storage.PlayerStats;
 import com.gmail.tracebachi.DeltaEssentials.Utils.InventoryUtils;
 import com.gmail.tracebachi.DeltaEssentials.Utils.LockedFileUtil;
 import com.gmail.tracebachi.DeltaEssentials.Utils.PotionEffectUtils;
@@ -36,82 +31,68 @@ import java.io.IOException;
  */
 public class PlayerSave implements Runnable
 {
-    private final String destServer;
-    private final PlayerEntry entry;
-    private final PlayerDataIOListener listener;
-    private final DeltaEssentials plugin;
-
-    public PlayerSave(PlayerEntry entry, String destServer, PlayerDataIOListener listener,
-                      DeltaEssentials plugin)
+    /**
+     * Interface for handing different outcomes of running this Runnable
+     */
+    public interface Callbacks
     {
-        Preconditions.checkNotNull(entry, "Entry was null.");
-        Preconditions.checkNotNull(listener, "Listener was null.");
-        Preconditions.checkNotNull(plugin, "Plugin was null.");
+        void onSuccess();
 
-        this.entry = entry;
-        this.destServer = destServer;
-        this.listener = listener;
-        this.plugin = plugin;
+        void onFailure(Exception ex);
+    }
+
+    private final DeltaEssPlayerData playerData;
+    private final File fileToSave;
+    private final Callbacks callbacks;
+
+    public PlayerSave(DeltaEssPlayerData playerData, File fileToSave, Callbacks callbacks)
+    {
+        Preconditions.checkNotNull(playerData, "playerData");
+        Preconditions.checkNotNull(fileToSave, "fileToSave");
+        Preconditions.checkNotNull(callbacks, "callbacks");
+
+        this.playerData = playerData;
+        this.fileToSave = fileToSave;
+        this.callbacks = callbacks;
     }
 
     @Override
     public void run()
     {
-        File playerDataFile = Settings.getPlayerDataFileFor(entry.getName());
-
         try
         {
             YamlConfiguration configuration = writePlayerDataYaml();
             String source = configuration.saveToString();
 
-            if(LockedFileUtil.write(source, playerDataFile))
+            if(LockedFileUtil.write(source, fileToSave))
             {
-                onSuccess();
+                callbacks.onSuccess();
             }
             else
             {
-                onFailure();
+                callbacks.onFailure(null);
             }
         }
-        catch(IOException | NullPointerException e)
+        catch(IOException | NullPointerException ex)
         {
-            e.printStackTrace();
-            onFailure();
+            callbacks.onFailure(ex);
         }
-    }
-
-    private void onSuccess()
-    {
-        plugin.debug("Saved inventory for {name:" + entry.getName() + "}");
-        plugin.scheduleTaskSync(() -> listener.onPlayerSaveSuccess(entry.getName(), destServer));
-    }
-
-    private void onFailure()
-    {
-        plugin.debug("Failed to save inventory for {name:" +
-            entry.getName() + "} due to an exception");
-        plugin.scheduleTaskSync(() -> listener.onPlayerSaveException(entry.getName()));
     }
 
     private YamlConfiguration writePlayerDataYaml()
     {
-        YamlConfiguration serialized;
         YamlConfiguration config = new YamlConfiguration();
-        PlayerStats playerStats = entry.getPlayerStats();
-        DeltaEssPlayerData playerData = entry.getDeltaEssPlayerData();
 
         config.set("LastSave", System.currentTimeMillis());
-        config.set("Health", playerStats.getHealth());
-        config.set("Hunger", playerStats.getFoodLevel());
-        config.set("XpLevel", playerStats.getXpLevel());
-        config.set("XpProgress", playerStats.getXpProgress());
-        config.set("Gamemode", playerStats.getGameMode().toString());
+        config.set("Health", playerData.getHealth());
+        config.set("FoodLevel", playerData.getFoodLevel());
+        config.set("XpLevel", playerData.getXpLevel());
+        config.set("XpProgress", playerData.getXpProgress());
+        config.set("Gamemode", playerData.getGameMode().toString());
         config.set("Effects", PotionEffectUtils.toStringList(playerData.getPotionEffects()));
-        config.set("TeleportDenyEnabled", playerData.isDenyingTeleports());
-        config.set("VanishEnabled", playerData.isVanished());
-        config.set("ReplyTo", playerData.getReplyingTo());
-        config.set("SocialSpyLevel", playerData.getSocialSpyLevel().toString());
-        config.set("MetaData", playerData.getMetaData());
+        config.set("HeldItemSlot", playerData.getHeldItemSlot());
+
+        YamlConfiguration serialized;
 
         serialized = InventoryUtils.toYamlSection(playerData.getSurvival().getArmor());
         config.set("Survival.Armor", serialized);
@@ -127,8 +108,14 @@ public class PlayerSave implements Runnable
         serialized = InventoryUtils.toYamlSection(playerData.getCreative().getExtraSlots());
         config.set("Creative.ExtraSlots", serialized);
 
-        serialized = InventoryUtils.toYamlSection(playerStats.getEnderChest());
+        serialized = InventoryUtils.toYamlSection(playerData.getEnderChest());
         config.set("EnderChest", serialized);
+
+        config.set("DenyingTeleports", playerData.isDenyingTeleports());
+        config.set("Vanished", playerData.isVanished());
+        config.set("ReplyingTo", playerData.getReplyingTo());
+        config.set("SocialSpyLevel", playerData.getSocialSpyLevel().toString());
+        config.set("MetaData", playerData.getMetaData());
         return config;
     }
 }

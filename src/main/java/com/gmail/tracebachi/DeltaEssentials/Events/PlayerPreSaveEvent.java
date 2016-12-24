@@ -26,8 +26,6 @@ import org.bukkit.event.HandlerList;
  */
 public class PlayerPreSaveEvent extends Event
 {
-    private static final HandlerList handlers = new HandlerList();
-
     private final Player player;
     private final ConfigurationSection metaData;
 
@@ -37,22 +35,33 @@ public class PlayerPreSaveEvent extends Event
         this.metaData = metaData;
     }
 
+    /**
+     * @return Player that will be saved
+     */
     public Player getPlayer()
     {
         return player;
     }
 
+    /**
+     * @return MetaData that will be saved with the player data
+     */
     public ConfigurationSection getMetaData()
     {
         return metaData;
     }
 
+    /** Used by Bukkit and Spigot **/
+    private static final HandlerList handlers = new HandlerList();
+
+    /** Used by Bukkit and Spigot **/
     @Override
     public HandlerList getHandlers()
     {
         return handlers;
     }
 
+    /** Used by Bukkit and Spigot **/
     public static HandlerList getHandlerList()
     {
         return handlers;

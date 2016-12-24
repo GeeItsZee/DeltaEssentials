@@ -135,7 +135,7 @@ public class TeleportListener extends DeltaEssentialsListener
     {
         String senderName = toTp.getName();
         String destName = destination.getName();
-        DeltaEssPlayerData destPlayerData = plugin.getPlayerMap().get(destName);
+        DeltaEssPlayerData destPlayerData = plugin.getPlayerDataMap().get(destName);
 
         if(teleportType == PlayerTpEvent.TeleportType.NORMAL_TP)
         {

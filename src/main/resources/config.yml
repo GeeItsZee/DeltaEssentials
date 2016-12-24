@@ -10,7 +10,7 @@ LoadPlayerDataOnLogin: True
 # Names of servers that a player cannot access without the permission
 # that gives them access to this server. By default, all servers not in this
 # list are "public" in that players do not need a special permission to join
-BlockedServers:
+PrivateServers:
   - SecretServer
   - SuperSecretServer
 
@@ -39,6 +39,13 @@ PreSaveCommands:
 
 # Formatting strings
 Formats:
+
+  FailedToLoadInventory: ''
+  FailedToSaveInventory: ''
+  PlayerLocked: ''
+
+
+
 
   NoPermission: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not have the &f{0}&7 permission.'
   PlayersOnly: '&8[&c!&8] &cFailure &8[&c!&8]&7 Only players can use &f{0}&7'

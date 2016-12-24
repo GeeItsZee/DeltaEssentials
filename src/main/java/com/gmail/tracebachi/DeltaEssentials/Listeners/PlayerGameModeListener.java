@@ -4,6 +4,7 @@ import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Storage.SavedPlayerInventory;
+import com.google.common.base.Preconditions;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,14 +13,35 @@ import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
+import static com.gmail.tracebachi.DeltaRedis.Shared.ChatMessageHelper.format;
+import static com.gmail.tracebachi.DeltaRedis.Shared.ChatMessageHelper.formatNoPerm;
+
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 7/21/16.
  */
 public class PlayerGameModeListener extends DeltaEssentialsListener
 {
-    public PlayerGameModeListener(DeltaEssentials plugin)
+    private LockedPlayerManager lockedPlayerManager;
+    private Settings settings;
+
+    public PlayerGameModeListener(LockedPlayerManager lockedPlayerManager, Settings settings,
+                                  DeltaEssentials plugin)
     {
         super(plugin);
+
+        Preconditions.checkNotNull(lockedPlayerManager, "lockedPlayerManager");
+        Preconditions.checkNotNull(settings, "settings");
+
+        this.lockedPlayerManager = lockedPlayerManager;
+        this.settings = settings;
+    }
+
+    @Override
+    public void shutdown()
+    {
+        this.lockedPlayerManager = null;
+        this.settings = null;
+        super.shutdown();
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -29,32 +51,35 @@ public class PlayerGameModeListener extends DeltaEssentialsListener
         String name = player.getName();
         GameMode currentMode = player.getGameMode();
         GameMode newMode = event.getNewGameMode();
-        DeltaEssPlayerData playerData = plugin.getPlayerMap().get(name);
-        String gameModePerm = "DeltaEss.GameMode." + newMode.name();
 
         // Ignore game mode changes to the same mode
         if(currentMode == event.getNewGameMode()) { return; }
 
-        // Ignore if DeltaEssPlayer does not exist
+        DeltaEssPlayerData playerData = plugin.getPlayerDataMap().get(name);
+
+        // If the player is not loaded, ignore the game mode change.
         if(playerData == null) { return; }
 
         // Prevent game mode change during loading or saving
-        if(plugin.getPlayerLockManager().isLocked(name))
+        if(lockedPlayerManager.isLocked(name))
         {
-            player.sendMessage(Settings.format("PlayerLocked"));
+            player.sendMessage(format("DeltaEss.PlayerLocked"));
             event.setCancelled(true);
             return;
         }
 
-        // Check if gamemode is disabled or not the forced gamemode (if enabled)
-        if(Settings.isGameModeBlocked(newMode) && !player.hasPermission(gameModePerm))
+        boolean isNewGameModeDisabled = settings.getDisabledGameModes().contains(newMode);
+        String gameModePerm = "DeltaEss.GameMode." + newMode.name();
+
+        // If gamemode is disabled and player does not have bypass permission, prevent the change.
+        if(isNewGameModeDisabled && !player.hasPermission(gameModePerm))
         {
-            player.sendMessage(Settings.format("NoPermission", gameModePerm));
+            player.sendMessage(formatNoPerm(gameModePerm));
             event.setCancelled(true);
             return;
         }
 
-        // Ignore players that have the single inventory permission
+        // If the player is sharing game mode inventories, ignore the game mode change.
         if(player.hasPermission("DeltaEss.SharedGameModeInv")) { return; }
 
         // Save the inventory associated with the old game mode
@@ -72,16 +97,15 @@ public class PlayerGameModeListener extends DeltaEssentialsListener
         if(newMode == GameMode.SURVIVAL)
         {
             SavedPlayerInventory savedSurvival = playerData.getSurvival();
-
             playerInventory.setStorageContents(savedSurvival.getStorage());
             playerInventory.setArmorContents(savedSurvival.getArmor());
             playerInventory.setExtraContents(savedSurvival.getExtraSlots());
-            playerData.setSurvival(null);
+
+            playerData.clearSurvival();
         }
         else if(newMode == GameMode.CREATIVE)
         {
             SavedPlayerInventory savedCreative = playerData.getCreative();
-
             playerInventory.setStorageContents(savedCreative.getStorage());
             playerInventory.setArmorContents(savedCreative.getArmor());
             playerInventory.setExtraContents(savedCreative.getExtraSlots());

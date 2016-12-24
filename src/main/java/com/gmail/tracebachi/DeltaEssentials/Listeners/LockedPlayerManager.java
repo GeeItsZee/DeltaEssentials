@@ -17,7 +17,6 @@
 package com.gmail.tracebachi.DeltaEssentials.Listeners;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
-import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashMap;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.HumanEntity;
@@ -32,18 +31,17 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.Iterator;
-import java.util.Map;
+import static com.gmail.tracebachi.DeltaRedis.Shared.ChatMessageHelper.format;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 1/20/16.
  */
-public class PlayerLockManager extends DeltaEssentialsListener
+public class LockedPlayerManager extends DeltaEssentialsListener
 {
     private CaseInsensitiveHashMap<Long> locked = new CaseInsensitiveHashMap<>();
     private BukkitTask cleanupTask;
 
-    public PlayerLockManager(DeltaEssentials plugin)
+    public LockedPlayerManager(DeltaEssentials plugin)
     {
         super(plugin);
 
@@ -91,7 +89,7 @@ public class PlayerLockManager extends DeltaEssentialsListener
 
         if(locked.containsKey(player.getName()))
         {
-            player.sendMessage(Settings.format("PlayerLocked"));
+            player.sendMessage(format("PlayerLocked"));
             event.setCancelled(true);
         }
     }
@@ -103,7 +101,7 @@ public class PlayerLockManager extends DeltaEssentialsListener
 
         if(locked.containsKey(player.getName()))
         {
-            player.sendMessage(Settings.format("PlayerLocked"));
+            player.sendMessage(format("PlayerLocked"));
             event.setCancelled(true);
         }
     }
@@ -115,7 +113,7 @@ public class PlayerLockManager extends DeltaEssentialsListener
 
         if(locked.containsKey(player.getName()))
         {
-            player.sendMessage(Settings.format("PlayerLocked"));
+            player.sendMessage(format("PlayerLocked"));
             event.setCancelled(true);
         }
     }
@@ -127,7 +125,7 @@ public class PlayerLockManager extends DeltaEssentialsListener
 
         if(locked.containsKey(player.getName()))
         {
-            player.sendMessage(Settings.format("PlayerLocked"));
+            player.sendMessage(format("PlayerLocked"));
             event.setCancelled(true);
         }
     }
@@ -139,7 +137,7 @@ public class PlayerLockManager extends DeltaEssentialsListener
 
         if(locked.containsKey(player.getName()))
         {
-            player.sendMessage(Settings.format("PlayerLocked"));
+            player.sendMessage(format("PlayerLocked"));
             event.setCancelled(true);
         }
     }
@@ -153,24 +151,14 @@ public class PlayerLockManager extends DeltaEssentialsListener
 
         if(locked.containsKey(player.getName()))
         {
-            player.sendMessage(Settings.format("PlayerLocked"));
+            player.sendMessage(format("PlayerLocked"));
             event.setCancelled(true);
         }
     }
 
     private void cleanup()
     {
-        Iterator<Map.Entry<String, Long>> iter = locked.entrySet().iterator();
         Long current = System.currentTimeMillis();
-
-        while(iter.hasNext())
-        {
-            Map.Entry<String, Long> entry = iter.next();
-
-            if(entry.getValue() < current)
-            {
-                iter.remove();
-            }
-        }
+        locked.entrySet().removeIf(entry -> entry.getValue() < current);
     }
 }

@@ -20,6 +20,7 @@ import com.gmail.tracebachi.DeltaEssentials.Commands.*;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerServerSwitchEvent;
 import com.gmail.tracebachi.DeltaEssentials.Listeners.*;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
+import com.gmail.tracebachi.DeltaEssentials.Utils.DeltaEssPlayerDataHelper;
 import com.gmail.tracebachi.DeltaExecutor.DeltaExecutor;
 import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashMap;
 import com.google.common.base.Preconditions;
@@ -35,13 +36,15 @@ import java.util.Map;
  */
 public class DeltaEssentials extends JavaPlugin
 {
-    private static volatile boolean syncTaskSchedulingAllowed;
+    private Settings settings;
+    private DeltaEssPlayerDataHelper playerDataHelper;
     private CaseInsensitiveHashMap<DeltaEssPlayerData> playerMap = new CaseInsensitiveHashMap<>();
 
-    private SharedChatListener sharedChatListener;
-    private PlayerLockManager playerLockManager;
-    private PlayerDataIOListener playerDataIOListener;
+    private LockedPlayerManager lockedPlayerManager;
+    private PlayerDataLoadListener playerDataLoadListener;
+    private PlayerDataSaveListener playerDataSaveListener;
     private PlayerGameModeListener playerGameModeListener;
+    private SharedChatListener sharedChatListener;
     private TeleportListener teleportListener;
 
     private CommandDeltaEss commandDeltaEss;
@@ -68,26 +71,44 @@ public class DeltaEssentials extends JavaPlugin
     public void onEnable()
     {
         reloadConfig();
-        Settings.read(getConfig());
-        syncTaskSchedulingAllowed = true;
 
-        // Add a player for the console so the console's reply targets are stored
-        playerMap.put("console", new DeltaEssPlayerData());
+        settings = new Settings();
+        settings.read(getConfig());
 
-        playerLockManager = new PlayerLockManager(this);
-        playerLockManager.register();
+        playerDataHelper = new DeltaEssPlayerDataHelper(settings);
 
-        teleportListener = new TeleportListener(this);
-        teleportListener.register();
+        lockedPlayerManager = new LockedPlayerManager(this);
+        lockedPlayerManager.register();
 
-        playerGameModeListener = new PlayerGameModeListener(this);
+        playerDataLoadListener = new PlayerDataLoadListener(
+            lockedPlayerManager,
+            playerDataHelper,
+            settings,
+            this);
+        playerDataLoadListener.register();
+
+        playerDataSaveListener = new PlayerDataSaveListener(
+            lockedPlayerManager,
+            playerDataHelper,
+            settings,
+            this);
+        playerDataSaveListener.register();
+
+        playerGameModeListener = new PlayerGameModeListener(lockedPlayerManager, settings, this);
         playerGameModeListener.register();
 
         sharedChatListener = new SharedChatListener(this);
         sharedChatListener.register();
 
-        playerDataIOListener = new PlayerDataIOListener(this);
-        playerDataIOListener.register();
+        teleportListener = new TeleportListener(this);
+        teleportListener.register();
+
+        Messenger messenger = getServer().getMessenger();
+        messenger.registerOutgoingPluginChannel(this, "BungeeCord");
+
+        // Add a player for the console so the console's reply targets are stored
+        // TODO Special case handling for console
+        // playerMap.put("console", new DeltaEssPlayerData());
 
         commandDeltaEss = new CommandDeltaEss(this);
         commandDeltaEss.register();
@@ -127,49 +148,65 @@ public class DeltaEssentials extends JavaPlugin
 
         commandTpDeny = new CommandTpDeny(this);
         commandTpDeny.register();
-
-        Messenger messenger = getServer().getMessenger();
-        messenger.registerOutgoingPluginChannel(this, "BungeeCord");
     }
 
     @Override
     public void onDisable()
     {
-        syncTaskSchedulingAllowed = false;
-
         // Save player data for all players
         for(Player player : Bukkit.getOnlinePlayers())
         {
             try
             {
-                playerDataIOListener.savePlayer(player);
+                playerDataSaveListener.savePlayer(player);
             }
             catch(Exception ex)
             {
                 ex.printStackTrace();
-                severe("Failed to save player data on shutdown for " +
-                    player.getName());
+                severe("Failed to save player data on shutdown for " + player.getName());
             }
         }
 
         // Shutdown the async executor (will wait for all tasks to complete)
         DeltaExecutor.instance().shutdown();
 
-        // Order matters. Shut down the IO listener before the inventory lock listener
-        playerDataIOListener.shutdown();
-        playerDataIOListener = null;
+        // Order matters
+        // Shut down the Load/Save listeners before the inventory lock listener
+        if(playerDataLoadListener != null)
+        {
+            playerDataLoadListener.shutdown();
+            playerDataLoadListener = null;
+        }
 
-        playerGameModeListener.shutdown();
-        playerGameModeListener = null;
+        if(playerDataSaveListener != null)
+        {
+            playerDataSaveListener.shutdown();
+            playerDataSaveListener = null;
+        }
 
-        playerLockManager.shutdown();
-        playerLockManager = null;
+        if(playerGameModeListener != null)
+        {
+            playerGameModeListener.shutdown();
+            playerGameModeListener = null;
+        }
 
-        teleportListener.shutdown();
-        teleportListener = null;
+        if(teleportListener != null)
+        {
+            teleportListener.shutdown();
+            teleportListener = null;
+        }
 
-        sharedChatListener.shutdown();
-        sharedChatListener = null;
+        if(sharedChatListener != null)
+        {
+            sharedChatListener.shutdown();
+            sharedChatListener = null;
+        }
+
+        if(lockedPlayerManager != null)
+        {
+            lockedPlayerManager.shutdown();
+            lockedPlayerManager = null;
+        }
 
         commandDeltaEss.shutdown();
         commandDeltaEss = null;
@@ -226,42 +263,15 @@ public class DeltaEssentials extends JavaPlugin
 
     public void debug(String message)
     {
-        if(Settings.isDebugEnabled())
+        if(settings.isDebugEnabled())
         {
             getLogger().info("[Debug] " + message);
         }
     }
 
-    public Map<String, DeltaEssPlayerData> getPlayerMap()
+    public Map<String, DeltaEssPlayerData> getPlayerDataMap()
     {
         return playerMap;
-    }
-
-    public DeltaEssPlayerData getPlayerData(String name)
-    {
-        return playerMap.get(name);
-    }
-
-    public PlayerLockManager getPlayerLockManager()
-    {
-        return playerLockManager;
-    }
-
-    public void scheduleTaskSync(Runnable runnable)
-    {
-        if(syncTaskSchedulingAllowed)
-        {
-            getServer().getScheduler().runTask(this, runnable);
-        }
-        else
-        {
-            runnable.run();
-        }
-    }
-
-    public void scheduleTaskAsync(Runnable runnable)
-    {
-        DeltaExecutor.instance().execute(runnable);
     }
 
     public boolean sendToServer(Player player, String destination)
@@ -271,10 +281,10 @@ public class DeltaEssentials extends JavaPlugin
 
     public boolean sendToServer(Player player, String destination, boolean callEvent)
     {
-        Preconditions.checkNotNull(player, "Player cannot be null.");
-        Preconditions.checkNotNull(destination, "Destination server cannot be null.");
+        Preconditions.checkNotNull(player, "player");
+        Preconditions.checkNotNull(destination, "destination");
 
-        if(!playerMap.containsKey(player.getName())) return false;
+        if(!playerMap.containsKey(player.getName())) { return false; }
 
         if(callEvent)
         {
@@ -287,7 +297,7 @@ public class DeltaEssentials extends JavaPlugin
             }
         }
 
-        playerDataIOListener.saveAndMovePlayer(player, destination);
+        playerDataSaveListener.saveAndMovePlayer(player, destination);
         return true;
     }
 }

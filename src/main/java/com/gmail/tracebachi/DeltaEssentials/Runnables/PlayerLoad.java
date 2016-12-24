@@ -16,9 +16,6 @@
  */
 package com.gmail.tracebachi.DeltaEssentials.Runnables;
 
-import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
-import com.gmail.tracebachi.DeltaEssentials.Listeners.PlayerDataIOListener;
-import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Storage.SavedPlayerInventory;
 import com.gmail.tracebachi.DeltaEssentials.Storage.SocialSpyLevel;
@@ -40,89 +37,89 @@ import java.io.IOException;
  */
 public class PlayerLoad implements Runnable
 {
-    private final String name;
-    private final PlayerDataIOListener listener;
-    private final DeltaEssentials plugin;
-
-    public PlayerLoad(String name, PlayerDataIOListener listener, DeltaEssentials plugin)
+    /**
+     * Interface for handing different outcomes of running this Runnable
+     */
+    public interface Callbacks
     {
-        Preconditions.checkNotNull(name, "Name was null.");
-        Preconditions.checkNotNull(listener, "Listener was null.");
-        Preconditions.checkNotNull(plugin, "Plugin was null.");
+        void onSuccess(DeltaEssPlayerData playerData);
 
-        this.name = name.toLowerCase();
-        this.listener = listener;
-        this.plugin = plugin;
+        void onNotFoundFailure();
+
+        void onExceptionFailure(Exception ex);
+    }
+
+    private final String playerName;
+    private final File fileToLoad;
+    private final Callbacks callbacks;
+
+    public PlayerLoad(String playerName, File fileToLoad, Callbacks callbacks)
+    {
+        Preconditions.checkNotNull(playerName, "playerName");
+        Preconditions.checkNotNull(fileToLoad, "fileToLoad");
+        Preconditions.checkNotNull(callbacks, "callbacks");
+        Preconditions.checkArgument(!playerName.isEmpty(), "Empty playerName");
+
+        this.playerName = playerName;
+        this.fileToLoad = fileToLoad;
+        this.callbacks = callbacks;
     }
 
     @Override
     public void run()
     {
-        File playerDataFile = Settings.getPlayerDataFileFor(name);
-
-        if(!playerDataFile.exists())
+        if(!fileToLoad.exists())
         {
-            onNotFoundFailure();
+            callbacks.onNotFoundFailure();
             return;
         }
 
         try
         {
-            String fileContents = LockedFileUtil.read(playerDataFile);
+            String fileContents = LockedFileUtil.read(fileToLoad);
             YamlConfiguration configuration = new YamlConfiguration();
             configuration.loadFromString(fileContents);
 
-            PlayerEntry entry = readPlayerDataYaml(configuration);
-            onSuccess(entry);
+            DeltaEssPlayerData playerData = readDeltaEssPlayerData(configuration);
+            callbacks.onSuccess(playerData);
         }
         catch(IOException | InvalidConfigurationException e)
         {
-            e.printStackTrace();
-            onExceptionFailure();
+            callbacks.onExceptionFailure(e);
         }
     }
 
-    private void onSuccess(PlayerEntry entry)
+    private DeltaEssPlayerData readDeltaEssPlayerData(YamlConfiguration config)
     {
-        plugin.debug("Loaded player data for {name:" + entry.getName() + "}");
-        plugin.scheduleTaskSync(() -> listener.onPlayerLoadSuccess(name, entry));
-    }
-
-    private void onNotFoundFailure()
-    {
-        plugin.debug("Player data not found for {name:" + name + "}");
-        plugin.scheduleTaskSync(() -> listener.onPlayerNotFound(name));
-    }
-
-    private void onExceptionFailure()
-    {
-        plugin.debug("Failed to load player data for {name:" + name + "} due to an exception");
-        plugin.scheduleTaskSync(() -> listener.onPlayerLoadException(name));
-    }
-
-    private PlayerEntry readPlayerDataYaml(YamlConfiguration config)
-    {
+        DeltaEssPlayerData playerData = new DeltaEssPlayerData(playerName);
         ItemStack[] itemStacks;
         ConfigurationSection section;
         SavedPlayerInventory savedPlayerInventory;
-        PlayerEntry entry = new PlayerEntry(name);
-        PlayerStats playerStats = new PlayerStats();
-        DeltaEssPlayerData playerData = new DeltaEssPlayerData();
 
-        playerStats.setHealth(config.getDouble("Health", 20.0));
-        playerStats.setFoodLevel(config.getInt("Hunger", 20));
-        playerStats.setXpLevel(config.getInt("XpLevel", 0));
-        playerStats.setXpProgress((float) config.getDouble("XpProgress", 0.0));
-        playerStats.setGameMode(GameMode.valueOf(config.getString("Gamemode", "SURVIVAL")));
-
+        playerData.setHealth(
+            config.getDouble("Health", 20.0));
+        playerData.setFoodLevel(
+            config.getInt("FoodLevel", 20));
+        playerData.setXpLevel(
+            config.getInt("XpLevel", 0));
+        playerData.setXpProgress(
+            (float) config.getDouble("XpProgress", 0.0));
+        playerData.setGameMode(parseGameMode(
+            config.getString("Gamemode", "SURVIVAL")));
         playerData.setPotionEffects(PotionEffectUtils.toEffectList(
             config.getStringList("Effects")));
+        playerData.setHeldItemSlot(
+            config.getInt("HeldItemSlot", 0));
         playerData.setSocialSpyLevel(parseSocialSpyLevel(
             config.getString("SocialSpyLevel", "NONE")));
-        playerData.setDenyingTeleports(config.getBoolean("TeleportDenyEnabled", false));
-        playerData.setVanished(config.getBoolean("VanishEnabled", false));
-        playerData.setReplyingTo(config.getString("ReplyTo", ""));
-        playerData.setMetaData(config.getConfigurationSection("MetaData"));
+        playerData.setDenyingTeleports(
+            config.getBoolean("DenyingTeleports", false));
+        playerData.setVanished(
+            config.getBoolean("Vanished", false));
+        playerData.setReplyingTo(
+            config.getString("ReplyingTo", ""));
+        playerData.setMetaData(
+            config.getConfigurationSection("MetaData"));
 
         section = config.getConfigurationSection("Survival");
         savedPlayerInventory = InventoryUtils.toSavedInventory(section);
@@ -134,12 +131,21 @@ public class PlayerLoad implements Runnable
 
         section = config.getConfigurationSection("EnderChest");
         itemStacks = InventoryUtils.toItemStacks(section, 27);
-        playerStats.setEnderChest(itemStacks);
+        playerData.setEnderChest(itemStacks);
 
-        entry.setPlayerStats(playerStats);
-        entry.setDeltaEssPlayerData(playerData);
+        return playerData;
+    }
 
-        return entry;
+    private GameMode parseGameMode(String input)
+    {
+        try
+        {
+            return (input != null) ? GameMode.valueOf(input) : GameMode.SURVIVAL;
+        }
+        catch(IllegalArgumentException e)
+        {
+            return GameMode.SURVIVAL;
+        }
     }
 
     private SocialSpyLevel parseSocialSpyLevel(String input)

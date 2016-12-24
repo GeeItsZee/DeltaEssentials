@@ -16,6 +16,7 @@
  */
 package com.gmail.tracebachi.DeltaEssentials.Events;
 
+import com.google.common.base.Preconditions;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
@@ -26,44 +27,60 @@ import org.bukkit.event.HandlerList;
  */
 public class PlayerServerSwitchEvent extends Event implements Cancellable
 {
-    private static final HandlerList handlers = new HandlerList();
     private final Player player;
-    private final String destinationServer;
+    private final String destServer;
     private boolean cancelled = false;
 
-    public PlayerServerSwitchEvent(Player player, String destinationServer)
+    public PlayerServerSwitchEvent(Player player, String destServer)
     {
+        Preconditions.checkNotNull(player, "player");
+        Preconditions.checkNotNull(destServer, "destServer");
+
         this.player = player;
-        this.destinationServer = destinationServer;
+        this.destServer = destServer;
     }
 
+    /**
+     * @return Player that is attempting to switch servers
+     */
     public Player getPlayer()
     {
         return player;
     }
 
-    public String getDestinationServer()
+    /**
+     * @return Name of the server that the player is attemping to switch to
+     */
+    public String getDestServer()
     {
-        return destinationServer;
+        return destServer;
     }
 
+    /** Used by Bukkit and Spigot **/
     @Override
     public boolean isCancelled()
     {
         return cancelled;
     }
 
+    /** Used by Bukkit and Spigot **/
     @Override
     public void setCancelled(boolean val)
     {
         cancelled = val;
     }
 
+    /** Used by Bukkit and Spigot **/
+    private static final HandlerList handlers = new HandlerList();
+
+    /** Used by Bukkit and Spigot **/
+    @Override
     public HandlerList getHandlers()
     {
         return handlers;
     }
 
+    /** Used by Bukkit and Spigot **/
     public static HandlerList getHandlerList()
     {
         return handlers;

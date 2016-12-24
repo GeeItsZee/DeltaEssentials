@@ -26,7 +26,6 @@ import org.bukkit.event.HandlerList;
  */
 public class PlayerLoadRequestEvent extends Event
 {
-    private static final HandlerList handlers = new HandlerList();
     private final Player player;
 
     public PlayerLoadRequestEvent(Player player)
@@ -34,17 +33,25 @@ public class PlayerLoadRequestEvent extends Event
         this.player = Preconditions.checkNotNull(player);
     }
 
+    /**
+     * @return Player to try and load
+     */
     public Player getPlayer()
     {
         return player;
     }
 
+    /** Used by Bukkit and Spigot **/
+    private static final HandlerList handlers = new HandlerList();
+
+    /** Used by Bukkit and Spigot **/
     @Override
     public HandlerList getHandlers()
     {
         return handlers;
     }
 
+    /** Used by Bukkit and Spigot **/
     public static HandlerList getHandlerList()
     {
         return handlers;

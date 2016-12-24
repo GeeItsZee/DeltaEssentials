@@ -33,7 +33,7 @@ public class DeltaEssPlayerData
 {
     private static final int ENDER_CHEST_SIZE = 27;
 
-    private final String ownerName;
+    private final String playerName;
     private double health = 20.00D;
     private int foodLevel = 0;
     private int xpLevel = 0;
@@ -41,6 +41,7 @@ public class DeltaEssPlayerData
     private GameMode gameMode = GameMode.SURVIVAL;
     private Collection<PotionEffect> potionEffects = Collections.emptyList();
     private ItemStack[] enderChest = new ItemStack[ENDER_CHEST_SIZE];
+    private int heldItemSlot = 0;
     private SavedPlayerInventory survival = SavedPlayerInventory.EMPTY;
     private SavedPlayerInventory creative = SavedPlayerInventory.EMPTY;
     private boolean denyingTeleports = false;
@@ -49,16 +50,16 @@ public class DeltaEssPlayerData
     private SocialSpyLevel socialSpyLevel = SocialSpyLevel.NONE;
     private ConfigurationSection metaData = new YamlConfiguration();
 
-    public DeltaEssPlayerData(String ownerName)
+    public DeltaEssPlayerData(String playerName)
     {
-        Preconditions.checkNotNull(ownerName, "ownerName");
-        Preconditions.checkArgument(!ownerName.isEmpty(), "Empty ownerName");
-        this.ownerName = ownerName;
+        Preconditions.checkNotNull(playerName, "playerName");
+        Preconditions.checkArgument(!playerName.isEmpty(), "Empty playerName");
+        this.playerName = playerName;
     }
 
-    public String getOwnerName()
+    public String getPlayerName()
     {
-        return ownerName;
+        return playerName;
     }
 
     public double getHealth()
@@ -141,6 +142,16 @@ public class DeltaEssPlayerData
         this.enderChest = enderChest;
     }
 
+    public int getHeldItemSlot()
+    {
+        return heldItemSlot;
+    }
+
+    public void setHeldItemSlot(int heldItemSlot)
+    {
+        this.heldItemSlot = heldItemSlot;
+    }
+
     public SavedPlayerInventory getSurvival()
     {
         return survival;
@@ -151,6 +162,11 @@ public class DeltaEssPlayerData
         this.survival = (survival == null) ? SavedPlayerInventory.EMPTY : survival;
     }
 
+    public void clearSurvival()
+    {
+        this.survival = SavedPlayerInventory.EMPTY;
+    }
+
     public SavedPlayerInventory getCreative()
     {
         return creative;
@@ -159,6 +175,11 @@ public class DeltaEssPlayerData
     public void setCreative(SavedPlayerInventory creative)
     {
         this.creative = (creative == null) ? SavedPlayerInventory.EMPTY : creative;
+    }
+
+    public void clearCreative()
+    {
+        this.creative = SavedPlayerInventory.EMPTY;
     }
 
     public boolean isDenyingTeleports()
@@ -204,7 +225,7 @@ public class DeltaEssPlayerData
 
     public ConfigurationSection getMetaData()
     {
-        return metaData;
+        return (metaData == null) ? new YamlConfiguration() : metaData;
     }
 
     public void setMetaData(ConfigurationSection metaData)

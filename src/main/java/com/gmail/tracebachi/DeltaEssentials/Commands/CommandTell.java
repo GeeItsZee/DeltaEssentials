@@ -120,7 +120,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
             return true;
         }
 
-        Map<String, DeltaEssPlayerData> playerMap = plugin.getPlayerMap();
+        Map<String, DeltaEssPlayerData> playerMap = plugin.getPlayerDataMap();
         DeltaEssPlayerData senderData = playerMap.get(senderName);
 
         if(senderData == null)
@@ -287,7 +287,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
                 return;
             }
 
-            DeltaEssPlayerData receiverData = plugin.getPlayerMap().get(receiverName);
+            DeltaEssPlayerData receiverData = plugin.getPlayerDataMap().get(receiverName);
 
             if(receiverData != null && receiverData.isVanished() && !senderIgnoresVanish)
             {
@@ -355,7 +355,7 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
     {
         String spyFormat = Settings.format("TellSpy", senderName, receiverName, message);
 
-        for(Map.Entry<String, DeltaEssPlayerData> entry : plugin.getPlayerMap().entrySet())
+        for(Map.Entry<String, DeltaEssPlayerData> entry : plugin.getPlayerDataMap().entrySet())
         {
             SocialSpyLevel socialSpyLevel = entry.getValue().getSocialSpyLevel();
 

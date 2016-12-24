@@ -101,7 +101,7 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
                 return true;
             }
 
-            DeltaEssPlayerData playerData = plugin.getPlayerMap().get(sender.getName());
+            DeltaEssPlayerData playerData = plugin.getPlayerDataMap().get(sender.getName());
 
             if(playerData == null)
             {
@@ -129,7 +129,7 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
                 return true;
             }
 
-            DeltaEssPlayerData playerData = plugin.getPlayerMap().get(firstName);
+            DeltaEssPlayerData playerData = plugin.getPlayerDataMap().get(firstName);
 
             if(playerData == null)
             {

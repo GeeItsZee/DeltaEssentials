@@ -99,7 +99,7 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
             return true;
         }
 
-        DeltaEssPlayerData playerData = plugin.getPlayerMap().get(sender.getName());
+        DeltaEssPlayerData playerData = plugin.getPlayerDataMap().get(sender.getName());
 
         if(playerData == null)
         {

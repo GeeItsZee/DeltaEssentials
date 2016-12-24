@@ -16,6 +16,7 @@
  */
 package com.gmail.tracebachi.DeltaEssentials.Events;
 
+import com.google.common.base.Preconditions;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
@@ -24,25 +25,34 @@ import org.bukkit.event.HandlerList;
  */
 public class PlayerPostSaveEvent extends Event
 {
-    private static final HandlerList handlers = new HandlerList();
     private final String name;
 
     public PlayerPostSaveEvent(String name)
     {
+        Preconditions.checkNotNull(name, "name");
+        Preconditions.checkArgument(!name.isEmpty(), "Empty name");
         this.name = name;
     }
 
+    /**
+     * @return Name of the player that was saved
+     */
     public String getName()
     {
         return name;
     }
 
+    /** Used by Bukkit and Spigot **/
+    private static final HandlerList handlers = new HandlerList();
+
+    /** Used by Bukkit and Spigot **/
     @Override
     public HandlerList getHandlers()
     {
         return handlers;
     }
 
+    /** Used by Bukkit and Spigot **/
     public static HandlerList getHandlerList()
     {
         return handlers;
