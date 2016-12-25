@@ -20,11 +20,10 @@ import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
 import com.gmail.tracebachi.DeltaEssentials.Listeners.TeleportListener;
-import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Utils.MessageUtil;
-import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
-import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Registerable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -33,6 +32,8 @@ import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+
+import static com.gmail.tracebachi.DeltaRedis.Shared.ChatMessageHelper.*;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
@@ -83,7 +84,7 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
     {
         if(args.length < 1)
         {
-            sender.sendMessage(Settings.format("TeleportUsage"));
+            sender.sendMessage(formatUsage("/tp <name>"));
             return true;
         }
 
@@ -91,13 +92,13 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
         {
             if(!(sender instanceof Player))
             {
-                sender.sendMessage(Settings.format("PlayersOnly", "/tp <player>"));
+                sender.sendMessage(formatPlayerOnlyCommand("/tp <name>"));
                 return true;
             }
 
             if(!sender.hasPermission("DeltaEss.Tp.Self"))
             {
-                sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Tp.Self"));
+                sender.sendMessage(formatNoPerm("DeltaEss.Tp.Self"));
                 return true;
             }
 
@@ -105,7 +106,7 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
 
             if(playerData == null)
             {
-                sender.sendMessage(Settings.format("PlayerDataNotLoaded"));
+                sender.sendMessage(format("DeltaEss.PlayerDataNotLoaded"));
                 return true;
             }
 
@@ -119,13 +120,13 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
 
             if(firstPlayer == null)
             {
-                sender.sendMessage(Settings.format("PlayerOffline", firstName));
+                sender.sendMessage(formatPlayerOffline(firstName));
                 return true;
             }
 
             if(!sender.hasPermission("DeltaEss.Tp.Other"))
             {
-                sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Tp.Other"));
+                sender.sendMessage(formatNoPerm("DeltaEss.Tp.Other"));
                 return true;
             }
 
@@ -133,7 +134,7 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
 
             if(playerData == null)
             {
-                sender.sendMessage(Settings.format("PlayerDataNotLoaded"));
+                sender.sendMessage(format("DeltaEss.PlayerDataNotLoaded"));
                 return true;
             }
 
@@ -150,12 +151,11 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
 
         if(autoCompletedDestName == null)
         {
-            toTp.sendMessage(Settings.format("TooManyAutoCompleteMatches", destName));
+            toTp.sendMessage(format("DeltaEss.TooManyAutoCompleteMatches", destName));
             return;
         }
 
         Player destination = Bukkit.getPlayerExact(autoCompletedDestName);
-
         if(destination != null)
         {
             teleportListener.teleport(
@@ -175,13 +175,11 @@ public class CommandTp implements TabExecutor, Registerable, Shutdownable
             {
                 MessageUtil.sendMessage(
                     toTpName,
-                    Settings.format("PlayerOffline", destName));
+                    format("DeltaEss.PlayerOffline", destName));
                 return;
             }
 
             String destServer = cachedPlayer.getServer();
-
-            // Format: Sender/\Destination
             DeltaRedisApi.instance().publish(
                 destServer,
                 DeltaEssentialsChannels.TP,

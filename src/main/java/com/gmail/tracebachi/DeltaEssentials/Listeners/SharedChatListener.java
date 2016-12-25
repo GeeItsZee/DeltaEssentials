@@ -21,12 +21,13 @@ import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Events.SharedChatIncomingEvent;
 import com.gmail.tracebachi.DeltaEssentials.Events.SharedChatOutgoingEvent;
 import com.gmail.tracebachi.DeltaRedis.Shared.Servers;
-import com.gmail.tracebachi.DeltaRedis.Shared.SplitPatterns;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
-import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent;
+import com.gmail.tracebachi.DeltaRedis.Spigot.Events.DeltaRedisMessageEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+
+import java.util.List;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
@@ -68,11 +69,11 @@ public class SharedChatListener extends DeltaEssentialsListener
 
         if(event.isSendingServerSelf()) { return; }
 
-        String[] splitMessage = SplitPatterns.DELTA.split(event.getMessage(), 4);
-        String channelName = splitMessage[0];
-        String permission = splitMessage[1];
-        String message = splitMessage[2];
-        String extraInfo = splitMessage[3];
+        List<String> messageParts = event.getMessageParts();
+        String channelName = messageParts.get(0);
+        String permission = messageParts.get(1);
+        String message = messageParts.get(2);
+        String extraInfo = messageParts.get(3);
         SharedChatIncomingEvent chatEvent = new SharedChatIncomingEvent(
             channelName,
             permission,

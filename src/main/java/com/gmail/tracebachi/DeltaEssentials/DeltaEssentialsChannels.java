@@ -23,6 +23,7 @@ public interface DeltaEssentialsChannels
 {
     String MOVE = "DE-Move";
     String TELL = "DE-Tell";
+    String SOCIAL_SPY = "DE-SocialSpy";
     String CHAT = "DE-Chat";
     String TP = "DE-TP";
     String TP_HERE = "DE-TPHere";

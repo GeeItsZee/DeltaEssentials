@@ -20,11 +20,10 @@ import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
 import com.gmail.tracebachi.DeltaEssentials.Listeners.TeleportListener;
-import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
-import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
-import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Registerable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -33,6 +32,8 @@ import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+
+import static com.gmail.tracebachi.DeltaRedis.Shared.ChatMessageHelper.*;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
@@ -83,27 +84,26 @@ public class CommandTpaHere implements TabExecutor, Registerable, Shutdownable
     {
         if(args.length < 1)
         {
-            sender.sendMessage(Settings.format("TeleportRequestUsage"));
+            sender.sendMessage(formatUsage("/tpahere <name>"));
             return true;
         }
 
         if(!(sender instanceof Player))
         {
-            sender.sendMessage(Settings.format("PlayersOnly", "/tpahere"));
+            sender.sendMessage(formatPlayerOnlyCommand("/tpahere"));
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.Tpa.Send"))
         {
-            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Tpa.Send"));
+            sender.sendMessage(formatNoPerm("DeltaEss.Tpa.Send"));
             return true;
         }
 
         DeltaEssPlayerData playerData = plugin.getPlayerDataMap().get(sender.getName());
-
         if(playerData == null)
         {
-            sender.sendMessage(Settings.format("PlayerDataNotLoaded"));
+            sender.sendMessage(format("DeltaEss.PlayerDataNotLoaded"));
             return true;
         }
 
@@ -122,8 +122,8 @@ public class CommandTpaHere implements TabExecutor, Registerable, Shutdownable
 
             teleportListener.getRequestMap().put(receiverName, request);
 
-            sender.sendMessage(Settings.format("SentTeleportRequest", receiverName));
-            receiver.sendMessage(Settings.format("ReceivedTeleportRequest", senderName));
+            sender.sendMessage(format("DeltaEss.SentTeleportRequest", receiverName));
+            receiver.sendMessage(format("DeltaEss.ReceivedTeleportRequest", senderName));
             return true;
         }
 
@@ -135,7 +135,7 @@ public class CommandTpaHere implements TabExecutor, Registerable, Shutdownable
 
             if(cachedPlayer == null)
             {
-                senderPlayer.sendMessage(Settings.format("PlayerOffline", receiverName));
+                senderPlayer.sendMessage(formatPlayerOffline(receiverName));
                 return;
             }
 
@@ -147,17 +147,16 @@ public class CommandTpaHere implements TabExecutor, Registerable, Shutdownable
                 currentServer,
                 PlayerTpEvent.TeleportType.TPA_HERE);
 
-            // Format: Receiver/\Sender/\CurrentServer
             api.publish(
                 destServer,
                 DeltaEssentialsChannels.TPA_HERE,
-                receiverName,
                 senderName,
+                receiverName,
                 currentServer);
 
             teleportListener.getRequestMap().put(receiverName, request);
 
-            senderPlayer.sendMessage(Settings.format("SentTeleportRequest", receiverName));
+            senderPlayer.sendMessage(format("DeltaEss.SentTeleportRequest", receiverName));
         });
 
         return true;

@@ -40,59 +40,28 @@ PreSaveCommands:
 # Formatting strings
 Formats:
 
-  FailedToLoadInventory: ''
-  FailedToSaveInventory: ''
-  PlayerLocked: ''
-
-
-
-
-  NoPermission: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not have the &f{0}&7 permission.'
-  PlayersOnly: '&8[&c!&8] &cFailure &8[&c!&8]&7 Only players can use &f{0}&7'
-  PlayerDataNotLoaded: '&8[&c!&8] &cFailure &8[&c!&8]&7 Player data has not been loaded yet.'
-  PlayerOffline: '&8[&c!&8] &cFailure &8[&c!&8]&7 Player &f{0}&7 is offline.'
-  TooManyAutoCompleteMatches: '&8[&c!&8] &cFailure &8[&c!&8]&7 Multiple online players match &f{0}&7.'
+  FailedToLoadInventory: '&8[&c!&8] &cFailure &8[&c!&8]&7 Failed to load inventory. Tell an admin.'
+  FailedToSaveInventory: '&8[&c!&8] &cFailure &8[&c!&8]&7 Failed to save inventory. Tell an admin.'
   PlayerLocked: '&8[&c!&8] &cFailure &8[&c!&8]&7 You are locked. Please wait until your data is loaded or saved.'
+  PlayerDataNotLoaded: '&8[&c!&8] &cFailure &8[&c!&8]&7 Player data has not been loaded yet.'
 
-  MovingToMessage: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Moving to &f{0}&7 ...'
-  MovingOtherToMessage: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Moving &f{0}&7 to {1} ...'
   CurrentServer: '&8[&9!&8] &9Info &8[&9!&8]&7 Current server: &f{0}&7'
   OnlineServerList: '&8[&9!&8] &9Info &8[&9!&8]&7 Online Servers: &f{0}&7'
   ServerOffline: '&8[&c!&8] &cFailure &8[&c!&8]&7 Server &f{0}&7 is offline.'
   InputIsCurrentServer: '&8[&c!&8] &cFailure &8[&c!&8]&7 &f{0}&7 is the current server.'
   OtherAlreadyOnServer: '&8[&c!&8] &cFailure &8[&c!&8]&7 &f{0}&7 is already on {1}.'
-  BlockedServer: '&8[&c!&8] &cFailure &8[&c!&8]&7 Server &f{0}&7 is blocked for you.'
+  MovingToMessage: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Moving to &f{0}&7 ...'
+  MovingOtherToMessage: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Moving &f{0}&7 to {1} ...'
 
-  SocialSpyUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /socialspy <all|world|none>'
-  SocialSpyChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 SocialSpy set to &f{0}&7'
+  SettingChanged: '&8[&a!&8] &aSuccess &8[&a!&8]&7 &f{0}&7 set to &f{1}&7'
 
-  DVanishUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /dvanish <on|off>'
-  DVanishChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 DeltaVanish set to &f{0}&7'
-
-  TeleportDenyUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tpdeny <on|off>'
-  TeleportDenyChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 TeleportDeny set to &f{0}&7'
-
-  LockdownUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /lockdown <on|off>'
-  LockdownMessage: 'Server is locked down ... for reasons!'
-  LockdownChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Lockdown set to &f{0}&7'
-
-  DeltaEssentialsUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /deltaessentials <debug|reload>'
-  DeltaEssentialsDebugUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /deltaessentials debug <on|off>'
-  DeltaEssentialsDebugChange: '&8[&a!&8] &aSuccess &8[&a!&8]&7 DeltaEssentials debug set to &f{0}&7'
-  DeltaEssentialsReloaded: '&8[&a!&8] &aSuccess &8[&a!&8]&7 DeltaEssentials configuration reloaded.'
-
-  TellUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tell <name> <message>'
-  ReplyUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /reply <message>'
   NoReplyTarget: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not have anyone to reply to.'
-
+  TooManyAutoCompleteMatches: '&8[&c!&8] &cFailure &8[&c!&8]&7 Multiple online players match &f{0}&7.'
   TellLog: '[{0} -> {1}] {2}'
   TellSpy: '&8[&7Spy&8]&7=&8[&7{0} &8-> &7{1}&8] &7{2}'
   TellSender: '&8[&dPM&8]&7=&8[&eMe -> {0}&8] &d{1}'
   TellReceiver: '&8[&dPM&8]&7=&8[&e{0} -> Me&8] &d{1}'
 
-  TeleportUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tp <name>'
-  TeleportRequestUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tpahere <name>'
-  TeleportHereUsage: '&8[&9!&8] &9Info &8[&9!&8]&7 /tphere <name>'
   NoPendingTeleportRequest: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not having a pending teleport request.'
   SentTeleportRequest: '&8[&a!&8] &aSuccess &8[&a!&8]&7 You sent &f{0}&7 a teleport request.'
   ReceivedTeleportRequest: '&8[&a!&8] &aSuccess &8[&a!&8]&7 &f{0}&7 sent you a teleport request. Type /tpaccept to accept within 30 seconds.'

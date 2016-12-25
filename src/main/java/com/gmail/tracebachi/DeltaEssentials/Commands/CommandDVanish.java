@@ -17,10 +17,9 @@
 package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
-import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
-import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
-import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Registerable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Shutdownable;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -28,6 +27,8 @@ import org.bukkit.entity.Player;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static com.gmail.tracebachi.DeltaRedis.Shared.ChatMessageHelper.*;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
@@ -74,19 +75,19 @@ public class CommandDVanish implements TabExecutor, Registerable, Shutdownable
     {
         if(args.length < 1)
         {
-            sender.sendMessage(Settings.format("DVanishUsage"));
+            sender.sendMessage(formatUsage("/dvanish <on|off>"));
             return true;
         }
 
         if(!(sender instanceof Player))
         {
-            sender.sendMessage(Settings.format("PlayersOnly", "/dvanish"));
+            sender.sendMessage(formatPlayerOnlyCommand("/dvanish"));
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.DVanish"))
         {
-            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.DVanish"));
+            sender.sendMessage(formatNoPerm("DeltaEss.DVanish"));
             return true;
         }
 
@@ -94,23 +95,23 @@ public class CommandDVanish implements TabExecutor, Registerable, Shutdownable
 
         if(playerData == null)
         {
-            sender.sendMessage(Settings.format("PlayerDataNotLoaded"));
+            sender.sendMessage(format("DeltaEss.PlayerDataNotLoaded"));
             return true;
         }
 
         if(args[0].equalsIgnoreCase("on"))
         {
             playerData.setVanished(true);
-            sender.sendMessage(Settings.format("DVanishChange", "ON"));
+            sender.sendMessage(format("DeltaEss.SettingChanged", "DeltaVanish", "On"));
         }
         else if(args[0].equalsIgnoreCase("off"))
         {
             playerData.setVanished(false);
-            sender.sendMessage(Settings.format("DVanishChange", "OFF"));
+            sender.sendMessage(format("DeltaEss.SettingChanged", "DeltaVanish", "Off"));
         }
         else
         {
-            sender.sendMessage(Settings.format("DVanishUsage"));
+            sender.sendMessage(formatUsage("/dvanish <on|off>"));
         }
 
         return true;

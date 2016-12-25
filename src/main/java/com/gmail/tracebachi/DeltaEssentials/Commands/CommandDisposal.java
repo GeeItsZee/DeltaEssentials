@@ -17,14 +17,16 @@
 package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
-import com.gmail.tracebachi.DeltaEssentials.Settings;
-import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
-import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Registerable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Shutdownable;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+
+import static com.gmail.tracebachi.DeltaRedis.Shared.ChatMessageHelper.formatNoPerm;
+import static com.gmail.tracebachi.DeltaRedis.Shared.ChatMessageHelper.formatPlayerOnlyCommand;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/4/15.
@@ -62,19 +64,18 @@ public class CommandDisposal implements CommandExecutor, Shutdownable, Registera
     {
         if(!(sender instanceof Player))
         {
-            sender.sendMessage(Settings.format("PlayersOnly", "/disposal"));
+            sender.sendMessage(formatPlayerOnlyCommand("/disposal"));
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.Disposal"))
         {
-            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Disposal"));
+            sender.sendMessage(formatNoPerm("DeltaEss.Disposal"));
             return true;
         }
 
         Player player = (Player) sender;
         Inventory inventory = plugin.getServer().createInventory(player, 36, "Disposal");
-
         player.openInventory(inventory);
         return true;
     }

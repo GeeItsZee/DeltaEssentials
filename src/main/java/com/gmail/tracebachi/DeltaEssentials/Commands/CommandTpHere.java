@@ -20,11 +20,10 @@ import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
 import com.gmail.tracebachi.DeltaEssentials.Listeners.TeleportListener;
-import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
-import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
-import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Registerable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -33,6 +32,8 @@ import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+
+import static com.gmail.tracebachi.DeltaRedis.Shared.ChatMessageHelper.*;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
@@ -83,40 +84,41 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
     {
         if(args.length < 1)
         {
-            sender.sendMessage(Settings.format("TeleportHereUsage"));
+            sender.sendMessage(format("/tphere <name>"));
             return true;
         }
 
         if(!(sender instanceof Player))
         {
-            sender.sendMessage(Settings.format("PlayersOnly", "/tphere"));
+            sender.sendMessage(formatPlayerOnlyCommand("/tphere <name>"));
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.Tp.Other"))
         {
-            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Tp.Other"));
+            sender.sendMessage(formatNoPerm("DeltaEss.Tp.Other"));
             return true;
         }
 
         DeltaEssPlayerData playerData = plugin.getPlayerDataMap().get(sender.getName());
-
         if(playerData == null)
         {
-            sender.sendMessage(Settings.format("PlayerDataNotLoaded"));
+            sender.sendMessage(format("DeltaEss.PlayerDataNotLoaded"));
+            return true;
+        }
+
+        String toTpName = args[0];
+        Player toTp = Bukkit.getPlayerExact(toTpName);
+        if(toTp != null)
+        {
+            teleportListener.teleport(
+                toTp,
+                (Player) sender,
+                PlayerTpEvent.TeleportType.TP_HERE);
             return true;
         }
 
         String senderName = sender.getName();
-        String toTpName = args[0];
-        Player toTp = Bukkit.getPlayerExact(toTpName);
-
-        if(toTp != null)
-        {
-            teleportListener.teleport(toTp, (Player) sender, PlayerTpEvent.TeleportType.TP_HERE);
-            return true;
-        }
-
         DeltaRedisApi.instance().findPlayer(toTpName, cachedPlayer ->
         {
             Player sendingPlayer = Bukkit.getPlayerExact(senderName);
@@ -125,7 +127,7 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
 
             if(cachedPlayer == null)
             {
-                sendingPlayer.sendMessage(Settings.format("PlayerOffline", toTpName));
+                sendingPlayer.sendMessage(formatPlayerOffline(toTpName));
                 return;
             }
 
@@ -137,12 +139,11 @@ public class CommandTpHere implements TabExecutor, Registerable, Shutdownable
                 currentServer,
                 PlayerTpEvent.TeleportType.TP_HERE);
 
-            // Format: Receiver/\Sender/\CurrentServer
             deltaRedisApi.publish(
                 destServer,
                 DeltaEssentialsChannels.TP_HERE,
-                toTpName,
                 senderName,
+                toTpName,
                 currentServer);
 
             teleportListener.getRequestMap().put(toTpName, request);

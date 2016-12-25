@@ -17,10 +17,9 @@
 package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
-import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
-import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
-import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Registerable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Shutdownable;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -28,6 +27,8 @@ import org.bukkit.entity.Player;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static com.gmail.tracebachi.DeltaRedis.Shared.ChatMessageHelper.*;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
@@ -74,43 +75,42 @@ public class CommandTpDeny implements TabExecutor, Registerable, Shutdownable
     {
         if(args.length < 1)
         {
-            sender.sendMessage(Settings.format("TeleportDenyUsage"));
+            sender.sendMessage(formatUsage("/tpdeny <on|off>"));
             return true;
         }
 
         if(!(sender instanceof Player))
         {
-            sender.sendMessage(Settings.format("PlayersOnly", "/tpdeny"));
+            sender.sendMessage(formatPlayerOnlyCommand("/tpdeny"));
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.Tp.Deny"))
         {
-            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Tp.Deny"));
+            sender.sendMessage(formatNoPerm("DeltaEss.Tp.Deny"));
             return true;
         }
 
         DeltaEssPlayerData playerData = plugin.getPlayerDataMap().get(sender.getName());
-
         if(playerData == null)
         {
-            sender.sendMessage(Settings.format("PlayerDataNotLoaded"));
+            sender.sendMessage(format("DeltaEss.PlayerDataNotLoaded"));
             return true;
         }
 
         if(args[0].equalsIgnoreCase("on"))
         {
             playerData.setDenyingTeleports(true);
-            sender.sendMessage(Settings.format("TeleportDenyChange", "ON"));
+            sender.sendMessage(format("DeltaEss.SettingChanged", "TpDeny", "On"));
         }
         else if(args[0].equalsIgnoreCase("off"))
         {
             playerData.setDenyingTeleports(false);
-            sender.sendMessage(Settings.format("TeleportDenyChange", "OFF"));
+            sender.sendMessage(format("DeltaEss.SettingChanged", "TpDeny", "OFF"));
         }
         else
         {
-            sender.sendMessage(Settings.format("TeleportDenyUsage"));
+            sender.sendMessage(formatUsage("/tpdeny <on|off>"));
         }
 
         return true;

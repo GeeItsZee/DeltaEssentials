@@ -18,17 +18,17 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentialsChannels;
-import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTellEvent;
-import com.gmail.tracebachi.DeltaEssentials.Settings;
+import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTellReceiveEvent;
+import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTellSendEvent;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Storage.SocialSpyLevel;
 import com.gmail.tracebachi.DeltaEssentials.Utils.MessageUtil;
-import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Callback;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Registerable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Shared.Servers;
-import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
-import com.gmail.tracebachi.DeltaRedis.Shared.SplitPatterns;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
-import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisMessageEvent;
+import com.gmail.tracebachi.DeltaRedis.Spigot.Events.DeltaRedisMessageEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -40,16 +40,23 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Pattern;
+
+import static com.gmail.tracebachi.DeltaRedis.Shared.ChatMessageHelper.*;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
  */
 public class CommandTell implements TabExecutor, Registerable, Shutdownable, Listener
 {
+    private static final String TELL_USE_PERM = "DeltaEss.Tell.Use";
+    private static final String TELL_COLOR_PERM = "DeltaEss.Tell.Color";
+    private static final String TELL_IGNORE_VANISH_PERM = "DeltaEss.Tell.IgnoreVanish";
+    private static final Pattern COMMA_PATTERN = Pattern.compile(",");
+
     private DeltaEssentials plugin;
+    private String consoleReplyingTo = "";
 
     public CommandTell(DeltaEssentials plugin)
     {
@@ -61,10 +68,8 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
     {
         plugin.getCommand("tell").setExecutor(this);
         plugin.getCommand("tell").setTabCompleter(this);
-
         plugin.getCommand("reply").setExecutor(this);
         plugin.getCommand("reply").setTabCompleter(this);
-
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
@@ -73,10 +78,8 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
     {
         plugin.getCommand("tell").setExecutor(null);
         plugin.getCommand("tell").setTabCompleter(null);
-
         plugin.getCommand("reply").setExecutor(null);
         plugin.getCommand("reply").setTabCompleter(null);
-
         HandlerList.unregisterAll(this);
     }
 
@@ -98,171 +101,34 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
     @Override
     public boolean onCommand(CommandSender sender, Command command, String s, String[] args)
     {
-        String senderName = sender.getName();
+        if(!sender.hasPermission(TELL_USE_PERM))
+        {
+            sender.sendMessage(formatNoPerm(TELL_USE_PERM));
+            return true;
+        }
+
         String commandName = command.getName();
-        String receiverName;
-        String message;
-
-        if(commandName.equalsIgnoreCase("reply") && args.length < 1)
-        {
-            sender.sendMessage(Settings.format("ReplyUsage"));
-            return true;
-        }
-        else if(commandName.equalsIgnoreCase("tell") && args.length < 2)
-        {
-            sender.sendMessage(Settings.format("TellUsage"));
-            return true;
-        }
-
-        if(!sender.hasPermission("DeltaEss.Tell.Use"))
-        {
-            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Tell.Use"));
-            return true;
-        }
-
-        Map<String, DeltaEssPlayerData> playerMap = plugin.getPlayerDataMap();
-        DeltaEssPlayerData senderData = playerMap.get(senderName);
-
-        if(senderData == null)
-        {
-            sender.sendMessage(Settings.format("PlayerDataNotLoaded"));
-            return true;
-        }
-
         if(commandName.equalsIgnoreCase("reply"))
         {
-            receiverName = senderData.getReplyingTo();
-
-            if(receiverName.equals(""))
+            if(args.length < 1)
             {
-                sender.sendMessage(Settings.format("NoReplyTarget"));
-                return true;
+                sender.sendMessage(formatUsage("/reply <message>"));
             }
-
-            message = String.join(" ", Arrays.copyOfRange(args, 0, args.length));
-        }
-        else
-        {
-            receiverName = attemptAutoComplete(args[0]);
-
-            if(receiverName == null)
+            else
             {
-                sender.sendMessage(Settings.format("TooManyAutoCompleteMatches", args[0]));
-                return true;
+                handleReplyCommand(sender, args);
             }
-
-            message = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
         }
-
-        if(sender.hasPermission("DeltaEss.Tell.Color"))
+        else if(commandName.equalsIgnoreCase("tell"))
         {
-            message = ChatColor.translateAlternateColorCodes('&', message);
-        }
-
-        Player receiver = Bukkit.getPlayerExact(receiverName);
-        boolean senderIgnoresVanish = sender.hasPermission("DeltaEss.Tell.IgnoreVanish");
-
-        if(receiver != null)
-        {
-            DeltaEssPlayerData receiverData = playerMap.get(receiverName);
-
-            if(receiverData != null && receiverData.isVanished() && !senderIgnoresVanish)
+            if(args.length < 2)
             {
-                sender.sendMessage(Settings.format("PlayerOffline", receiverName));
-                return true;
+                sender.sendMessage(formatUsage("/tell <name> <message>"));
             }
-
-            PlayerTellEvent event = new PlayerTellEvent(
-                senderName,
-                sender,
-                receiverName,
-                receiver,
-                message);
-
-            Bukkit.getPluginManager().callEvent(event);
-            String finalMessage = event.getMessage();
-
-            if(event.isCancelled()) { return true; }
-
-            Bukkit.getLogger().info(Settings.format(
-                "TellLog",
-                senderName,
-                receiverName,
-                finalMessage));
-            sender.sendMessage(Settings.format(
-                "TellSender",
-                receiverName,
-                finalMessage));
-            receiver.sendMessage(Settings.format(
-                "TellReceiver",
-                senderName,
-                finalMessage));
-
-            senderData.setReplyingTo(receiverName);
-
-            if(receiverData != null)
+            else
             {
-                receiverData.setReplyingTo(senderName);
+                handleTellCommand(sender, args);
             }
-
-            // Format: SenderName/\ReceiverName/\Message/\IgnoreVanish
-            DeltaRedisApi.instance().publish(
-                Servers.SPIGOT,
-                DeltaEssentialsChannels.TELL,
-                senderName,
-                receiverName,
-                finalMessage,
-                senderIgnoresVanish ? "1" : "0");
-
-            sendToSocialSpies(senderName, receiverName, finalMessage, true);
-        }
-        else
-        {
-            PlayerTellEvent event = new PlayerTellEvent(
-                senderName,
-                sender,
-                receiverName,
-                null,
-                message);
-
-            Bukkit.getPluginManager().callEvent(event);
-            String finalMessage = event.getMessage();
-
-            if(event.isCancelled()) { return true; }
-
-            Bukkit.getLogger().info(Settings.format(
-                "TellLog",
-                senderName,
-                receiverName,
-                finalMessage));
-            sender.sendMessage(Settings.format(
-                "TellSender",
-                receiverName,
-                finalMessage));
-
-            senderData.setReplyingTo(receiverName);
-
-            DeltaRedisApi.instance().findPlayer(receiverName, cachedPlayer ->
-            {
-                if(cachedPlayer == null)
-                {
-                    MessageUtil.sendMessage(
-                        senderName,
-                        Settings.format("PlayerOffline", receiverName));
-                    return;
-                }
-
-                // Format: SenderName/\ReceiverName/\Message/\IgnoreVanish
-                DeltaRedisApi.instance().publish(
-                    Servers.SPIGOT,
-                    DeltaEssentialsChannels.TELL,
-                    senderName,
-                    receiverName,
-                    finalMessage,
-                    senderIgnoresVanish ? "1" : "0");
-
-                sendToSocialSpies(senderName, receiverName, finalMessage, true);
-            });
         }
 
         return true;
@@ -271,61 +137,253 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
     @EventHandler(priority = EventPriority.NORMAL)
     public void onDeltaRedisMessage(DeltaRedisMessageEvent event)
     {
-        if(event.getChannel().equals(DeltaEssentialsChannels.TELL) && !event.isSendingServerSelf())
+        if(event.getChannel().equals(DeltaEssentialsChannels.SOCIAL_SPY))
         {
-            String[] split = SplitPatterns.DELTA.split(event.getMessage(), 4);
-            String senderName = split[0];
-            String receiverName = split[1];
-            String message = split[2];
-            boolean senderIgnoresVanish = split[3].equals("1");
+            List<String> messageParts = event.getMessageParts();
+            String senderName = messageParts.get(0);
+            String receiverName = messageParts.get(1);
+            String message = messageParts.get(2);
 
-            Player receiver = Bukkit.getPlayerExact(receiverName);
+            sendToSocialSpies(senderName, receiverName, message);
+        }
+        else if(event.getChannel().equals(DeltaEssentialsChannels.TELL))
+        {
+            List<String> messageParts = event.getMessageParts();
+            String senderName = messageParts.get(0);
+            String receiverName = messageParts.get(1);
+            String message = messageParts.get(2);
+
+            Set<String> senderPerms = new HashSet<>();
+            Collections.addAll(senderPerms, COMMA_PATTERN.split(messageParts.get(3)));
+
+            handleReceivingMessage(senderName, receiverName, message, senderPerms);
+        }
+    }
+
+    private void handleReplyCommand(CommandSender sender, String[] args)
+    {
+        String senderName = sender.getName();
+        String receiverName;
+
+        if(senderName.equalsIgnoreCase("console"))
+        {
+            receiverName = consoleReplyingTo;
+            if(receiverName.isEmpty())
+            {
+                sender.sendMessage(format("DeltaEss.NoReplyTarget"));
+                return;
+            }
+        }
+        else
+        {
+            Map<String, DeltaEssPlayerData> playerMap = plugin.getPlayerDataMap();
+            DeltaEssPlayerData senderData = playerMap.get(senderName);
+
+            if(senderData == null)
+            {
+                sender.sendMessage(format("DeltaEss.PlayerDataNotLoaded"));
+                return;
+            }
+
+            receiverName = senderData.getReplyingTo();
+            if(receiverName.isEmpty())
+            {
+                sender.sendMessage(format("DeltaEss.NoReplyTarget"));
+                return;
+            }
+        }
+
+        String message = String.join(" ", Arrays.copyOfRange(args, 0, args.length));
+
+        if(sender.hasPermission(TELL_COLOR_PERM))
+        {
+            message = ChatColor.translateAlternateColorCodes('&', message);
+        }
+
+        handleTellingMessage(
+            senderName,
+            receiverName,
+            message,
+            sender.hasPermission(TELL_IGNORE_VANISH_PERM));
+    }
+
+    private void handleTellCommand(CommandSender sender, String[] args)
+    {
+        String senderName = sender.getName();
+        DeltaEssPlayerData senderData = plugin.getPlayerDataMap().get(senderName);
+
+        if(!senderName.equalsIgnoreCase("console") && senderData == null)
+        {
+            sender.sendMessage(format("DeltaEss.PlayerDataNotLoaded"));
+            return;
+        }
+
+        String receiverName = attemptAutoComplete(args[0]);
+        if(receiverName == null)
+        {
+            sender.sendMessage(format("DeltaEss.TooManyAutoCompleteMatches", args[0]));
+            return;
+        }
+
+        if(senderName.equalsIgnoreCase("console"))
+        {
+            consoleReplyingTo = receiverName;
+        }
+        else
+        {
+            senderData.setReplyingTo(receiverName);
+        }
+
+        String message = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+
+        if(sender.hasPermission(TELL_COLOR_PERM))
+        {
+            message = ChatColor.translateAlternateColorCodes('&', message);
+        }
+
+        handleTellingMessage(
+            senderName,
+            receiverName,
+            message,
+            sender.hasPermission(TELL_IGNORE_VANISH_PERM));
+    }
+
+    private void handleTellingMessage(String senderName, String receiverName, String message,
+                                      boolean senderIgnoresVanishPerm)
+    {
+        Callback<PlayerTellSendEvent> callback = event ->
+        {
+            if(event.isCancelled()) { return; }
+
+            String eventMessage = event.getMessage();
+            String eventSenderPerms = String.join(",", event.getSenderPermissions());
+
+            Bukkit.getScheduler().runTask(plugin, () ->
+            {
+                CommandSender eventSender = getCommandSender(senderName);
+                if(eventSender == null) { return; }
+
+                Bukkit.getLogger().info(format(
+                    "DeltaEss.TellLog",
+                    senderName,
+                    receiverName,
+                    eventMessage));
+
+                eventSender.sendMessage(format(
+                    "DeltaEss.TellSender",
+                    receiverName,
+                    eventMessage));
+
+                DeltaRedisApi.instance().publish(
+                    Servers.SPIGOT,
+                    DeltaEssentialsChannels.SOCIAL_SPY,
+                    senderName,
+                    receiverName,
+                    eventMessage);
+
+                if(receiverName.equalsIgnoreCase("console") ||
+                    Bukkit.getPlayerExact(receiverName) != null)
+                {
+                    handleReceivingMessage(
+                        senderName,
+                        receiverName,
+                        eventMessage,
+                        event.getSenderPermissions());
+                    return;
+                }
+
+                DeltaRedisApi.instance().findPlayer(receiverName, cachedPlayer ->
+                {
+                    if(cachedPlayer == null)
+                    {
+                        MessageUtil.sendMessage(
+                            senderName,
+                            formatPlayerOffline(receiverName));
+                    }
+                    else
+                    {
+                        DeltaRedisApi.instance().publish(
+                            Servers.SPIGOT,
+                            DeltaEssentialsChannels.TELL,
+                            senderName,
+                            receiverName,
+                            eventMessage,
+                            eventSenderPerms);
+                    }
+                });
+            });
+        };
+
+        PlayerTellSendEvent event = new PlayerTellSendEvent(
+            senderName,
+            receiverName,
+            message,
+            callback);
+
+        if(senderIgnoresVanishPerm)
+        {
+            event.getSenderPermissions().add(TELL_IGNORE_VANISH_PERM);
+        }
+
+        Bukkit.getPluginManager().callEvent(event);
+    }
+
+    private void handleReceivingMessage(String senderName, String receiverName, String message,
+                                        Set<String> senderPermissions)
+    {
+        Callback<PlayerTellReceiveEvent> callback = (event) ->
+        {
+            if(event.isCancelled()) { return; }
+
+            CommandSender receiver = getCommandSender(receiverName);
 
             if(receiver == null)
             {
-                sendToSocialSpies(senderName, receiverName, message, false);
+                DeltaRedisApi.instance().sendMessageToPlayer(
+                    senderName,
+                    formatPlayerOffline(receiverName));
                 return;
             }
 
-            DeltaEssPlayerData receiverData = plugin.getPlayerDataMap().get(receiverName);
+            DeltaEssPlayerData playerData = plugin.getPlayerDataMap().get(receiverName);
+            boolean hasIgnoreVanishPerm = event.hasSenderPermission(TELL_IGNORE_VANISH_PERM);
 
-            if(receiverData != null && receiverData.isVanished() && !senderIgnoresVanish)
+            if(playerData != null && playerData.isVanished() && !hasIgnoreVanishPerm)
             {
                 DeltaRedisApi.instance().sendMessageToPlayer(
                     senderName,
-                    Settings.format("PlayerOffline", receiverName));
+                    formatPlayerOffline(receiverName));
                 return;
             }
 
-            PlayerTellEvent tellEvent = new PlayerTellEvent(
-                senderName,
-                null,
-                receiverName,
-                receiver,
-                message);
-
-            Bukkit.getPluginManager().callEvent(tellEvent);
-            String finalMessage = tellEvent.getMessage();
-
-            if(tellEvent.isCancelled()) { return; }
-
-            Bukkit.getLogger().info(Settings.format(
-                "TellLog",
+            Bukkit.getLogger().info(format(
+                "DeltaEss.TellLog",
                 senderName,
                 receiverName,
-                finalMessage));
-            receiver.sendMessage(Settings.format(
-                "TellReceiver",
-                senderName,
-                finalMessage));
+                message));
 
-            if(receiverData != null)
+            receiver.sendMessage(format(
+                "DeltaEss.TellReceiver",
+                senderName,
+                message));
+
+            if(receiverName.equalsIgnoreCase("console"))
             {
-                receiverData.setReplyingTo(senderName);
+                consoleReplyingTo = senderName;
             }
+            else if(playerData != null)
+            {
+                playerData.setReplyingTo(senderName);
+            }
+        };
 
-            sendToSocialSpies(senderName, receiverName, finalMessage, true);
-        }
+        PlayerTellReceiveEvent receiveEvent = new PlayerTellReceiveEvent(
+            senderName,
+            receiverName,
+            message,
+            senderPermissions,
+            callback);
+        Bukkit.getPluginManager().callEvent(receiveEvent);
     }
 
     private String attemptAutoComplete(String partial)
@@ -350,17 +408,22 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
         return null;
     }
 
-    private void sendToSocialSpies(String senderName, String receiverName, String message,
-                                   boolean participantInWorld)
+    private void sendToSocialSpies(String senderName, String receiverName, String message)
     {
-        String spyFormat = Settings.format("TellSpy", senderName, receiverName, message);
+        String spyFormat = format("DeltaEss.TellSpy", senderName, receiverName, message);
+        Player sender = Bukkit.getPlayerExact(senderName);
+        Player receiver = Bukkit.getPlayerExact(receiverName);
+        boolean participantInWorld = sender != null ||
+            receiver != null ||
+            senderName.equalsIgnoreCase("console") ||
+            receiverName.equalsIgnoreCase("console");
 
         for(Map.Entry<String, DeltaEssPlayerData> entry : plugin.getPlayerDataMap().entrySet())
         {
             SocialSpyLevel socialSpyLevel = entry.getValue().getSocialSpyLevel();
 
-            if(socialSpyLevel == SocialSpyLevel.ALL ||
-                (socialSpyLevel == SocialSpyLevel.WORLD && participantInWorld))
+            if((socialSpyLevel == SocialSpyLevel.WORLD && participantInWorld) ||
+                socialSpyLevel == SocialSpyLevel.ALL)
             {
                 Player player = Bukkit.getPlayerExact(entry.getKey());
 
@@ -370,5 +433,12 @@ public class CommandTell implements TabExecutor, Registerable, Shutdownable, Lis
                 }
             }
         }
+    }
+
+    private CommandSender getCommandSender(String name)
+    {
+        return (name.equalsIgnoreCase("console")) ?
+            Bukkit.getConsoleSender() :
+            Bukkit.getPlayerExact(name);
     }
 }

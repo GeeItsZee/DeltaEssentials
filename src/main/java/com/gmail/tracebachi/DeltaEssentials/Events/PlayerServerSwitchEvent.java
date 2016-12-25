@@ -49,7 +49,7 @@ public class PlayerServerSwitchEvent extends Event implements Cancellable
     }
 
     /**
-     * @return Name of the server that the player is attemping to switch to
+     * @return Name of the server that the player is attempting to switch to
      */
     public String getDestServer()
     {

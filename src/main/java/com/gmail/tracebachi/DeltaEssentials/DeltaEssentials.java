@@ -47,10 +47,8 @@ public class DeltaEssentials extends JavaPlugin
     private SharedChatListener sharedChatListener;
     private TeleportListener teleportListener;
 
-    private CommandDeltaEss commandDeltaEss;
     private CommandDisposal commandDisposal;
     private CommandDVanish commandDVanish;
-    private CommandLockdown commandLockdown;
     private CommandMoveTo commandMoveTo;
     private CommandMoveAll commandMoveAll;
     private CommandSocialSpy commandSocialSpy;
@@ -106,26 +104,16 @@ public class DeltaEssentials extends JavaPlugin
         Messenger messenger = getServer().getMessenger();
         messenger.registerOutgoingPluginChannel(this, "BungeeCord");
 
-        // Add a player for the console so the console's reply targets are stored
-        // TODO Special case handling for console
-        // playerMap.put("console", new DeltaEssPlayerData());
-
-        commandDeltaEss = new CommandDeltaEss(this);
-        commandDeltaEss.register();
-
         commandDisposal = new CommandDisposal(this);
         commandDisposal.register();
 
         commandDVanish = new CommandDVanish(this);
         commandDVanish.register();
 
-        commandLockdown = new CommandLockdown(this);
-        commandLockdown.register();
-
-        commandMoveTo = new CommandMoveTo(this);
+        commandMoveTo = new CommandMoveTo(settings, this);
         commandMoveTo.register();
 
-        commandMoveAll = new CommandMoveAll(this);
+        commandMoveAll = new CommandMoveAll(settings, this);
         commandMoveAll.register();
 
         commandSocialSpy = new CommandSocialSpy(this);
@@ -208,44 +196,77 @@ public class DeltaEssentials extends JavaPlugin
             lockedPlayerManager = null;
         }
 
-        commandDeltaEss.shutdown();
-        commandDeltaEss = null;
+        if(playerDataHelper != null)
+        {
+            playerDataHelper.shutdown();
+            playerDataHelper = null;
+        }
 
-        commandDisposal.shutdown();
-        commandDisposal = null;
+        if(commandDisposal != null)
+        {
+            commandDisposal.shutdown();
+            commandDisposal = null;
+        }
 
-        commandDVanish.shutdown();
-        commandDVanish = null;
+        if(commandDVanish != null)
+        {
+            commandDVanish.shutdown();
+            commandDVanish = null;
+        }
 
-        commandLockdown.shutdown();
-        commandLockdown = null;
+        if(commandMoveTo != null)
+        {
+            commandMoveTo.shutdown();
+            commandMoveTo = null;
+        }
 
-        commandMoveTo.shutdown();
-        commandMoveTo = null;
+        if(commandMoveAll != null)
+        {
+            commandMoveAll.shutdown();
+            commandMoveAll = null;
+        }
 
-        commandMoveAll.shutdown();
-        commandMoveAll = null;
+        if(commandSocialSpy != null)
+        {
+            commandSocialSpy.shutdown();
+            commandSocialSpy = null;
+        }
 
-        commandSocialSpy.shutdown();
-        commandSocialSpy = null;
+        if(commandTell != null)
+        {
+            commandTell.shutdown();
+            commandTell = null;
+        }
 
-        commandTell.shutdown();
-        commandTell = null;
+        if(commandTp != null)
+        {
+            commandTp.shutdown();
+            commandTp = null;
+        }
 
-        commandTp.shutdown();
-        commandTp = null;
+        if(commandTpAccept != null)
+        {
+            commandTpAccept.shutdown();
+            commandTpAccept = null;
+        }
 
-        commandTpAccept.shutdown();
-        commandTpAccept = null;
+        if(commandTpaHere != null)
+        {
+            commandTpaHere.shutdown();
+            commandTpaHere = null;
+        }
 
-        commandTpaHere.shutdown();
-        commandTpaHere = null;
+        if(commandTpHere != null)
+        {
+            commandTpHere.shutdown();
+            commandTpHere = null;
+        }
 
-        commandTpHere.shutdown();
-        commandTpHere = null;
-
-        commandTpDeny.shutdown();
-        commandTpDeny = null;
+        if(commandTpDeny != null)
+        {
+            commandTpDeny.shutdown();
+            commandTpDeny = null;
+        }
 
         Messenger messenger = getServer().getMessenger();
         messenger.unregisterIncomingPluginChannel(this);

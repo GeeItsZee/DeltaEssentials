@@ -18,9 +18,11 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.Settings;
-import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
-import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Registerable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Shutdownable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Structures.CaseInsensitiveHashSet;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
+import com.google.common.base.Preconditions;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -34,15 +36,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import static com.gmail.tracebachi.DeltaRedis.Shared.ChatMessageHelper.format;
+import static com.gmail.tracebachi.DeltaRedis.Shared.ChatMessageHelper.formatNoPerm;
+
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 12/4/15.
  */
 public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, Listener
 {
+    private Settings settings;
     private DeltaEssentials plugin;
 
-    public CommandMoveAll(DeltaEssentials plugin)
+    public CommandMoveAll(Settings settings, DeltaEssentials plugin)
     {
+        Preconditions.checkNotNull(settings, "settings");
+        Preconditions.checkNotNull(plugin, "plugin");
+
+        this.settings = settings;
         this.plugin = plugin;
     }
 
@@ -51,7 +61,6 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
     {
         plugin.getCommand("moveall").setExecutor(this);
         plugin.getCommand("moveall").setTabCompleter(this);
-
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
@@ -60,7 +69,6 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
     {
         plugin.getCommand("moveall").setExecutor(null);
         plugin.getCommand("moveall").setTabCompleter(null);
-
         HandlerList.unregisterAll(this);
     }
 
@@ -68,6 +76,7 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
     public void shutdown()
     {
         unregister();
+        settings = null;
         plugin = null;
     }
 
@@ -76,7 +85,19 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
                                       String s, String[] args)
     {
         String lastArg = args[args.length - 1].toLowerCase();
-        return DeltaRedisApi.instance().matchStartOfServerName(lastArg);
+        List<String> serverList = DeltaRedisApi.instance().matchStartOfServerName(lastArg);
+        List<String> resultList = new ArrayList<>(serverList.size());
+        CaseInsensitiveHashSet privateServers = settings.getPrivateServers();
+
+        for(String server : serverList)
+        {
+            if(!privateServers.contains(server))
+            {
+                resultList.add(server);
+            }
+        }
+
+        return resultList;
     }
 
     @Override
@@ -90,14 +111,14 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
         {
             String formattedList = getFormattedServerList(servers);
 
-            sender.sendMessage(Settings.format("CurrentServer", currentServer));
-            sender.sendMessage(Settings.format("OnlineServerList", formattedList));
+            sender.sendMessage(format("DeltaEss.CurrentServer", currentServer));
+            sender.sendMessage(format("DeltaEss.OnlineServerList", formattedList));
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.MoveAll"))
         {
-            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.MoveAll"));
+            sender.sendMessage(formatNoPerm("DeltaEss.MoveAll"));
             return true;
         }
 
@@ -105,19 +126,19 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
 
         if(destServer == null)
         {
-            sender.sendMessage(Settings.format("ServerOffline", args[0]));
+            sender.sendMessage(format("DeltaEss.ServerOffline", args[0]));
             return true;
         }
 
         if(currentServer.equalsIgnoreCase(destServer))
         {
-            sender.sendMessage(Settings.format("InputIsCurrentServer", destServer));
+            sender.sendMessage(format("DeltaEss.InputIsCurrentServer", destServer));
             return true;
         }
 
         for(Player player : Bukkit.getOnlinePlayers())
         {
-            player.sendMessage(Settings.format("MovingToMessage", destServer));
+            player.sendMessage(format("DeltaEss.MovingToMessage", destServer));
             plugin.sendToServer(player, destServer);
         }
 
@@ -127,10 +148,11 @@ public class CommandMoveAll implements TabExecutor, Registerable, Shutdownable, 
     private String getFormattedServerList(Set<String> servers)
     {
         List<String> serverList = new ArrayList<>(servers.size());
+        CaseInsensitiveHashSet privateServers = settings.getPrivateServers();
 
         for(String server : servers)
         {
-            if(!Settings.isServerBlocked(server))
+            if(!privateServers.contains(server))
             {
                 serverList.add(server);
             }

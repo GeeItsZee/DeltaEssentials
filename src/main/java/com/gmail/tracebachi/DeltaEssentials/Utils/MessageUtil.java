@@ -33,7 +33,6 @@ public interface MessageUtil
         else
         {
             Player player = Bukkit.getPlayerExact(playerName);
-
             if(player != null)
             {
                 player.sendMessage(message);

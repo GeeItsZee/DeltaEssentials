@@ -19,11 +19,10 @@ package com.gmail.tracebachi.DeltaEssentials.Commands;
 import com.gmail.tracebachi.DeltaEssentials.DeltaEssentials;
 import com.gmail.tracebachi.DeltaEssentials.Events.PlayerTpEvent;
 import com.gmail.tracebachi.DeltaEssentials.Listeners.TeleportListener;
-import com.gmail.tracebachi.DeltaEssentials.Settings;
 import com.gmail.tracebachi.DeltaEssentials.Storage.DeltaEssPlayerData;
 import com.gmail.tracebachi.DeltaEssentials.Storage.TeleportRequest;
-import com.gmail.tracebachi.DeltaRedis.Shared.Registerable;
-import com.gmail.tracebachi.DeltaRedis.Shared.Shutdownable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Registerable;
+import com.gmail.tracebachi.DeltaRedis.Shared.Interfaces.Shutdownable;
 import com.gmail.tracebachi.DeltaRedis.Spigot.DeltaRedisApi;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -32,6 +31,8 @@ import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+
+import static com.gmail.tracebachi.DeltaRedis.Shared.ChatMessageHelper.*;
 
 /**
  * Created by Trace Bachi (tracebachi@gmail.com, BigBossZee) on 11/29/15.
@@ -82,36 +83,36 @@ public class CommandTpAccept implements TabExecutor, Registerable, Shutdownable
     {
         if(!(sender instanceof Player))
         {
-            sender.sendMessage(Settings.format("PlayersOnly", "/tpaccept"));
+            sender.sendMessage(formatUsage("/tpaccept"));
             return true;
         }
 
         if(!sender.hasPermission("DeltaEss.Tpa.Accept"))
         {
-            sender.sendMessage(Settings.format("NoPermission", "DeltaEss.Tpa.Accept"));
+            sender.sendMessage(formatNoPerm("DeltaEss.Tpa.Accept"));
             return true;
         }
 
-        DeltaEssPlayerData playerData = plugin.getPlayerDataMap().get(sender.getName());
+        String senderName = sender.getName();
 
+        DeltaEssPlayerData playerData = plugin.getPlayerDataMap().get(senderName);
         if(playerData == null)
         {
-            sender.sendMessage(Settings.format("PlayerDataNotLoaded"));
+            sender.sendMessage(format("DeltaEss.PlayerDataNotLoaded"));
             return true;
         }
 
-        TeleportRequest request = teleportListener.getRequestMap().get(sender.getName());
-
+        TeleportRequest request = teleportListener.getRequestMap().get(senderName);
         if(request == null)
         {
-            sender.sendMessage(Settings.format("NoPendingTeleportRequest"));
+            sender.sendMessage(format("DeltaEss.NoPendingTeleportRequest"));
             return true;
         }
 
         Player player = (Player) sender;
         String currentServerName = DeltaRedisApi.instance().getServerName();
-        String destServerName = request.getDestServer();
 
+        String destServerName = request.getDestServer();
         if(!destServerName.equals(currentServerName))
         {
             plugin.sendToServer(player, destServerName);
@@ -119,15 +120,16 @@ public class CommandTpAccept implements TabExecutor, Registerable, Shutdownable
         }
 
         Player destPlayer = Bukkit.getPlayerExact(request.getSender());
-
         if(destPlayer == null)
         {
-            sender.sendMessage(Settings.format("PlayerOffline", request.getSender()));
+            sender.sendMessage(formatPlayerOffline(request.getSender()));
             return true;
         }
 
-        teleportListener.teleport(player, destPlayer, PlayerTpEvent.TeleportType.TPA_HERE);
-
+        teleportListener.teleport(
+            player,
+            destPlayer,
+            PlayerTpEvent.TeleportType.TPA_HERE);
         return true;
     }
 }
