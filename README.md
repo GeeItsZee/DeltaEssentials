@@ -1,42 +1,85 @@
 # DeltaEssentials
-DeltaEssentials is a plugin for Bukkit / Spigot using BungeeCord. It has functionality similar
-to the popular Essentials plugin, but adds multi-server support. DeltaEssentials requires
-[DeltaRedis](https://github.com/geeitszee/DeltaRedis) for communication and 
-[DeltaExecutor](https://github.com/geeitszee/DeltaExecutor) for scheduling.
+Plugin for essential server functionality like player data syncing, chat, teleport, and cross-server vanish
+for BungeeCord and Spigot servers built using [SockExchange](https://github.com/geeitszee/SockExchange)
 
-## Permissions
-```yml
-DeltaEss.Debug: Access to /deltaessdebug
-DeltaEss.Disposal: Access to /disposal
-DeltaEss.DVanish: Access to /dvanish
-DeltaEss.Lockdown: Access to /lockdown
+## Installation
+Copy the same JAR into the plugins directory of your BungeeCord and Spigot installations. The
+[default Spigot configuration](https://github.com/GeeItsZee/DeltaEssentials/blob/3.0.0-rewrite-using-sockexchange/src/main/resources/config.yml)
+should be fine.
 
-DeltaEss.MoveAll: Access to /moveall
-DeltaEss.MoveTo.Self: Access to /mt <Server Name>
-DeltaEss.MoveTo.Other: Access to /mt <Server Name> <Player>
-DeltaEss.MoveToBlocked.<Server Name>: Access to /mt <Server Name> if server is blocked
+In order for player data sharing to work, you will need to create a symbolic link for the
+`plugins/DeltaEssentials/PlayerData` folder with all other servers that should share the player data.
+For example, if `Castle` and `Fort` servers should share player data, create a symbolic link where
+`Castle/plugins/DeltaEssentials/PlayerData` and `Fort/plugins/DeltaEssentials/PlayerData` point to the
+same folder. (Technical detail: DeltaEssentials handles file locking using Bungee, so only one server
+at a time should be able to read/write a player file)
 
-DeltaEss.SocialSpy: Access to /socialspy
+## Commands
+`/tell` and `/reply`
+- Permissions: 
+  - `DeltaEss.Tell` for normal tell
+  - `DeltaEss.Tell.Color` to allow color codes
+  - `DeltaEss.Tell.IgnoreVanish` to send a message even if the player is vanished
+- Description: Standard commands for personal messages
 
-DeltaEss.Tell.Use: Access to /tell and /reply
-DeltaEss.Tell.Color: Access to color codes in PMs
-DeltaEss.Tell.IgnoreVanish: Access to PM even when other player is vanished
+`/socialspy`
+- Permission: `DeltaEss.SocialSpy`
+- Description: Moderating command for viewing personal messages as they are sent
 
-DeltaEss.Tp.Self: Access to /tp <Player>
-DeltaEss.Tp.Other: Access to /tp <Player> <Player> and /tphere
-DeltaEss.Tp.Deny: Access to /tpdeny
-DeltaEss.Tp.IgnoreVanish: Ignores if player is vanished when /tp is used.
-DeltaEss.Tp.IgnoreDeny: Ignores if player is denying teleports when /tp is used.
-DeltaEss.Tp.Silent: Target player is not alerted when user teleports.
+`/blocktp`
+- Permission: `DeltaEss.BlockTp`
+- Description: Blocks players from teleporting to you
 
-DeltaEss.Tpa.Send: Access to /tpahere
-DeltaEss.Tpa.Accept: Access to /tpaccept
+`/tp`
+- Permissions: 
+  - `DeltaEss.Tp.MeToOther` for the normal command
+  - `DeltaEss.Tp.OtherToOther` for teleporting other players 
+  - `DeltaEss.Tp.IgnoreVanish` to teleport even if the player is vanished
+  - `DeltaEss.Tp.IgnoreBlocking` to teleport even if the player is blocking teleports
+- Description: Teleports you to the target player or the player you specify to the target player
 
-DeltaEss.SharedGameModeInv: Inventory is shared between gamemodes
-DeltaEss.GameMode.<GameMode>: Access to switch to or be in <GameMode>.
-```
+`/tphere`
+- Permission: `DeltaEss.Tp.OtherToMe` (ignores if a player is vanished or blocking)
+- Description: Teleports the target player to you
 
-# Licence ([GPLv3](http://www.gnu.org/licenses/gpl-3.0.en.html))
+`/tpahere`
+- Permissions: 
+  - `DeltaEss.Tp.OtherToMe.Ask` for the normal command
+  - `DeltaEss.Tp.IgnoreVanish` to teleport even if the player is vanished
+  - `DeltaEss.Tp.IgnoreBlocking` to teleport even if the player is blocking teleports
+- Description: Sends a teleport request which will allow the target player to teleport to you
+
+`/tpaccept` and `/tpdeny`
+- Permission: `DeltaEss.Tp.OtherToMe.Answer`
+- Description: Responds to a teleport request
+
+`/playerfile`
+- Permission: `DeltaEss.PlayerFile`
+- Description: Loads, opens, and saves a player file (for viewing or editing purposes)
+
+`/dvanish`
+- Permission: `DeltaEss.DVanish`
+- Description: Marks you are vanished (for teleports and chat)
+
+`/findplayer`
+- Permissions:
+  - `DeltaEss.FindPlayer` for the command 
+  - `DeltaEss.FindPlayer.IgnoreVanish` to find a player even if the player is vanished
+- Description: Finds if the player is online on the network and on what server
+
+`/disposal`
+- Permission: `DeltaEss.Disposal`
+- Description: Opens a chest that you can use to destroy items permanently
+
+## Other Permissions
+`DeltaEss.Tp.Silent`: When you teleport to someone that does not have this permission,
+ they won't get a message that you teleported to them.
+
+`DeltaEss.SharedGameModeInv`: Your survival and creative inventories will not get switched out when you switch game modes.
+
+`DeltaEss.GameMode.<game mode>`: If a game mode is blocked, this permission will allow you to bypass that block.
+
+## Licence ([GPLv3](http://www.gnu.org/licenses/gpl-3.0.en.html))
 ```
 DeltaEssentials - Basic server functionality for Bukkit/Spigot servers using BungeeCord.
 Copyright (C) 2015  Trace Bachi (tracebachi@gmail.com)

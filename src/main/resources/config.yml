@@ -2,75 +2,66 @@
 # DeltaEssentials Configuration File
 ###############################################################################
 
-# Should player data be loaded when player joins?
-# Some servers may want to set this to false if an authentication plugin
-# will tell DeltaEssentials when it is "safe" to load the player data.
-LoadPlayerDataOnLogin: True
-
-# Names of servers that a player cannot access without the permission
-# that gives them access to this server. By default, all servers not in this
-# list are "public" in that players do not need a special permission to join
-PrivateServers:
-  - SecretServer
-  - SuperSecretServer
-
-# Default game mode for players who do not have player data
+# What is the default game mode for players who do not have any player data?
 DefaultGameMode: SURVIVAL
 
-# Should the default game mode be set for all players that don't have
-# the bypass permission to ignore this setting?
-ForceDefaultGameModeOnJoin: False
+# Should the game mode of a player be updated to the default game mode
+# when they join the server? (Will be ignored if the player has the right permission)
+ForceDefaultGameMode: False
 
-# Game modes that players cannot access without the bypass permission
-DisabledGameModes:
-  - ADVENTURE
-  - SPECTATOR
+# What items should be given to a player when they first join the server?
+# These items are only given once when the player gets a new DeltaEssentials
+# player file. For servers that share player files, this means the player
+# will only get these items once.
+FirstJoinItemStacks: []
+
+# What game modes are blocked for players without the right permission?
+BlockedGameModes:
+- ADVENTURE
+- SPECTATOR
 
 # Should potion effects be ignored when loading and saving to player data?
 # Servers may want to set this to false if they do not want potion effects
 # to be shared with other servers.
 LoadAndSavePotionEffects: True
 
-# Commands run as the player before the player data is saved
-# The most common use for this is to remove players from minigames
-# that modify player inventories, so that the correct inventories get saved.
+# What commands should run before the player data is saved?
+# The most common use for this is to remove players from games that modify
+# player inventories, so that the correct inventories get saved.
 PreSaveCommands:
-  - leave-minigame
+- leave-minigame
 
-# Formatting strings
+# Formats
 Formats:
 
-  FailedToLoadInventory: '&8[&c!&8] &cFailure &8[&c!&8]&7 Failed to load inventory. Tell an admin.'
-  FailedToSaveInventory: '&8[&c!&8] &cFailure &8[&c!&8]&7 Failed to save inventory. Tell an admin.'
-  PlayerLocked: '&8[&c!&8] &cFailure &8[&c!&8]&7 You are locked. Please wait until your data is loaded or saved.'
-  PlayerDataNotLoaded: '&8[&c!&8] &cFailure &8[&c!&8]&7 Player data has not been loaded yet.'
-
-  CurrentServer: '&8[&9!&8] &9Info &8[&9!&8]&7 Current server: &f{0}&7'
-  OnlineServerList: '&8[&9!&8] &9Info &8[&9!&8]&7 Online Servers: &f{0}&7'
-  ServerOffline: '&8[&c!&8] &cFailure &8[&c!&8]&7 Server &f{0}&7 is offline.'
-  InputIsCurrentServer: '&8[&c!&8] &cFailure &8[&c!&8]&7 &f{0}&7 is the current server.'
-  OtherAlreadyOnServer: '&8[&c!&8] &cFailure &8[&c!&8]&7 &f{0}&7 is already on {1}.'
-  MovingToMessage: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Moving to &f{0}&7 ...'
-  MovingOtherToMessage: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Moving &f{0}&7 to {1} ...'
-
-  SettingChanged: '&8[&a!&8] &aSuccess &8[&a!&8]&7 &f{0}&7 set to &f{1}&7'
-
-  NoReplyTarget: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not have anyone to reply to.'
-  TooManyAutoCompleteMatches: '&8[&c!&8] &cFailure &8[&c!&8]&7 Multiple online players match &f{0}&7.'
-  TellLog: '[{0} -> {1}] {2}'
-  TellSpy: '&8[&7Spy&8]&7=&8[&7{0} &8-> &7{1}&8] &7{2}'
-  TellSender: '&8[&dPM&8]&7=&8[&eMe -> {0}&8] &d{1}'
-  TellReceiver: '&8[&dPM&8]&7=&8[&e{0} -> Me&8] &d{1}'
-
-  NoPendingTeleportRequest: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not having a pending teleport request.'
-  SentTeleportRequest: '&8[&a!&8] &aSuccess &8[&a!&8]&7 You sent &f{0}&7 a teleport request.'
-  ReceivedTeleportRequest: '&8[&a!&8] &aSuccess &8[&a!&8]&7 &f{0}&7 sent you a teleport request. Type /tpaccept to accept within 30 seconds.'
-
-  TeleportingMessage: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Teleporting to &f{0}&7 ...'
+  NoPerm: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not have the &f{0}&7 permission.'
+  Usage: '&8[&9!&8] &9Usage &8[&9!&8]&7 {0}'
+  PlayerOnlyCommand: '&8[&c!&8] &cFailure &8[&c!&8]&7 &f{0}&7 can only be run by a player.'
+  ActionBlocked: '&8[&c!&8] &cFailure &8[&c!&8]&7 &f{0}&7 was blocked because of &f{1}&7'
+  SettingChanged: '&8[&a!&8] &aSuccess &8[&a!&8]&7 &f{0}&7 set to &f{1}&7.'
+  TooManyMatchingNames: '&8[&c!&8] &cFailure &8[&c!&8]&7 Too many matching names for &f{0}&7.'
+  NoOneForReply: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not have anyone to reply to.'
+  PlayerOffline: '&8[&c!&8] &cFailure &8[&c!&8]&7 &f{0}&7 is not online.'
+  PlayerOnline: '&8[&a!&8] &aSuccess &8[&a!&8]&7 &f{0}&7 is online on &f{1}&7.'
+  BlockingTeleports: '&8[&c!&8] &cFailure &8[&c!&8]&7 &f{0}&7 is blocking teleports.'
+  UnsafeTpLocation: '&8[&c!&8] &cFailure &8[&c!&8]&7 &f{0}&7 is not in a safe location.'
+  TeleportingTo: '&8[&9!&8] &9Info &8[&9!&8]&7 Teleporting to &f{0}&7 ...'
   TeleportedToYou: '&8[&9!&8] &9Info &8[&9!&8]&7 &f{0}&7 teleported to you.'
-  DeniedTeleport: '&8[&9!&8] &9Info &8[&9!&8]&7 &f{0}&7 was denied a teleport to you.'
-  OtherDenyingTeleport: '&8[&c!&8] &cFailure &8[&c!&8]&7 &f{0}&7 is denying teleports.'
-  UnsafeLocation: '&8[&c!&8] &cFailure &8[&c!&8]&7 &f{0}&7 is not in a safe location.'
+  OtherCantJoinPrivateServer: '&8[&c!&8] &cFailure &8[&c!&8]&7 &f{0}&7 does not have the permission to join this server.'
+
+  TpAskHere/Sent: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Sent TpAskHere request to &f{0}&7.'
+  TpAskHere/Received: '&8[&9!&8] &9Info &8[&9!&8]&7 Received TpAskHere request from &f{0}&7.'
+  TpAskHere/Denied: '&8[&9!&8] &9Info &8[&9!&8]&7 &f{0}&7 denied the TpAskHere request from &f{1}&7.'
+  TpAskHere/NoRequests: '&8[&c!&8] &cFailure &8[&c!&8]&7 You do not have any TpAskHere requests.'
+
+  Tell/Log: '[{0} -> {1}] {2}'
+  Tell/Sender: '&8[&dPM&8]&7=&8[&e{0} -> {1}&8] &d{2}'
+  Tell/Receiver: '&8[&dPM&8]&7=&8[&e{0} -> {1}&8] &d{2}'
+  Tell/SocialSpy: '&8[&7Spy&8]&7=&8[&7{0} &8-> &7{1}&8] &7{2}'
+
+  PlayerFile/Success: '&8[&a!&8] &aSuccess &8[&a!&8]&7 Player file for &f{0}&7 was &f{1}&7.'
+  PlayerFile/Failure: '&8[&c!&8] &cFailure &8[&c!&8]&7 Player file for &f{0}&7 failed to &f{1}&7. Error: &f{2}&7'
+  PlayerFile/NotLoaded: '&8[&c!&8] &cFailure &8[&c!&8]&7 Player file is not loaded.'
 
 # Debug Mode
-Debug: False
+DebugMode: False

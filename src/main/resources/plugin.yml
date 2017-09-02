@@ -1,34 +1,33 @@
 name: DeltaEssentials
-main: com.gmail.tracebachi.DeltaEssentials.DeltaEssentials
+main: com.gmail.tracebachi.DeltaEssentials.Spigot.DeltaEssentialsPlugin
 version: ${project.version}
-author: Trace Bachi (tracebachi@gmail.com, BigBossZee)
-depend: [DeltaRedis, DeltaExecutor]
+author: GeeItsZee (tracebachi@gmail.com)
+depend: [SockExchange]
+softdepend: [Vault, PermissionsEx]
 commands:
-  deltaessentials:
-    aliases: [deltaess, de]
-  disposal:
-    aliases: [trash]
-  dvanish:
-    aliases: [dv]
-  lockdown:
-    aliases: []
-  moveall:
-    aliases: []
-  moveto:
-    aliases: [mt]
+  reply:
+    aliases: [r]
   socialspy:
     aliases: [spy]
   tell:
     aliases: [t, m, msg, pm]
-  reply:
-    aliases: [r]
-  tp:
-    aliases: [detp]
+  playerfile:
+    aliases: []
+  blocktp:
+    aliases: []
   tpaccept:
-    aliases: [detpaccept]
+    aliases: []
   tpahere:
-    aliases: [detpahere]
+    aliases: []
+  tp:
+    aliases: []
   tpdeny:
-    aliases: [detpdeny]
+    aliases: []
   tphere:
-    aliases: [detphere]
+    aliases: []
+  dvanish:
+    aliases: []
+  findplayer:
+    aliases: [isonline]
+  disposal:
+    aliases: [trash]
